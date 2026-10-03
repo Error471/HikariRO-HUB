@@ -1,0 +1,346 @@
+@import 'tailwindcss';
+@import '@fontsource/cinzel/600.css';
+@import '@fontsource/cinzel/700.css';
+@import '@fontsource-variable/inter';
+
+/* Tokens del tema: noche azulada, oro de interfaz clásica y azul "maná" como acento secundario. */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Cinzel', 'Times New Roman', serif;
+
+  --color-night-950: #07080f;
+  --color-night-900: #0a0c15;
+  --color-night-850: #0e1120;
+  --color-night-800: #131729;
+  --color-night-700: #1b2036;
+  --color-night-600: #262c47;
+
+  --color-ink: #ece8f4;
+  --color-ink-muted: #a7a3ba;
+  --color-ink-faint: #74718a;
+
+  --color-gold-200: #f8e2b0;
+  --color-gold-300: #f2cd84;
+  --color-gold-400: #e7b75f;
+  --color-gold-500: #c9902f;
+  --color-gold-700: #6b4a17;
+
+  --color-mana-300: #a9dcff;
+  --color-mana-400: #7cc6ff;
+  --color-mana-600: #2f7fc0;
+
+  --color-ember-400: #ff7a6b;
+  --color-leaf-400: #5fd39a;
+
+  --radius-card: 1rem;
+  --shadow-glow: 0 0 0 1px rgb(231 183 95 / 0.25), 0 8px 30px -12px rgb(231 183 95 / 0.35);
+
+  --animate-rise: rise 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade: fade 300ms ease-out both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-night-900 font-sans text-ink antialiased;
+    min-height: 100dvh;
+    background-image:
+      radial-gradient(60rem 30rem at 85% -10%, rgb(47 127 192 / 0.14), transparent 60%),
+      radial-gradient(50rem 26rem at -10% 110%, rgb(201 144 47 / 0.1), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-gold-400;
+  }
+
+  ::selection {
+    @apply bg-gold-500/40 text-ink;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Borde con brillo dorado tenue, usado en tarjetas destacadas. */
+  .frame-gold {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--color-night-850), var(--color-night-850)) padding-box,
+      linear-gradient(
+          140deg,
+          rgb(242 205 132 / 0.55),
+          rgb(255 255 255 / 0.06) 40%,
+          rgb(124 198 255 / 0.25)
+        )
+        border-box;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Contenido de la Wiki: se presenta como una página de pergamino porque los artículos
+ * usan estilos en línea pensados para fondo claro. Solo se dan estilos base; los del
+ * propio artículo (colores, tablas, cajas) se respetan.
+ */
+@layer components {
+  .wiki-content {
+    --wiki-ink: #2c2416;
+    --wiki-muted: #6b5d45;
+    --wiki-link: #8a4b0f;
+    --wiki-border: #d9c9a3;
+    background: linear-gradient(180deg, #f8f1e2, #f2e8d3);
+    color: var(--wiki-ink);
+    border-radius: var(--radius-card);
+    border: 1px solid #e3d3ad;
+    padding: 1.25rem;
+    line-height: 1.65;
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+    box-shadow: 0 20px 50px -30px rgb(0 0 0 / 0.8);
+  }
+
+  @media (min-width: 640px) {
+    .wiki-content {
+      padding: 2rem 2.25rem;
+    }
+  }
+
+  .wiki-content :where(h1, h2, h3, h4) {
+    font-family: var(--font-display);
+    color: #3b2a12;
+    font-weight: 700;
+    line-height: 1.25;
+    margin: 1.6em 0 0.6em;
+    scroll-margin-top: 5rem;
+  }
+
+  .wiki-content :where(h1) {
+    font-size: 1.6rem;
+  }
+
+  .wiki-content :where(h2) {
+    font-size: 1.35rem;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--wiki-border);
+  }
+
+  .wiki-content :where(h3) {
+    font-size: 1.1rem;
+  }
+
+  .wiki-content :where(.mw-headline) {
+    scroll-margin-top: 5rem;
+  }
+
+  .wiki-content :where(p, ul, ol, dl, table, blockquote, pre) {
+    margin: 0 0 1em;
+  }
+
+  .wiki-content :where(ul) {
+    list-style: disc;
+    padding-left: 1.5em;
+  }
+
+  .wiki-content :where(ol) {
+    list-style: decimal;
+    padding-left: 1.5em;
+  }
+
+  .wiki-content :where(a) {
+    color: var(--wiki-link);
+    text-decoration: underline;
+    text-decoration-color: rgb(138 75 15 / 0.35);
+    text-underline-offset: 2px;
+  }
+
+  .wiki-content :where(a:hover) {
+    text-decoration-color: currentColor;
+  }
+
+  .wiki-content :where(a[target='_blank'])::after {
+    content: ' ↗';
+    font-size: 0.75em;
+    opacity: 0.6;
+  }
+
+  .wiki-content :where(a.image)::after,
+  .wiki-content :where(a:has(img))::after {
+    content: none;
+  }
+
+  .wiki-content :where(img) {
+    display: inline-block;
+    max-width: 100%;
+    height: auto;
+    vertical-align: middle;
+  }
+
+  .wiki-content :where(table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+  }
+
+  .wiki-content :where(.wikitable) {
+    background: #fbf7ee;
+    border: 1px solid var(--wiki-border);
+  }
+
+  .wiki-content :where(.wikitable th, .wikitable td) {
+    border: 1px solid var(--wiki-border);
+    padding: 0.4em 0.65em;
+  }
+
+  .wiki-content :where(.wikitable th) {
+    background: #eadfc4;
+  }
+
+  .wiki-content :where(code, pre, kbd) {
+    font-family: ui-monospace, monospace;
+    background: rgb(59 42 18 / 0.08);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+  }
+
+  .wiki-content :where(.center) {
+    text-align: center;
+  }
+
+  .wiki-content :where(.floatright, .tright) {
+    float: right;
+    margin: 0 0 1em 1em;
+  }
+
+  .wiki-content :where(.floatleft, .tleft) {
+    float: left;
+    margin: 0 1em 1em 0;
+  }
+
+  .wiki-content :where(.mw-redlink) {
+    color: #a33a2a;
+  }
+
+  .wiki-content :where(.mw-parser-output)::after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+
+  /* Portada de la wiki: clases `hro2-*` de su Common.css, reproducidas de forma básica. */
+  .wiki-content :where(.hro2-hero) {
+    background: linear-gradient(135deg, #1b2036, #2f4a6b);
+    color: #f8e2b0;
+    border-radius: 14px;
+    padding: 1.75rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .wiki-content :where(.hro2-eyebrow) {
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    opacity: 0.8;
+  }
+
+  .wiki-content :where(.hro2-title) {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+  }
+
+  .wiki-content :where(.hro2-subtitle) {
+    color: #ece8f4;
+  }
+
+  .wiki-content :where(.hro2-actions) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .wiki-content :where(.hro2-btn a) {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 0.4em 1em;
+    border: 1px solid rgb(248 226 176 / 0.6);
+    color: #f8e2b0;
+    text-decoration: none;
+  }
+
+  .wiki-content :where(.hro2-btn-primary a) {
+    background: #e7b75f;
+    color: #2c2416;
+  }
+
+  .wiki-content
+    :where(.hro2-alert, .hro2-panel, .hro2-card, .hro2-feature, .hro2-stat, .hro2-lore, .hro2-cta) {
+    background: #fbf7ee;
+    border: 1px solid var(--wiki-border);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .wiki-content :where(.hro2-stats, .hro2-grid, .hro2-info-grid) {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    margin-bottom: 1rem;
+  }
+
+  .wiki-content :where(.hro2-stat) {
+    text-align: center;
+  }
+
+  .wiki-content :where(.hro2-stat strong) {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    color: #8a4b0f;
+  }
+
+  .wiki-content :where(.hro2-chips) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+}

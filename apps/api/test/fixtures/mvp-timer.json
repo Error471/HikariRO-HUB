@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "rows": [
+    {
+      "configured": true,
+      "id": 1511,
+      "killed_at": null,
+      "map": "moc_pryd06",
+      "max_at": null,
+      "min_at": null,
+      "name": "Amon Ra",
+      "now": 1791040608
+    },
+    {
+      "configured": true,
+      "id": 30027,
+      "killed_at": 1791038766,
+      "map": "cavemine01",
+      "max_at": 1791047766,
+      "min_at": 1791045966,
+      "name": "Arachne",
+      "now": 1791040608
+    },
+    {
+      "configured": true,
+      "id": 30027,
+      "killed_at": null,
+      "map": "cavemine02",
+      "max_at": null,
+      "min_at": null,
+      "name": "Arachne",
+      "now": 1791040608
+    }
+  ],
+  "server_now": 1791040608
+}

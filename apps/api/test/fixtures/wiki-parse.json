@@ -1,0 +1,18 @@
+{
+  "parse": {
+    "title": "Sistema de pesca",
+    "pageid": 20,
+    "revid": 2100,
+    "redirects": [{ "from": "Pesca", "to": "Sistema de pesca" }],
+    "text": "<div class=\"mw-parser-output\"><div style=\"background:linear-gradient(135deg,#123d52 0%,#28a2a0 100%);border:1px solid #d7b45c;position:fixed;\">Intro</div><h2><span class=\"mw-headline\" id=\"Primeros_pasos\">Primeros pasos</span></h2><p>Lee <a href=\"/wiki/index.php?title=Sistema_de_mineria\" title=\"Sistema de mineria\">la minería</a>, <a href=\"/wiki/index.php?title=VIP_System#Ventajas\">VIP</a>, <a href=\"/wiki/index.php?title=Categor%C3%ADa:Gu%C3%ADas\">guías</a>, <a href=\"/wiki/index.php?title=Archivo:Fishing.png\" class=\"image\"><img alt=\"Fishing.png\" src=\"/wiki/images/thumb/1/19/Fishing.png/250px-Fishing.png\" srcset=\"/wiki/images/thumb/1/19/Fishing.png/375px-Fishing.png 1.5x\" width=\"250\"></a> <a href=\"/wiki/index.php?title=Pagina_inexistente&amp;action=edit&amp;redlink=1\" class=\"new\">rota</a> y <a rel=\"nofollow\" class=\"external text\" href=\"https://hikariro.com/?module=item&amp;action=view&amp;id=50063\">la caña</a>.</p><img src=\"https://irowiki.org/w/images/a.png\" onerror=\"alert(1)\"><script>alert(1)</script><a href=\"javascript:alert(1)\">x</a><div class=\"fixed hidden hro2-card wikitable\" style=\"background:url(https://evil.test/x.png);color:#174f68\">Tarjeta</div><table class=\"wikitable mw-collapsible mw-collapsed\"><tr><th style=\"background:#174f68;color:white\">Región</th></tr></table></div>",
+    "sections": [
+      { "toclevel": 1, "level": "2", "line": "Primeros pasos", "anchor": "Primeros_pasos" },
+      { "toclevel": 3, "level": "4", "line": "Detalle <i>menor</i>", "anchor": "Detalle" }
+    ],
+    "categories": [
+      { "sortkey": "", "category": "Guías" },
+      { "sortkey": "", "category": "Páginas_con_enlaces_rotos_a_archivos", "hidden": false },
+      { "sortkey": "", "category": "Oculta", "hidden": true }
+    ]
+  }
+}
