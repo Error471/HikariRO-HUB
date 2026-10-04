@@ -42,3 +42,21 @@ test('una ruta inexistente muestra la página de error', async ({ page }) => {
   await page.goto('/no-existe');
   await expect(page.getByText('Esta zona no aparece en el mapa')).toBeVisible();
 });
+
+test('al borrar la búsqueda se vuelve a la página de origen', async ({ page }) => {
+  await login(page, '/wiki');
+  const wikiSearch = page.getByRole('searchbox', { name: 'Buscar en la wiki' });
+  await wikiSearch.fill('pesca');
+  await expect(page).toHaveURL(/\/wiki\/buscar\?q=pesca/);
+  await page.getByRole('searchbox', { name: 'Buscar en la wiki' }).fill('');
+  await expect(page).toHaveURL(/\/wiki$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Wiki' })).toBeVisible();
+
+  await page.goto('/mercados/vending');
+  const marketSearch = page.getByRole('searchbox', { name: 'Buscar item en todos los mercados' });
+  await marketSearch.fill('potion');
+  await expect(page).toHaveURL(/\/mercados\/buscar\?q=potion/);
+  await page.getByRole('searchbox', { name: 'Buscar item en todos los mercados' }).fill('');
+  await expect(page).toHaveURL(/\/mercados\/vending(\?.*)?$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Vending' })).toBeVisible();
+});
