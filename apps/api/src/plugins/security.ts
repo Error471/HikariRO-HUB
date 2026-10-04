@@ -7,6 +7,8 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 export interface SecurityOptions {
   appOrigin: string;
+  /** Límite global de peticiones a /api por minuto; 0 = solo las rutas sensibles (login…). */
+  rateLimitPerMinute: number;
 }
 
 export async function registerSecurity(app: FastifyInstance, options: SecurityOptions) {
@@ -19,8 +21,8 @@ export async function registerSecurity(app: FastifyInstance, options: SecurityOp
   });
 
   await app.register(rateLimit, {
-    global: true,
-    max: 300,
+    global: options.rateLimitPerMinute > 0,
+    max: options.rateLimitPerMinute || 300,
     timeWindow: '1 minute',
     // Los archivos de la web (app de escritorio) no cuentan: una sola carga pide decenas.
     allowList: (request) => !request.url.startsWith('/api/'),

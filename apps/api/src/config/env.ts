@@ -44,6 +44,9 @@ const envSchema = z.object({
   /** Cada cuánto consulta el MVP Timer el vigilante de avisos. */
   ALERT_POLL_SECONDS: z.coerce.number().int().min(30).max(600).default(60),
 
+  /** Límite global de peticiones a /api por minuto e IP (0 = solo login y rutas sensibles). */
+  RATE_LIMIT_PER_MINUTE: z.coerce.number().int().min(0).default(300),
+
   LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   LOGIN_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
 });

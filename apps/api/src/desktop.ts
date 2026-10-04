@@ -46,6 +46,8 @@ export async function startDesktopServer(options: DesktopServerOptions): Promise
       SESSION_TTL_HOURS: '720',
       COOKIE_SECURE: 'false',
       ALLOW_REMEMBER: 'true',
+      // Un solo usuario en su propio PC: solo se limitan el login y las rutas sensibles.
+      RATE_LIMIT_PER_MINUTE: '0',
       HIKARI_USER_AGENT: `HikariHub/${options.version}`,
       ...(options.hikariBaseUrl && { HIKARI_BASE_URL: options.hikariBaseUrl }),
       ...(options.newsFeedUrl && { HIKARI_NEWS_FEED_URL: options.newsFeedUrl }),

@@ -21,6 +21,8 @@ const apiEnv = {
   SESSION_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
   COOKIE_SECURE: 'false',
   LOGIN_MAX_ATTEMPTS: '50',
+  // Como en la app de escritorio: sin límite global (los e2e hacen cientos de peticiones).
+  RATE_LIMIT_PER_MINUTE: '0',
 };
 
 /** Ruta a un Chromium ya instalado (p. ej. en contenedores sin `playwright install`). */

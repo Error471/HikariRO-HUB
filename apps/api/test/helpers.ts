@@ -48,7 +48,10 @@ export async function createTestApp(
     webDir,
     remember = false,
     revalidateMs = 300_000,
+    env = {},
   }: {
+    /** Cambios sobre la configuración de prueba. */
+    env?: Partial<typeof testEnv>;
     notifier?: Notifier | null;
     webDir?: string;
     /** Activa "Mantener la sesión iniciada" (como en la app de escritorio). */
@@ -82,7 +85,7 @@ export async function createTestApp(
   const alerts = new AlertService(userData, notifier);
   const mvp = new MvpService(client, HIKARI);
   const app = await buildApp({
-    env: webDir ? { ...testEnv, WEB_DIST_DIR: webDir } : testEnv,
+    env: { ...testEnv, ...env, ...(webDir && { WEB_DIST_DIR: webDir }) },
     hikariAuth,
     sessions,
     loginThrottle: new MemoryLoginThrottle({ maxAttempts: 3, windowMs: 60_000 }),

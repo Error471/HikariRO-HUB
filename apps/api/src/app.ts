@@ -76,7 +76,10 @@ export async function buildApp(deps: AppDependencies) {
   registerErrorHandling(app, {
     spaFallback: env.WEB_DIST_DIR ? createSpaFallback(env.WEB_DIST_DIR) : undefined,
   });
-  await registerSecurity(app, { appOrigin: env.APP_ORIGIN });
+  await registerSecurity(app, {
+    appOrigin: env.APP_ORIGIN,
+    rateLimitPerMinute: env.RATE_LIMIT_PER_MINUTE,
+  });
   await app.register(cookie, { secret: env.SESSION_SECRET });
   registerSessionGuard(app);
 
