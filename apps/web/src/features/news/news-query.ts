@@ -1,4 +1,4 @@
-import { newsListResponseSchema, type NewsSection } from '@hrc/shared';
+import { newsListResponseSchema, type NewsSection } from '@hikari-hub/shared';
 import { queryOptions } from '@tanstack/react-query';
 import { CalendarDays, GitBranch, Megaphone, MessageSquare, type LucideIcon } from 'lucide-react';
 import { apiRequest } from '@/lib/api-client';

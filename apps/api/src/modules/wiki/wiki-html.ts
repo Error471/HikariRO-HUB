@@ -1,4 +1,4 @@
-import { wikiCategoryPath, wikiPath } from '@hrc/shared';
+import { wikiCategoryPath, wikiPath } from '@hikari-hub/shared';
 import * as cheerio from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
 

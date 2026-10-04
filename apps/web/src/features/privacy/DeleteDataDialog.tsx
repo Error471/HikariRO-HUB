@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/Spinner';
 import { useDeleteAccountData } from '@/features/auth/session';
 import { errorMessage } from '@/lib/api-client';
 
-/** Confirmación para borrar todo lo que el Companion guarda de la cuenta. */
+/** Confirmación para borrar todo lo que Hikari Hub guarda de la cuenta. */
 export function DeleteDataDialog() {
   const remove = useDeleteAccountData();
   const navigate = useNavigate();
@@ -32,18 +32,20 @@ export function DeleteDataDialog() {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-night-950/80 backdrop-blur-sm data-[state=open]:animate-fade" />
-        <Dialog.Content className="frame-gold fixed top-1/2 left-1/2 z-50 flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-card p-6 shadow-2xl">
+        <Dialog.Content className="panel fixed top-1/2 left-1/2 z-50 flex w-[min(28rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 rounded-card p-6 shadow-2xl">
           <span className="grid size-12 place-items-center rounded-full bg-ember-400/12 text-ember-400">
             <Trash2 aria-hidden="true" className="size-6" />
           </span>
-          <Dialog.Title className="font-display text-xl font-bold">¿Borrar tus datos?</Dialog.Title>
+          <Dialog.Title className="font-display text-xl font-semibold">
+            ¿Borrar tus datos?
+          </Dialog.Title>
           <Dialog.Description asChild>
             <div className="flex flex-col gap-2 text-sm text-ink-muted">
-              <p>Se eliminará todo lo que el Companion guarda de tu cuenta:</p>
+              <p>Se eliminará todo lo que Hikari Hub guarda de tu cuenta en este PC:</p>
               <ul className="list-disc pl-5">
                 <li>Tus MVPs favoritos.</li>
-                <li>Los avisos en todos tus dispositivos.</li>
-                <li>Tu sesión en este dispositivo (también se cierra en HikariRO).</li>
+                <li>Los avisos de MVP.</li>
+                <li>Tu sesión guardada en este PC (también se cierra en HikariRO).</li>
               </ul>
               <p>
                 Tu cuenta de HikariRO no se modifica. Más detalles en{' '}

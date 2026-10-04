@@ -5,7 +5,7 @@ import { dashboardLink, navigation, type ModuleDefinition } from '../navigation'
 const linkBase =
   'group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-sm text-ink-muted transition-colors duration-150 hover:bg-white/5 hover:text-ink';
 const linkActive =
-  'bg-gradient-to-r from-gold-400/14 to-transparent text-gold-200 before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-gold-400';
+  'bg-white/[0.06] text-ink before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-gold-400';
 
 function ModuleLink({ item, onNavigate }: { item: ModuleDefinition; onNavigate?: () => void }) {
   const Icon = item.icon;
@@ -54,7 +54,7 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             {grouped && (
               <p
                 id={`nav-${group.id}`}
-                className="mb-1.5 px-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-ink-faint"
+                className="mb-1.5 px-3 text-[0.68rem] font-semibold uppercase tracking-wider text-ink-faint"
               >
                 {group.label}
               </p>

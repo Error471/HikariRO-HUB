@@ -1,4 +1,4 @@
-import type { NewsPost } from '@hrc/shared';
+import type { NewsPost } from '@hikari-hub/shared';
 import { Link } from '@tanstack/react-router';
 import { ChevronRight } from 'lucide-react';
 import { useState } from 'react';
@@ -23,7 +23,7 @@ export function NewsImage({ src, className }: { src: string | null; className?: 
 
 export function NewsCard({ post }: { post: NewsPost }) {
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-card border border-white/7 bg-night-850/80 transition duration-300 hover:-translate-y-0.5 hover:border-gold-400/35">
+    <article className="group relative flex flex-col overflow-hidden rounded-card border border-white/7 bg-night-850/80 transition duration-300 hover:border-white/20">
       <NewsImage
         src={post.imageUrl}
         className="aspect-[16/9] w-full border-b border-white/6 bg-night-950 object-cover"

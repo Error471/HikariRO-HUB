@@ -60,7 +60,6 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
   return (
     <div className="flex flex-col gap-6 animate-rise">
       <PageHeader
-        eyebrow="HikariRO"
         title="MVP Timer"
         description="Respawns registrados en el servidor. Se actualiza cada 15 segundos."
         actions={
@@ -71,7 +70,7 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
               onClick={() => void refetch()}
               disabled={isFetching}
               aria-label="Actualizar ahora"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-gold-400/40 hover:text-ink disabled:opacity-60"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink disabled:opacity-60"
             >
               <RefreshCw
                 aria-hidden="true"

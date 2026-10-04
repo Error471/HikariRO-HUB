@@ -1,4 +1,4 @@
-import type { CardAlbumQuery, CardAlbumResponse, FishingAlbumResponse } from '@hrc/shared';
+import type { CardAlbumQuery, CardAlbumResponse, FishingAlbumResponse } from '@hikari-hub/shared';
 import { isLoginRedirect } from '../../hikari/fluxcp-pages.js';
 import type { HikariClient, HikariResponse } from '../../hikari/hikari-client.js';
 import { AppError } from '../../lib/app-error.js';

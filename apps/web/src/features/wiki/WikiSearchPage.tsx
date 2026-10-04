@@ -20,7 +20,7 @@ export function WikiSearchPage({ query }: { query: string }) {
   return (
     <div className="flex flex-col gap-6 animate-rise">
       <WikiBreadcrumbs items={['Buscar']} />
-      <h1 className="font-display text-3xl font-bold tracking-wide">Buscar en la wiki</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Buscar en la wiki</h1>
       <WikiSearchBox initialQuery={trimmed} autoFocus />
 
       {!ready ? (
@@ -79,7 +79,7 @@ export function WikiSearchPage({ query }: { query: string }) {
                   <li key={result.title}>
                     <ArticleLink
                       title={result.title}
-                      className="group block rounded-card border border-white/7 bg-night-850/80 p-4 transition hover:border-gold-400/35"
+                      className="group block rounded-card border border-white/7 bg-night-850/80 p-4 transition hover:border-white/20"
                     >
                       <span className="block font-medium text-ink group-hover:text-gold-200">
                         {result.title}

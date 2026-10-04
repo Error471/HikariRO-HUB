@@ -1,0 +1,38 @@
+# Instalador de Windows para publicar en GitHub Releases.
+appId: com.hikarihub.app
+productName: Hikari Hub
+# Nombre interno (carpetas de actualización); los datos van en %APPDATA%\Hikari Hub.
+extraMetadata:
+  name: hikari-hub
+copyright: Proyecto de la comunidad, no afiliado a HikariRO
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/**
+  - package.json
+extraResources:
+  - from: ../web/dist
+    to: web
+  - from: build/icon.ico
+    to: icons/icon.ico
+  - from: build/icon.png
+    to: icons/icon.png
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: build/icon.ico
+  artifactName: Hikari-Hub-Setup-${version}.${ext}
+nsis:
+  oneClick: true
+  perMachine: false
+  deleteAppDataOnUninstall: true
+  shortcutName: Hikari Hub
+  uninstallDisplayName: Hikari Hub
+# El flujo "Publicar versión" de GitHub Actions sustituye owner y repo por los del repositorio.
+publish:
+  provider: github
+  owner: Error471
+  repo: hikariro-companion
+  releaseType: release

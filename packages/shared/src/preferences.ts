@@ -19,39 +19,28 @@ export const leadMinutesSchema = z.union([
 ]);
 export type LeadMinutes = z.infer<typeof leadMinutesSchema>;
 
-export const pushSettingsSchema = z.object({ leadMinutes: leadMinutesSchema });
-export type PushSettings = z.infer<typeof pushSettingsSchema>;
+export const alertSettingsSchema = z
+  .object({ enabled: z.boolean().optional(), leadMinutes: leadMinutesSchema.optional() })
+  .refine((value) => value.enabled !== undefined || value.leadMinutes !== undefined, {
+    message: 'No hay nada que cambiar',
+  });
+export type AlertSettings = z.infer<typeof alertSettingsSchema>;
 
-/** Formato de `PushSubscription.toJSON()` en el navegador. */
-export const pushSubscriptionSchema = z.object({
-  endpoint: z.url({ protocol: /^https$/ }).max(1024),
-  expirationTime: z.number().nullable().optional(),
-  keys: z.object({
-    p256dh: z.string().min(16).max(256),
-    auth: z.string().min(8).max(64),
-  }),
-});
-export type PushSubscriptionJson = z.infer<typeof pushSubscriptionSchema>;
-
-export const pushUnsubscribeSchema = z.object({ endpoint: z.url().max(1024) });
-
-export const pushConfigResponseSchema = z.object({
-  /** `false` si el servidor no tiene claves VAPID configuradas. */
+export const alertConfigResponseSchema = z.object({
+  /** `false` fuera de la app de escritorio: no hay a quién enviar las notificaciones. */
+  available: z.boolean(),
   enabled: z.boolean(),
-  publicKey: z.string().nullable(),
   leadMinutes: leadMinutesSchema,
-  /** Endpoints registrados por este usuario (para saber si este navegador está suscrito). */
-  endpoints: z.array(z.string()),
   /** `false` si la sesión que vigila los respawns caducó y hay que volver a entrar. */
   watching: z.boolean(),
 });
-export type PushConfigResponse = z.infer<typeof pushConfigResponseSchema>;
+export type AlertConfigResponse = z.infer<typeof alertConfigResponseSchema>;
 
-/** Contenido de cada notificación push (lo lee el service worker). */
-export const pushMessageSchema = z.object({
+/** Contenido de cada notificación de Windows. */
+export const alertMessageSchema = z.object({
   title: z.string(),
   body: z.string(),
   tag: z.string(),
   url: z.string(),
 });
-export type PushMessage = z.infer<typeof pushMessageSchema>;
+export type AlertMessage = z.infer<typeof alertMessageSchema>;

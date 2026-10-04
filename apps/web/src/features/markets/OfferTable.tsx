@@ -1,4 +1,4 @@
-import type { MarketOffer, MarketType } from '@hrc/shared';
+import type { MarketOffer, MarketType } from '@hikari-hub/shared';
 import { Link } from '@tanstack/react-router';
 import { formatCount, formatZeny } from '@/lib/format';
 import { ItemIcon } from './ItemIcon';

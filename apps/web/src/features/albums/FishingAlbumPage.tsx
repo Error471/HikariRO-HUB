@@ -48,7 +48,7 @@ export function FishingAlbumPage({ filter, onFilterChange }: FishingAlbumPagePro
         description="Especies descubiertas, récords y capturas. El álbum se comparte entre los personajes de tu cuenta."
       />
 
-      <section className="frame-gold rounded-card p-5 sm:p-6">
+      <section className="panel rounded-card p-5 sm:p-6">
         {data ? (
           <ProgressMeter
             label="Especies descubiertas"

@@ -1,4 +1,4 @@
-import type { MarketItem, MarketShop, MarketType } from '@hrc/shared';
+import type { MarketItem, MarketShop, MarketType } from '@hikari-hub/shared';
 import * as cheerio from 'cheerio';
 import type { AnyNode } from 'domhandler';
 

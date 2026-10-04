@@ -1,54 +1,37 @@
-import {
-  leadMinutesSchema,
-  pushSubscriptionSchema,
-  type LeadMinutes,
-  type PushSubscriptionJson,
-} from '@hrc/shared';
-import type { Redis } from 'ioredis';
+import { leadMinutesSchema, type LeadMinutes } from '@hikari-hub/shared';
 import { z } from 'zod';
+import { JsonFile } from '../lib/json-file.js';
 
-export interface StoredSubscription {
-  subscription: PushSubscriptionJson;
-  createdAt: number;
-}
-
-export interface PushState {
-  subscriptions: StoredSubscription[];
+export interface AlertState {
+  enabled: boolean;
   leadMinutes: LeadMinutes;
-  /** Sesión del Companion que usa el vigilante de MVPs para consultar HikariRO. */
+  /** Sesión de Hikari Hub que usa el vigilante de MVPs para consultar HikariRO. */
   watchSessionId: string | null;
 }
 
-export const defaultPushState = (): PushState => ({
-  subscriptions: [],
+export const defaultAlertState = (): AlertState => ({
+  enabled: false,
   leadMinutes: 5,
   watchSessionId: null,
 });
 
-const pushStateSchema = z.object({
-  subscriptions: z.array(
-    z.object({
-      subscription: pushSubscriptionSchema,
-      createdAt: z.number(),
-    }),
-  ),
+const alertStateSchema = z.object({
+  enabled: z.boolean(),
   leadMinutes: leadMinutesSchema,
   watchSessionId: z.string().nullable(),
 });
 
-const favoritesSchema = z.array(z.number().int());
-
 /**
- * Datos propios del Companion por cuenta de HikariRO (favoritos y avisos).
- * Es lo único que se persiste: no hace falta una base de datos relacional.
+ * Datos propios de Hikari Hub por cuenta de HikariRO (favoritos y avisos).
+ * Es lo único que se persiste: no hace falta una base de datos.
  */
 export interface UserDataStore {
   getFavorites(username: string): Promise<number[]>;
   setFavorites(username: string, ids: number[]): Promise<void>;
-  getPush(username: string): Promise<PushState>;
-  setPush(username: string, state: PushState): Promise<void>;
-  /** Usuarios con al menos un dispositivo suscrito. */
-  pushUsers(): Promise<string[]>;
+  getAlerts(username: string): Promise<AlertState>;
+  setAlerts(username: string, state: AlertState): Promise<void>;
+  /** Usuarios con los avisos activados. */
+  alertUsers(): Promise<string[]>;
   /** Marca un aviso como enviado; devuelve `false` si ya lo estaba (evita duplicados). */
   claimNotification(key: string, ttlSeconds: number): Promise<boolean>;
   /** Borra favoritos y avisos de la cuenta. */
@@ -57,103 +40,83 @@ export interface UserDataStore {
 
 export const userKey = (username: string) => username.trim().toLowerCase();
 
+const userDataSchema = z.object({
+  favorites: z.record(z.string(), z.array(z.number().int())),
+  alerts: z.record(z.string(), alertStateSchema),
+  claims: z.record(z.string(), z.number()),
+});
+type UserData = z.infer<typeof userDataSchema>;
+
+const emptyData = (): UserData => ({ favorites: {}, alerts: {}, claims: {} });
+
+const without = <T>(record: Record<string, T>, key: string): Record<string, T> =>
+  Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key));
+
+/** Implementación en memoria; `onChange` permite volcarla a disco. */
 export class MemoryUserDataStore implements UserDataStore {
-  private readonly favorites = new Map<string, number[]>();
-  private readonly push = new Map<string, PushState>();
-  private readonly claims = new Map<string, number>();
+  protected readonly data: UserData;
+
+  constructor(initial: UserData = emptyData()) {
+    this.data = initial;
+  }
 
   async getFavorites(username: string): Promise<number[]> {
-    return [...(this.favorites.get(userKey(username)) ?? [])];
+    return [...(this.data.favorites[userKey(username)] ?? [])];
   }
 
   async setFavorites(username: string, ids: number[]): Promise<void> {
-    this.favorites.set(userKey(username), [...ids]);
+    this.data.favorites[userKey(username)] = [...ids];
+    await this.onChange();
   }
 
-  async getPush(username: string): Promise<PushState> {
-    const state = this.push.get(userKey(username));
-    return state ? structuredClone(state) : defaultPushState();
+  async getAlerts(username: string): Promise<AlertState> {
+    const state = this.data.alerts[userKey(username)];
+    return state ? structuredClone(state) : defaultAlertState();
   }
 
-  async setPush(username: string, state: PushState): Promise<void> {
-    this.push.set(userKey(username), structuredClone(state));
+  async setAlerts(username: string, state: AlertState): Promise<void> {
+    this.data.alerts[userKey(username)] = structuredClone(state);
+    await this.onChange();
   }
 
-  async pushUsers(): Promise<string[]> {
-    return [...this.push.entries()]
-      .filter(([, state]) => state.subscriptions.length > 0)
+  async alertUsers(): Promise<string[]> {
+    return Object.entries(this.data.alerts)
+      .filter(([, state]) => state.enabled)
       .map(([username]) => username);
   }
 
   async claimNotification(key: string, ttlSeconds: number): Promise<boolean> {
     const now = Date.now();
-    const expiresAt = this.claims.get(key);
-    if (expiresAt !== undefined && expiresAt > now) return false;
-    this.claims.set(key, now + ttlSeconds * 1000);
+    this.data.claims = Object.fromEntries(
+      Object.entries(this.data.claims).filter(([, expiresAt]) => expiresAt > now),
+    );
+    if (this.data.claims[key] !== undefined) return false;
+    this.data.claims[key] = now + ttlSeconds * 1000;
+    await this.onChange();
     return true;
   }
 
   async deleteUser(username: string): Promise<void> {
-    this.favorites.delete(userKey(username));
-    this.push.delete(userKey(username));
+    const key = userKey(username);
+    this.data.favorites = without(this.data.favorites, key);
+    this.data.alerts = without(this.data.alerts, key);
+    await this.onChange();
   }
+
+  protected async onChange(): Promise<void> {}
 }
 
-export class RedisUserDataStore implements UserDataStore {
-  constructor(
-    private readonly redis: Redis,
-    private readonly prefix = 'hrc:',
-  ) {}
+/** Guarda los datos en un archivo JSON del perfil del usuario de Windows. */
+export class FileUserDataStore extends MemoryUserDataStore {
+  private readonly file: JsonFile<UserData>;
 
-  private key(username: string, field: string) {
-    return `${this.prefix}user:${userKey(username)}:${field}`;
+  constructor(path: string) {
+    const file = new JsonFile(path, userDataSchema, emptyData);
+    super(file.load());
+    this.file = file;
   }
 
-  async getFavorites(username: string): Promise<number[]> {
-    const raw = await this.redis.get(this.key(username, 'favorites'));
-    const parsed = favoritesSchema.safeParse(raw ? JSON.parse(raw) : []);
-    return parsed.success ? parsed.data : [];
-  }
-
-  async setFavorites(username: string, ids: number[]): Promise<void> {
-    await this.redis.set(this.key(username, 'favorites'), JSON.stringify(ids));
-  }
-
-  async getPush(username: string): Promise<PushState> {
-    const raw = await this.redis.get(this.key(username, 'push'));
-    if (!raw) return defaultPushState();
-    const parsed = pushStateSchema.safeParse(JSON.parse(raw));
-    return parsed.success ? parsed.data : defaultPushState();
-  }
-
-  async setPush(username: string, state: PushState): Promise<void> {
-    const users = `${this.prefix}push:users`;
-    const multi = this.redis.multi().set(this.key(username, 'push'), JSON.stringify(state));
-    if (state.subscriptions.length) multi.sadd(users, userKey(username));
-    else multi.srem(users, userKey(username));
-    await multi.exec();
-  }
-
-  pushUsers(): Promise<string[]> {
-    return this.redis.smembers(`${this.prefix}push:users`);
-  }
-
-  async claimNotification(key: string, ttlSeconds: number): Promise<boolean> {
-    const result = await this.redis.set(
-      `${this.prefix}push:sent:${key}`,
-      '1',
-      'EX',
-      ttlSeconds,
-      'NX',
-    );
-    return result === 'OK';
-  }
-
-  async deleteUser(username: string): Promise<void> {
-    await this.redis
-      .multi()
-      .del(this.key(username, 'favorites'), this.key(username, 'push'))
-      .srem(`${this.prefix}push:users`, userKey(username))
-      .exec();
+  protected override onChange(): Promise<void> {
+    return this.file.save(this.data);
   }
 }

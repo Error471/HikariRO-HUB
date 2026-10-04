@@ -1,4 +1,4 @@
-import type { MarketType } from '@hrc/shared';
+import type { MarketType } from '@hikari-hub/shared';
 import { getRouteApi } from '@tanstack/react-router';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { MarketPage } from '@/features/markets/MarketPage';

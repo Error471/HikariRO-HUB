@@ -13,12 +13,11 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
-  TRUST_PROXY: booleanFromString.default(false),
 
   APP_ORIGIN: z.url(),
 
   HIKARI_BASE_URL: z.url().default('https://hikariro.com'),
-  HIKARI_USER_AGENT: z.string().min(1).default('HikariRO-Companion/0.1'),
+  HIKARI_USER_AGENT: z.string().min(1).default('HikariHub/0.1'),
   HIKARI_NEWS_FEED_URL: z.url().default('https://api.hikariro.com/discord/feed.php'),
   HIKARI_TIMEOUT_MS: z.coerce.number().int().positive().default(10_000),
 
@@ -27,20 +26,23 @@ const envSchema = z.object({
   SESSION_TTL_HOURS: z.coerce.number().positive().default(48),
   SESSION_REVALIDATE_SECONDS: z.coerce.number().int().positive().default(300),
   COOKIE_SECURE: booleanFromString.default(true),
+  /** Permite "Mantener la sesión iniciada" (contraseña cifrada). Solo en la app de escritorio. */
+  ALLOW_REMEMBER: booleanFromString.default(false),
+  /** Cada cuántos minutos se visita HikariRO para que no cierre la sesión por inactividad (0 = nunca). */
+  KEEPALIVE_MINUTES: z.coerce.number().int().min(0).max(60).default(5),
 
-  REDIS_URL: z.string().optional(),
+  /** Carpeta donde se guardan sesiones, favoritos y avisos. Sin ella, todo vive en memoria. */
+  DATA_DIR: z.string().min(1).optional(),
+  /** Build de la web (`apps/web/dist`) para servirla desde la propia API. */
+  WEB_DIST_DIR: z.string().min(1).optional(),
+  /** Archivo de log; sin él se escribe en la salida estándar. */
+  LOG_FILE: z.string().min(1).optional(),
 
   /** Contacto del responsable de esta instancia, mostrado en la página de privacidad. */
   PRIVACY_CONTACT: z.string().trim().max(200).optional(),
 
-  // Avisos push (opcionales): genera las claves con `pnpm --filter @hrc/api vapid`.
-  VAPID_PUBLIC_KEY: z.string().optional(),
-  VAPID_PRIVATE_KEY: z.string().optional(),
-  VAPID_SUBJECT: z
-    .string()
-    .regex(/^(mailto:|https:\/\/)/, 'Debe empezar por mailto: o https://')
-    .optional(),
-  PUSH_POLL_SECONDS: z.coerce.number().int().min(30).max(600).default(60),
+  /** Cada cuánto consulta el MVP Timer el vigilante de avisos. */
+  ALERT_POLL_SECONDS: z.coerce.number().int().min(30).max(600).default(60),
 
   LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   LOGIN_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
@@ -55,19 +57,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
       .map((issue) => `  - ${issue.path.join('.')}: ${issue.message}`)
       .join('\n');
     throw new Error(`Configuración inválida:\n${issues}`);
-  }
-  if (result.data.NODE_ENV === 'production' && !result.data.REDIS_URL) {
-    throw new Error('Configuración inválida:\n  - REDIS_URL es obligatoria en producción');
-  }
-  const vapid = [
-    result.data.VAPID_PUBLIC_KEY,
-    result.data.VAPID_PRIVATE_KEY,
-    result.data.VAPID_SUBJECT,
-  ];
-  if (vapid.some(Boolean) && !vapid.every(Boolean)) {
-    throw new Error(
-      'Configuración inválida:\n  - VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY y VAPID_SUBJECT van juntas',
-    );
   }
   return result.data;
 }

@@ -21,7 +21,7 @@ export function NewsWidget() {
       <header className="flex items-start justify-between gap-4">
         <h2
           id="widget-news"
-          className="flex items-center gap-2 font-display text-lg font-semibold tracking-wide"
+          className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
         >
           <Megaphone aria-hidden="true" className="size-5 text-gold-300" />
           Últimas noticias

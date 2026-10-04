@@ -4,7 +4,7 @@ import {
   wikiIndexResponseSchema,
   wikiPageSchema,
   wikiSearchResponseSchema,
-} from '@hrc/shared';
+} from '@hikari-hub/shared';
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api-client';
 

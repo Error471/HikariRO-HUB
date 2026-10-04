@@ -1,4 +1,4 @@
-import type { MarketType } from '@hrc/shared';
+import type { MarketType } from '@hikari-hub/shared';
 import { ShoppingBag, Store, type LucideIcon } from 'lucide-react';
 
 export interface MarketMeta {

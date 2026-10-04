@@ -8,19 +8,32 @@ export interface ActiveSession {
   record: SessionRecord;
 }
 
+/** Vuelve a iniciar sesión en HikariRO (lo usa "Mantener la sesión iniciada"). */
+export type Relogin = (username: string, password: string) => Promise<CookieJar>;
+
 export interface SessionServiceOptions {
   ttlMs: number;
   revalidateMs: number;
+  /** Si existe, las sesiones creadas con contraseña pueden recuperarse solas. */
+  relogin?: Relogin;
 }
 
 export class SessionService {
+  // Evita dos logins a la vez para la misma sesión (vigilante + petición del usuario).
+  private readonly recovering = new Map<string, Promise<ActiveSession | null>>();
+
   constructor(
     private readonly store: SessionStore,
     private readonly sealer: Sealer,
     private readonly options: SessionServiceOptions,
   ) {}
 
-  async create(username: string, jar: CookieJar): Promise<ActiveSession> {
+  get canRemember(): boolean {
+    return this.options.relogin !== undefined;
+  }
+
+  /** `password` solo se guarda (cifrada) si el usuario pidió mantener la sesión iniciada. */
+  async create(username: string, jar: CookieJar, password?: string): Promise<ActiveSession> {
     const now = Date.now();
     const id = randomToken();
     const record: SessionRecord = {
@@ -30,6 +43,7 @@ export class SessionService {
       createdAt: now,
       expiresAt: now + this.options.ttlMs,
       validatedAt: now,
+      ...(password && this.canRemember && { credentials: this.sealer.seal(password) }),
     };
     await this.store.set(id, record);
     return { id, record };
@@ -39,6 +53,10 @@ export class SessionService {
     const record = await this.store.get(id);
     if (!record || record.expiresAt <= Date.now()) return null;
     return { id, record };
+  }
+
+  list(): Promise<string[]> {
+    return this.store.list();
   }
 
   destroy(id: string): Promise<void> {
@@ -71,26 +89,64 @@ export class SessionService {
   }
 
   /**
-   * Usa la sesión sin una petición del usuario (avisos en segundo plano). Guarda las
-   * cookies rotadas pero no extiende la caducidad: la sesión caduca igual que si no se usara.
+   * HikariRO cerró su sesión: si el usuario pidió mantenerla, vuelve a entrar con la
+   * contraseña guardada. Devuelve `null` (y destruye la sesión) si no es posible.
+   * Si HikariRO no responde, el error se propaga y la sesión se conserva.
+   */
+  recover(session: ActiveSession): Promise<ActiveSession | null> {
+    const pending = this.recovering.get(session.id);
+    if (pending) return pending;
+    const attempt = this.relogin(session).finally(() => this.recovering.delete(session.id));
+    this.recovering.set(session.id, attempt);
+    return attempt;
+  }
+
+  /**
+   * Usa la sesión sin una petición del usuario (avisos y mantenimiento en segundo plano).
+   * Guarda las cookies rotadas pero no extiende la caducidad de la sesión de Hikari Hub.
    */
   async runDetached<T>(
     sessionId: string,
     task: (jar: CookieJar, session: ActiveSession) => Promise<T>,
   ): Promise<{ status: 'ok'; value: T } | { status: 'gone' }> {
-    const session = await this.find(sessionId);
-    if (!session) return { status: 'gone' };
-    try {
-      const jar = this.openJar(session);
-      const value = await task(jar, session);
-      await this.store.set(sessionId, { ...session.record, upstream: this.sealJar(jar) });
-      return { status: 'ok', value };
-    } catch (error) {
-      if (error instanceof AppError && error.code === 'SESSION_EXPIRED') {
-        await this.destroy(sessionId);
-        return { status: 'gone' };
+    const found = await this.find(sessionId);
+    if (!found) return { status: 'gone' };
+    let session: ActiveSession = found;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const jar = this.openJar(session);
+        const value = await task(jar, session);
+        await this.store.set(sessionId, { ...session.record, upstream: this.sealJar(jar) });
+        return { status: 'ok', value };
+      } catch (error) {
+        if (!(error instanceof AppError && error.code === 'SESSION_EXPIRED')) throw error;
+        const recovered: ActiveSession | null = attempt === 0 ? await this.recover(session) : null;
+        if (!recovered) {
+          await this.destroy(sessionId);
+          return { status: 'gone' };
+        }
+        session = recovered;
       }
-      throw error;
+    }
+    return { status: 'gone' };
+  }
+
+  private async relogin(session: ActiveSession): Promise<ActiveSession | null> {
+    const { credentials, username } = session.record;
+    if (!credentials || !this.options.relogin) {
+      await this.destroy(session.id);
+      return null;
+    }
+    try {
+      const jar = await this.options.relogin(username, this.sealer.unseal(credentials));
+      const current = (await this.find(session.id)) ?? session;
+      return await this.touch(current, jar, true);
+    } catch (error) {
+      // Contraseña cambiada o datos dañados: hay que volver a entrar a mano.
+      if (error instanceof AppError && error.code !== 'INVALID_CREDENTIALS') throw error;
+      await this.destroy(session.id);
+      return null;
     }
   }
 

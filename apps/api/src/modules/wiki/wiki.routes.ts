@@ -1,4 +1,4 @@
-import { wikiSearchQuerySchema, wikiTitleSchema } from '@hrc/shared';
+import { wikiSearchQuerySchema, wikiTitleSchema } from '@hikari-hub/shared';
 import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
 import { z } from 'zod';
 import type { WikiService } from './wiki.service.js';

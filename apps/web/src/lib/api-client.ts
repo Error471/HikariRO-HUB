@@ -1,4 +1,9 @@
-import { apiErrorBodySchema, CSRF_HEADER, defaultErrorMessages, type ErrorCode } from '@hrc/shared';
+import {
+  apiErrorBodySchema,
+  CSRF_HEADER,
+  defaultErrorMessages,
+  type ErrorCode,
+} from '@hikari-hub/shared';
 import type { z } from 'zod';
 
 export type ClientErrorCode = ErrorCode | 'NETWORK_ERROR';
@@ -15,7 +20,7 @@ export class ApiError extends Error {
 }
 
 const NETWORK_MESSAGE =
-  'No se ha podido conectar con el Companion. Comprueba tu conexión e inténtalo nuevamente.';
+  'No se ha podido conectar con Hikari Hub. Comprueba tu conexión e inténtalo nuevamente.';
 
 let csrfToken: string | null = null;
 

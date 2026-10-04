@@ -1,4 +1,4 @@
-import { sessionResponseSchema, type LoginRequest, type SessionResponse } from '@hrc/shared';
+import { sessionResponseSchema, type LoginRequest, type SessionResponse } from '@hikari-hub/shared';
 import { queryOptions, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ApiError, apiRequest, setCsrfToken } from '@/lib/api-client';
 
@@ -69,25 +69,11 @@ export function useLogout() {
   });
 }
 
-/** Da de baja los avisos de este navegador (si los hay); no falla si no hay service worker. */
-async function unsubscribeThisBrowser(): Promise<void> {
-  try {
-    const registration = await navigator.serviceWorker?.getRegistration();
-    const subscription = await registration?.pushManager.getSubscription();
-    await subscription?.unsubscribe();
-  } catch {
-    // El servidor ya olvida el dispositivo; esto solo limpia el navegador.
-  }
-}
-
-/** Borra favoritos, avisos y la sesión del Companion. */
+/** Borra favoritos, avisos y la sesión de Hikari Hub. */
 export function useDeleteAccountData() {
   const clearSession = useClearSession();
   return useMutation({
-    mutationFn: async () => {
-      await apiRequest('/account/data', { method: 'DELETE' });
-      await unsubscribeThisBrowser();
-    },
+    mutationFn: () => apiRequest('/account/data', { method: 'DELETE' }),
     onSuccess: clearSession,
   });
 }

@@ -16,7 +16,6 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { StatusScreen } from '@/components/ui/StatusScreen';
 import { LoginPage, safeRedirect } from '@/features/auth/LoginPage';
 import { sessionQuery } from '@/features/auth/session';
-import { PwaUpdater } from '@/features/pwa/PwaUpdater';
 import { errorMessage } from '@/lib/api-client';
 import { AppShell } from './layout/AppShell';
 import { modules } from './navigation';
@@ -40,7 +39,6 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
     <>
       <Outlet />
       <Toaster theme="dark" position="top-center" richColors closeButton />
-      <PwaUpdater />
     </>
   ),
   pendingComponent: () => <StatusScreen title="Conectando…" busy />,

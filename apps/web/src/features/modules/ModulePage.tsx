@@ -40,7 +40,7 @@ export function ModulePage({ module }: { module: ModuleDefinition }) {
           href={module.sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink transition hover:border-gold-400/40"
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink transition hover:border-white/20"
         >
           Ver en HikariRO
           <ArrowUpRight aria-hidden="true" className="size-4" />

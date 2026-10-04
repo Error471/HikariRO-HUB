@@ -1,4 +1,4 @@
-import type { CardSort, CardStatus } from '@hrc/shared';
+import type { CardSort, CardStatus } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Layers } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -90,7 +90,7 @@ export function CardAlbumPage({ params, onParamsChange }: CardAlbumPageProps) {
         description="Tu colección de cartas en HikariRO."
       />
 
-      <section className="frame-gold rounded-card p-5 sm:p-6">
+      <section className="panel rounded-card p-5 sm:p-6">
         {progress ? (
           <ProgressMeter
             label="Progreso de la colección"

@@ -1,4 +1,4 @@
-import type { Fish } from '@hrc/shared';
+import type { Fish } from '@hikari-hub/shared';
 import { Fish as FishIcon, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
@@ -66,7 +66,7 @@ export function FishTile({ fish }: { fish: Fish }) {
   }
 
   return (
-    <article className="flex flex-col items-center gap-2 rounded-card border border-mana-400/20 bg-gradient-to-b from-mana-600/10 to-night-850/80 p-4 text-center">
+    <article className="flex flex-col items-center gap-2 rounded-card border border-white/8 bg-night-850 p-4 text-center">
       <FishImage src={fish.imageUrl} iconUrl={fish.iconUrl} discovered />
       <h3 className="font-semibold text-ink">
         {fish.itemId ? (

@@ -46,7 +46,7 @@ describe('POST /api/auth/login', () => {
     expect(body.csrfToken).toEqual(expect.any(String));
 
     const setCookie = String(response.headers['set-cookie']);
-    expect(setCookie).toMatch(/^__Host-hrc_sid=/);
+    expect(setCookie).toMatch(/^__Host-hh_sid=/);
     expect(setCookie).toContain('HttpOnly');
     expect(setCookie).toContain('Secure');
     expect(setCookie).toContain('SameSite=Strict');
@@ -155,7 +155,7 @@ describe('GET /api/auth/me', () => {
     const expired = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
     expect(expired.statusCode).toBe(401);
     expect(expired.json().error.code).toBe('SESSION_EXPIRED');
-    expect(String(expired.headers['set-cookie'])).toMatch(/__Host-hrc_sid=;/);
+    expect(String(expired.headers['set-cookie'])).toMatch(/__Host-hh_sid=;/);
 
     const again = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
     expect(again.json().error.code).toBe('SESSION_EXPIRED');
@@ -197,7 +197,7 @@ describe('POST /api/auth/logout', () => {
       headers: { cookie, origin: APP_ORIGIN, 'x-csrf-token': body.csrfToken },
     });
     expect(response.statusCode).toBe(204);
-    expect(String(response.headers['set-cookie'])).toMatch(/__Host-hrc_sid=;/);
+    expect(String(response.headers['set-cookie'])).toMatch(/__Host-hh_sid=;/);
 
     const me = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
     expect(me.statusCode).toBe(401);

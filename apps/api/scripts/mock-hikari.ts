@@ -1,6 +1,6 @@
 /**
  * Servidor que imita el login de FluxCP de HikariRO para desarrollar sin conexión.
- * Credenciales de prueba: demo / demo. Uso: pnpm --filter @hrc/api mock:hikari
+ * Credenciales de prueba: demo / demo. Uso: pnpm --filter @hikari-hub/api mock:hikari
  */
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';

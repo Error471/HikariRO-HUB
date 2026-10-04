@@ -1,5 +1,3 @@
-import type { Redis } from 'ioredis';
-
 /** Cuenta intentos fallidos por usuario para no provocar bloqueos en HikariRO. */
 export interface LoginThrottle {
   isBlocked(key: string): Promise<boolean>;
@@ -39,29 +37,6 @@ export class MemoryLoginThrottle implements LoginThrottle {
       return undefined;
     }
     return entry;
-  }
-}
-
-export class RedisLoginThrottle implements LoginThrottle {
-  constructor(
-    private readonly redis: Redis,
-    private readonly options: ThrottleOptions,
-    private readonly prefix = 'hrc:login-fail:',
-  ) {}
-
-  async isBlocked(key: string): Promise<boolean> {
-    const count = Number((await this.redis.get(this.prefix + key)) ?? 0);
-    return count >= this.options.maxAttempts;
-  }
-
-  async registerFailure(key: string): Promise<void> {
-    const redisKey = this.prefix + key;
-    const count = await this.redis.incr(redisKey);
-    if (count === 1) await this.redis.pexpire(redisKey, this.options.windowMs);
-  }
-
-  async reset(key: string): Promise<void> {
-    await this.redis.del(this.prefix + key);
   }
 }
 

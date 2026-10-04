@@ -1,4 +1,4 @@
-import type { WikiPage } from '@hrc/shared';
+import type { WikiPage } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, BookX, CornerDownRight, ListTree, Tag } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -86,7 +86,7 @@ export function WikiArticlePage({ title }: { title: string }) {
       />
 
       <header className="flex flex-col gap-3">
-        <h1 className="font-display text-3xl font-bold tracking-wide text-balance sm:text-4xl">
+        <h1 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           {page.title}
         </h1>
         {page.redirectedFrom && (
@@ -101,7 +101,7 @@ export function WikiArticlePage({ title }: { title: string }) {
               <li key={category}>
                 <CategoryLink
                   name={category}
-                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-0.5 text-xs text-ink-muted transition hover:border-gold-400/40 hover:text-gold-200"
+                  className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-0.5 text-xs text-ink-muted transition hover:border-white/20 hover:text-gold-200"
                 >
                   <Tag aria-hidden="true" className="size-3" />
                   {category}

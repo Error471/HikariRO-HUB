@@ -36,19 +36,7 @@ describe('DELETE /api/account/data', () => {
   it('borra favoritos, avisos y la sesión', async () => {
     const { cookie, csrf } = await loginAs(app, pool);
     await userData.setFavorites('ivan', [1039]);
-    await userData.setPush('ivan', {
-      subscriptions: [
-        {
-          subscription: {
-            endpoint: 'https://fcm.googleapis.com/fcm/send/a',
-            keys: { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) },
-          },
-          createdAt: 1,
-        },
-      ],
-      leadMinutes: 10,
-      watchSessionId: 'x',
-    });
+    await userData.setAlerts('ivan', { enabled: true, leadMinutes: 10, watchSessionId: 'x' });
 
     pool
       .intercept({ path: '/?module=account&action=logout', method: 'GET' })
@@ -56,13 +44,13 @@ describe('DELETE /api/account/data', () => {
     const response = await remove({ cookie, 'x-csrf-token': csrf });
 
     expect(response.statusCode).toBe(204);
-    expect(String(response.headers['set-cookie'])).toMatch(/__Host-hrc_sid=;/);
+    expect(String(response.headers['set-cookie'])).toMatch(/__Host-hh_sid=;/);
     expect(await userData.getFavorites('ivan')).toEqual([]);
-    expect(await userData.getPush('ivan')).toMatchObject({
-      subscriptions: [],
+    expect(await userData.getAlerts('ivan')).toMatchObject({
+      enabled: false,
       watchSessionId: null,
     });
-    expect(await userData.pushUsers()).toEqual([]);
+    expect(await userData.alertUsers()).toEqual([]);
 
     const me = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
     expect(me.statusCode).toBe(401);
@@ -85,7 +73,7 @@ describe('GET /api/info', () => {
     const { app } = await createTestApp(agent);
     const response = await app.inject({ method: 'GET', url: '/api/info' });
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toEqual({ privacyContact: null });
+    expect(response.json()).toEqual({ privacyContact: null, rememberAvailable: false });
     await app.close();
     await agent.close();
   });

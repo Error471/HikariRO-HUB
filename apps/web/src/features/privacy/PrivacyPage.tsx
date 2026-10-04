@@ -1,10 +1,9 @@
-import { publicInfoSchema } from '@hrc/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowLeft, Check, X } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Brand } from '@/components/ui/Brand';
-import { apiRequest } from '@/lib/api-client';
+import { publicInfoQuery } from './public-info';
 
 const stored: { what: string; why: string; until: string }[] = [
   {
@@ -13,34 +12,34 @@ const stored: { what: string; why: string; until: string }[] = [
     until: 'Hasta que borres tus datos.',
   },
   {
-    what: 'La sesión de HikariRO (cookie), cifrada con AES-256',
-    why: 'Consultar en tu nombre el MVP Timer, los álbumes y los mercados.',
-    until: 'Hasta que cierres sesión o pasen 48 h sin usar la app.',
+    what: 'La sesión de HikariRO (cookie), cifrada con AES-256 y con una clave protegida por Windows',
+    why: 'Consultar en tu nombre el MVP Timer, los álbumes y los mercados sin pedirte la contraseña cada vez.',
+    until: 'Hasta que cierres sesión o HikariRO la dé por caducada.',
   },
   {
-    what: 'Tus MVPs favoritos',
-    why: 'Verlos en todos tus dispositivos y avisarte de ellos.',
+    what: 'Tu contraseña, solo si marcas «Mantener la sesión iniciada en este PC», cifrada con AES-256 y una clave protegida por Windows',
+    why: 'Volver a entrar sola cuando HikariRO cierra la sesión (por ejemplo, tras apagar o suspender el PC).',
+    until: 'Hasta que cierres sesión o borres tus datos.',
+  },
+  {
+    what: 'Tus MVPs favoritos y la configuración de los avisos',
+    why: 'Mostrártelos y avisarte de ellos.',
     until: 'Hasta que los quites o borres tus datos.',
   },
   {
-    what: 'Dispositivos con avisos activados (dirección del servicio de notificaciones del navegador y sus claves de cifrado) y la antelación elegida',
-    why: 'Enviarte los avisos de MVP.',
-    until: 'Hasta que desactives los avisos o borres tus datos.',
-  },
-  {
-    what: 'Marcas de avisos ya enviados',
-    why: 'No mandarte el mismo aviso dos veces.',
+    what: 'Marcas de avisos ya mostrados',
+    why: 'No avisarte dos veces de lo mismo.',
     until: '24 h; se borran solas.',
   },
   {
     what: 'Copias temporales de lo que muestra HikariRO (MVPs, mercados, álbumes, wiki, noticias)',
     why: 'Que la app sea rápida y no sobrecargar HikariRO.',
-    until: 'Entre 10 s y 30 min, en memoria.',
+    until: 'Entre 10 s y 30 min, en memoria; desaparecen al cerrar la app.',
   },
 ];
 
 const notStored = [
-  'Tu contraseña: viaja cifrada (HTTPS) hasta HikariRO solo para iniciar sesión y no se guarda ni se registra.',
+  'Tu contraseña, si no marcas «Mantener la sesión iniciada»: viaja cifrada (HTTPS) desde tu PC hasta HikariRO solo para iniciar sesión y no se guarda. Nunca se registra.',
   'Datos de pago, correo o datos personales de tu cuenta.',
   'Analítica, publicidad ni cookies de terceros.',
 ];
@@ -48,19 +47,15 @@ const notStored = [
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-display text-xl font-bold text-gold-200">{title}</h2>
+      <h2 className="font-display text-xl font-semibold text-gold-200">{title}</h2>
       <div className="flex flex-col gap-3 text-sm leading-relaxed text-ink-muted">{children}</div>
     </section>
   );
 }
 
-/** Página pública: qué guarda el Companion, qué no y cómo borrar los datos. */
+/** Página pública: qué guarda Hikari Hub, qué no y cómo borrar los datos. */
 export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
-  const info = useQuery({
-    queryKey: ['public-info'],
-    queryFn: ({ signal }) => apiRequest('/info', { schema: publicInfoSchema, signal }),
-    staleTime: Infinity,
-  });
+  const info = useQuery(publicInfoQuery);
   const contact = info.data?.privacyContact;
 
   return (
@@ -69,7 +64,7 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
         <Brand />
         <Link
           to={authenticated ? '/' : '/login'}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-gold-400/40 hover:text-ink"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
         >
           <ArrowLeft aria-hidden="true" className="size-4" />
           {authenticated ? 'Volver a la app' : 'Volver al inicio de sesión'}
@@ -77,29 +72,26 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
       </header>
 
       <div className="flex flex-col gap-3 animate-rise">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-gold-400/80">
-          Privacidad
-        </p>
-        <h1 className="font-display text-3xl font-bold text-balance sm:text-4xl">
+        <p className="text-sm font-medium text-ink-faint">Privacidad</p>
+        <h1 className="font-display text-3xl font-semibold text-balance sm:text-4xl">
           Privacidad y cómo funciona
         </h1>
         <p className="text-ink-muted">
-          HikariRO Companion es una app no oficial creada por jugadores. No está afiliada a
-          HikariRO. Aquí se explica qué datos guarda, para qué y cómo borrarlos.
+          Hikari Hub es una app no oficial creada por jugadores. No está afiliada a HikariRO. Aquí
+          se explica qué datos guarda, para qué y cómo borrarlos.
         </p>
       </div>
 
       <Section title="Cómo funciona">
         <p>
-          El Companion no tiene cuentas propias: entras con tu usuario y contraseña de HikariRO. El
-          servidor del Companion inicia sesión en HikariRO por ti y, a partir de ahí, consulta en tu
-          nombre las mismas páginas que verías en la web (MVP Timer, álbumes, mercados…) para
-          mostrarlas aquí.
+          Hikari Hub no tiene cuentas propias ni servidores: entras con tu usuario y contraseña de
+          HikariRO y la app, que se ejecuta en tu PC, inicia sesión en HikariRO por ti. A partir de
+          ahí consulta en tu nombre las mismas páginas que verías en la web (MVP Timer, álbumes,
+          mercados…) para mostrarlas aquí.
         </p>
         <p>
-          Tu navegador nunca recibe la sesión de HikariRO: solo una cookie técnica propia (
-          <code className="text-ink">__Host-hrc_sid</code>) que identifica tu sesión en el
-          Companion. No hay cookies de publicidad ni de seguimiento.
+          Todo lo que guarda se queda en tu PC, en la carpeta de datos de Hikari Hub de tu usuario
+          de Windows. Nadie más, tampoco quien creó la app, puede verlo.
         </p>
       </Section>
 
@@ -132,31 +124,28 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
           ))}
         </ul>
         <p>
-          Los registros técnicos del servidor pueden incluir tu dirección IP y las páginas
-          solicitadas, para detectar errores y abusos. Nunca incluyen contraseñas ni cookies.
+          La app guarda en tu PC un registro de errores técnicos para poder diagnosticarlos. Nunca
+          incluye contraseñas ni cookies.
         </p>
       </Section>
 
       <Section title="Con quién se comparten">
         <p>
-          Con <strong className="text-ink">HikariRO</strong>, para iniciar sesión y consultar tus
-          datos. Si activas los avisos, el servicio de notificaciones de tu navegador (Google,
-          Mozilla, Apple o Microsoft) entrega los avisos cifrados. Con nadie más.
+          Solo con <strong className="text-ink">HikariRO</strong>, para iniciar sesión y consultar
+          tus datos. La app también consulta GitHub para saber si hay una versión nueva, sin enviar
+          ningún dato tuyo. Los avisos de MVP los muestra Windows en tu propio PC.
         </p>
       </Section>
 
       <Section title="Cómo borrar tus datos">
         <p>
-          En el panel de usuario (abajo en la barra lateral; en el móvil, menú{' '}
-          <strong className="text-ink">Más</strong>) pulsa{' '}
+          En el panel de usuario (abajo en la barra lateral) pulsa{' '}
           <strong className="text-ink">Borrar mis datos</strong>. Se eliminan al momento tus
-          favoritos, tus dispositivos con avisos y la sesión de ese dispositivo, y se cierra tu
-          sesión en HikariRO.
+          favoritos, tus avisos y la sesión guardada, y se cierra tu sesión en HikariRO.
         </p>
         <p>
-          Si tienes la sesión abierta en otros dispositivos, se cierra sola a las 48 h sin uso o
-          cuando cierres sesión en ellos. Para dejar de recibir avisos en un solo dispositivo, usa{' '}
-          <strong className="text-ink">MVP Timer → Avisos → Desactivar</strong>.
+          Al desinstalar Hikari Hub desde la configuración de Windows se borra también toda su
+          carpeta de datos.
         </p>
       </Section>
 

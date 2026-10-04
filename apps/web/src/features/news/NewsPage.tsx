@@ -1,4 +1,4 @@
-import type { NewsSection } from '@hrc/shared';
+import type { NewsSection } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Newspaper } from 'lucide-react';
 import { modules } from '@/app/navigation';
@@ -35,7 +35,7 @@ export function NewsPage({ section, onSectionChange }: NewsPageProps) {
   return (
     <div className="flex flex-col gap-6 animate-rise">
       <PageHeader
-        eyebrow="Comunidad HikariRO"
+        eyebrow="Comunidad"
         title="Noticias"
         description={
           data?.updatedAt

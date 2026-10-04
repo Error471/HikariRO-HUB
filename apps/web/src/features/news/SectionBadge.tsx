@@ -1,4 +1,4 @@
-import type { NewsSection } from '@hrc/shared';
+import type { NewsSection } from '@hikari-hub/shared';
 import { cn } from '@/lib/cn';
 import { sectionMeta } from './news-query';
 

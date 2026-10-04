@@ -1,4 +1,4 @@
-import type { MarketOffer, MarketType } from '@hrc/shared';
+import type { MarketOffer, MarketType } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { PackageSearch, Search } from 'lucide-react';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -20,7 +20,7 @@ function ResultSection({ type, offers }: { type: MarketType; offers: MarketOffer
     <section aria-labelledby={`results-${type}`} className="flex flex-col gap-3">
       <h2
         id={`results-${type}`}
-        className="flex items-center gap-2 font-display text-lg font-semibold tracking-wide"
+        className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
       >
         <Icon aria-hidden="true" className="size-5 text-gold-300" />
         {meta.label}

@@ -1,4 +1,4 @@
-import type { MarketItem, MarketType } from '@hrc/shared';
+import type { MarketItem, MarketType } from '@hikari-hub/shared';
 import { formatCount, formatZeny } from '@/lib/format';
 import { ItemIcon } from './ItemIcon';
 import { marketMeta } from './market-meta';

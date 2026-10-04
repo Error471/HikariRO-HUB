@@ -1,4 +1,4 @@
-import type { MarketShop } from '@hrc/shared';
+import type { MarketShop } from '@hikari-hub/shared';
 import { Link } from '@tanstack/react-router';
 import { MapPin, User } from 'lucide-react';
 import { formatCount, formatZeny } from '@/lib/format';
@@ -15,7 +15,7 @@ export function ShopCard({ shop }: { shop: MarketShop }) {
     shop.type === 'vending' ? '/mercados/vending/$shopId' : '/mercados/buying-store/$shopId';
 
   return (
-    <article className="group relative flex flex-col rounded-card border border-white/7 bg-night-850/80 p-4 transition duration-300 hover:-translate-y-0.5 hover:border-gold-400/35 sm:p-5">
+    <article className="group relative flex flex-col rounded-card border border-white/7 bg-night-850/80 p-4 transition duration-300 hover:border-white/20 sm:p-5">
       <div className="flex items-center justify-between text-xs text-ink-faint">
         <span>{meta.shopLabel}</span>
         <span className="tabular-nums">#{shop.id}</span>

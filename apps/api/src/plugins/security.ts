@@ -1,14 +1,12 @@
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import type { FastifyInstance } from 'fastify';
-import type { Redis } from 'ioredis';
 import { AppError } from '../lib/app-error.js';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
 export interface SecurityOptions {
   appOrigin: string;
-  redis?: Redis;
 }
 
 export async function registerSecurity(app: FastifyInstance, options: SecurityOptions) {
@@ -24,8 +22,8 @@ export async function registerSecurity(app: FastifyInstance, options: SecurityOp
     global: true,
     max: 300,
     timeWindow: '1 minute',
-    redis: options.redis,
-    nameSpace: 'hrc:ratelimit:',
+    // Los archivos de la web (app de escritorio) no cuentan: una sola carga pide decenas.
+    allowList: (request) => !request.url.startsWith('/api/'),
     errorResponseBuilder: () => new AppError('RATE_LIMITED'),
   });
 
@@ -37,7 +35,7 @@ export async function registerSecurity(app: FastifyInstance, options: SecurityOp
   });
 
   app.addHook('onSend', async (_request, reply, payload) => {
-    reply.header('cache-control', 'no-store');
+    if (!reply.hasHeader('cache-control')) reply.header('cache-control', 'no-store');
     return payload;
   });
 }

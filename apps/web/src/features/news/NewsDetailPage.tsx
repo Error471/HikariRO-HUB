@@ -46,7 +46,7 @@ export function NewsDetailPage({ postId }: { postId: string }) {
               <time dateTime={post.publishedAt}>{formatLongDate(post.publishedAt)}</time>
               <span>· {post.author}</span>
             </div>
-            <h1 className="mt-4 font-display text-2xl leading-tight font-bold tracking-wide text-balance sm:text-3xl">
+            <h1 className="mt-4 font-display text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl">
               {post.title}
             </h1>
           </header>
@@ -64,7 +64,7 @@ export function NewsDetailPage({ postId }: { postId: string }) {
               href={post.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-gold-400/40 hover:text-ink"
+              className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
             >
               Ver en Discord
               <ArrowUpRight aria-hidden="true" className="size-4" />

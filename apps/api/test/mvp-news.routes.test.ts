@@ -57,14 +57,14 @@ describe('GET /api/mvp', () => {
     expect(cached.statusCode).toBe(200);
   });
 
-  it('cierra la sesión del Companion si HikariRO redirige al login', async () => {
+  it('cierra la sesión de Hikari Hub si HikariRO redirige al login', async () => {
     const { cookie } = await loginAs(app, pool);
     mockMvp(302, '', { location: '/?module=account&action=login&return_url=%2F' });
 
     const response = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
     expect(response.statusCode).toBe(401);
     expect(response.json().error.code).toBe('SESSION_EXPIRED');
-    expect(String(response.headers['set-cookie'])).toMatch(/__Host-hrc_sid=;/);
+    expect(String(response.headers['set-cookie'])).toMatch(/__Host-hh_sid=;/);
 
     const me = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
     expect(me.json().error.code).toBe('SESSION_EXPIRED');

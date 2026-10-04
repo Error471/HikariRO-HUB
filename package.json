@@ -1,5 +1,5 @@
 {
-  "name": "hikariro-companion",
+  "name": "hikari-hub",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.28.0",
@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "dev": "pnpm --parallel --filter @hrc/api --filter @hrc/web dev",
+    "dev": "pnpm --parallel --filter @hikari-hub/api --filter @hikari-hub/web dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",

@@ -17,7 +17,7 @@ export function WikiCategoryPage({ name }: { name: string }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-gold-400/80">
           Categoría
         </p>
-        <h1 className="font-display text-3xl font-bold tracking-wide sm:text-4xl">{name}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{name}</h1>
       </header>
 
       {isPending ? (
@@ -34,7 +34,7 @@ export function WikiCategoryPage({ name }: { name: string }) {
                 <li key={subcategory}>
                   <CategoryLink
                     name={subcategory}
-                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/10 px-3 text-sm text-ink-muted hover:border-gold-400/40 hover:text-gold-200"
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/10 px-3 text-sm text-ink-muted hover:border-white/20 hover:text-gold-200"
                   >
                     <FolderOpen aria-hidden="true" className="size-4" />
                     {subcategory}
@@ -48,7 +48,7 @@ export function WikiCategoryPage({ name }: { name: string }) {
               <li key={title}>
                 <ArticleLink
                   title={title}
-                  className="flex min-h-14 items-center gap-3 rounded-card border border-white/7 bg-night-850/80 px-4 text-sm transition hover:border-gold-400/35 hover:text-gold-200"
+                  className="flex min-h-14 items-center gap-3 rounded-card border border-white/7 bg-night-850/80 px-4 text-sm transition hover:border-white/20 hover:text-gold-200"
                 >
                   <FileText aria-hidden="true" className="size-4 shrink-0 text-gold-300" />
                   <span className="truncate">{title}</span>

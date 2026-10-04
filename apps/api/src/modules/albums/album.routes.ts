@@ -1,4 +1,4 @@
-import { cardAlbumQuerySchema } from '@hrc/shared';
+import { cardAlbumQuerySchema } from '@hikari-hub/shared';
 import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
 import { AppError } from '../../lib/app-error.js';
 import type { UpstreamSession } from '../../session/upstream-session.js';

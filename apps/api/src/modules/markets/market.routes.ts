@@ -1,4 +1,4 @@
-import { marketSearchQuerySchema, marketTypeSchema } from '@hrc/shared';
+import { marketSearchQuerySchema, marketTypeSchema } from '@hikari-hub/shared';
 import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
 import { z } from 'zod';
 import type { MarketService } from './market.service.js';

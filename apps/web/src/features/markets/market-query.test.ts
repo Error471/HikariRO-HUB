@@ -1,4 +1,4 @@
-import type { MarketShop } from '@hrc/shared';
+import type { MarketShop } from '@hikari-hub/shared';
 import { describe, expect, it } from 'vitest';
 import { formatZeny } from '@/lib/format';
 import { normalizeText, shopTotals } from './market-query';

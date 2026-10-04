@@ -1,17 +1,20 @@
 import { randomBytes } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { defineConfig, devices } from '@playwright/test';
 
 // Puertos propios para no chocar con `pnpm dev`.
 const MOCK_PORT = 4110;
-const API_PORT = 3100;
-const WEB_PORT = 5190;
-const WEB_URL = `http://localhost:${WEB_PORT}`;
+const APP_PORT = 3100;
+const APP_URL = `http://127.0.0.1:${APP_PORT}`;
 
+// Igual que la app de escritorio: la API sirve el build de la web en un solo origen.
 const apiEnv = {
   NODE_ENV: 'development',
   LOG_LEVEL: 'warn',
-  PORT: String(API_PORT),
-  APP_ORIGIN: WEB_URL,
+  HOST: '127.0.0.1',
+  PORT: String(APP_PORT),
+  APP_ORIGIN: APP_URL,
+  WEB_DIST_DIR: fileURLToPath(new URL('./apps/web/dist', import.meta.url)),
   HIKARI_BASE_URL: `http://localhost:${MOCK_PORT}`,
   HIKARI_NEWS_FEED_URL: `http://localhost:${MOCK_PORT}/discord/feed.php`,
   SESSION_SECRET: randomBytes(48).toString('base64url'),
@@ -30,7 +33,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: WEB_URL,
+    baseURL: APP_URL,
     locale: 'es-ES',
     trace: 'retain-on-failure',
     launchOptions: { executablePath },
@@ -44,23 +47,17 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command: 'pnpm --filter @hrc/api mock:hikari',
+      command: 'pnpm --filter @hikari-hub/api mock:hikari',
       port: MOCK_PORT,
       env: { MOCK_HIKARI_PORT: String(MOCK_PORT) },
       reuseExistingServer: false,
     },
     {
-      command: 'pnpm --filter @hrc/api exec tsx src/server.ts',
-      url: `http://localhost:${API_PORT}/api/health`,
-      env: apiEnv,
-      reuseExistingServer: false,
-    },
-    {
-      // Build de producción (con service worker real), servido con `vite preview`.
-      command: `pnpm --filter @hrc/web exec sh -c "vite build --logLevel warn && vite preview --port ${WEB_PORT} --strictPort"`,
+      command:
+        'pnpm --filter @hikari-hub/web exec vite build --logLevel warn && pnpm --filter @hikari-hub/api exec tsx src/server.ts',
       timeout: 180_000,
-      url: WEB_URL,
-      env: { API_PROXY_TARGET: `http://localhost:${API_PORT}` },
+      url: `${APP_URL}/api/health`,
+      env: apiEnv,
       reuseExistingServer: false,
     },
   ],

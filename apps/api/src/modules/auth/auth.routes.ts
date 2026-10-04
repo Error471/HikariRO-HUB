@@ -1,11 +1,11 @@
-import { loginRequestSchema, type SessionResponse } from '@hrc/shared';
+import { loginRequestSchema, type SessionResponse } from '@hikari-hub/shared';
 import type { FastifyInstance, preHandlerAsyncHookHandler } from 'fastify';
 import { AppError } from '../../lib/app-error.js';
 import type { SessionCookie } from '../../plugins/session-guard.js';
 import type { ActiveSession } from '../../session/session-service.js';
 import type { AuthService } from './auth.service.js';
 
-/** Avisos de inicio y fin de sesión (p. ej. para que los avisos push usen la sesión nueva). */
+/** Avisos de inicio y fin de sesión (p. ej. para que los avisos de MVP usen la sesión nueva). */
 export interface SessionEvents {
   sessionStarted(username: string, sessionId: string): Promise<void>;
   sessionEnded(username: string, sessionId: string): Promise<void>;

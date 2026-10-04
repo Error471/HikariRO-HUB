@@ -4,7 +4,7 @@ import type {
   WikiIndexResponse,
   WikiPage,
   WikiSearchResponse,
-} from '@hrc/shared';
+} from '@hikari-hub/shared';
 import { z } from 'zod';
 import type { HikariClient } from '../../hikari/hikari-client.js';
 import { parseUpstreamJson } from '../../hikari/upstream-json.js';

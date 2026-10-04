@@ -1,4 +1,4 @@
-import { mvpListResponseSchema } from '@hrc/shared';
+import { mvpListResponseSchema } from '@hikari-hub/shared';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api-client';
 

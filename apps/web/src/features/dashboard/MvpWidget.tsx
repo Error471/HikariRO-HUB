@@ -23,15 +23,12 @@ export function MvpWidget() {
   const upcoming = views.filter((mvp) => mvp.state.key !== 'ready').slice(0, VISIBLE);
 
   return (
-    <section
-      aria-labelledby="widget-mvp"
-      className="frame-gold flex flex-col rounded-card p-5 sm:p-6"
-    >
+    <section aria-labelledby="widget-mvp" className="panel flex flex-col rounded-card p-5 sm:p-6">
       <header className="flex items-start justify-between gap-4">
         <div>
           <h2
             id="widget-mvp"
-            className="flex items-center gap-2 font-display text-lg font-semibold tracking-wide"
+            className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
           >
             <Hourglass aria-hidden="true" className="size-5 text-gold-300" />
             MVP Timer

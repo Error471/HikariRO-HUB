@@ -4,7 +4,7 @@ import type {
   MarketShopResponse,
   MarketShopsResponse,
   MarketType,
-} from '@hrc/shared';
+} from '@hikari-hub/shared';
 import type { HikariClient } from '../../hikari/hikari-client.js';
 import { AppError } from '../../lib/app-error.js';
 import { mapLimit } from '../../lib/map-limit.js';

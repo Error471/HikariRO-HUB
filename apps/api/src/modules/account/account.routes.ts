@@ -14,7 +14,7 @@ export interface AccountRoutesOptions {
 export async function accountRoutes(app: FastifyInstance, options: AccountRoutesOptions) {
   const { auth, userData, cookie, requireSession } = options;
 
-  // Borra todo lo que el Companion guarda de la cuenta y cierra la sesión actual.
+  // Borra todo lo que Hikari Hub guarda de la cuenta y cierra la sesión actual.
   app.delete(
     '/data',
     { preHandler: requireSession, config: { rateLimit: { max: 5, timeWindow: 60_000 } } },
@@ -24,7 +24,7 @@ export async function accountRoutes(app: FastifyInstance, options: AccountRoutes
 
       await userData.deleteUser(session.record.username);
       await auth.logout(session).catch((error: unknown) => {
-        // La sesión del Companion ya está destruida; si HikariRO no responde, caducará sola.
+        // La sesión de Hikari Hub ya está destruida; si HikariRO no responde, caducará sola.
         request.log.warn({ err: error }, 'no se pudo cerrar la sesión en HikariRO');
       });
       cookie.clear(reply);

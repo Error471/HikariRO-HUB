@@ -22,13 +22,13 @@ export function UserPanel({ username }: { username: string }) {
     <div className="flex items-center gap-3 rounded-xl border border-white/6 bg-night-800/60 p-2.5">
       <span
         aria-hidden="true"
-        className="grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-mana-600/60 to-night-600 font-display text-sm font-bold text-ink"
+        className="grid size-9 shrink-0 place-items-center rounded-lg bg-night-700 text-sm font-semibold text-ink ring-1 ring-white/10"
       >
         {username.slice(0, 1).toUpperCase()}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-ink">{username}</p>
-        <p className="text-xs text-ink-faint">Cuenta de HikariRO</p>
+        <p className="truncate text-xs text-ink-faint">HikariRO</p>
       </div>
       <DeleteDataDialog />
       <button

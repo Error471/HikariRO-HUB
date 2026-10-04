@@ -1,4 +1,4 @@
-import type { AlbumCard, AlbumProgress, Fish } from '@hrc/shared';
+import type { AlbumCard, AlbumProgress, Fish } from '@hikari-hub/shared';
 import * as cheerio from 'cheerio';
 import { AppError } from '../../lib/app-error.js';
 

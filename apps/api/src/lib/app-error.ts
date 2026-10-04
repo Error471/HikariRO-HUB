@@ -1,4 +1,4 @@
-import { defaultErrorMessages, type ErrorCode } from '@hrc/shared';
+import { defaultErrorMessages, type ErrorCode } from '@hikari-hub/shared';
 
 const statusByCode: Record<ErrorCode, number> = {
   VALIDATION_ERROR: 422,

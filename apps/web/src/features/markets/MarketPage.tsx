@@ -1,4 +1,4 @@
-import type { MarketShop, MarketType } from '@hrc/shared';
+import type { MarketShop, MarketType } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Store } from 'lucide-react';
 import { useDeferredValue, useState } from 'react';

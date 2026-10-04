@@ -1,4 +1,4 @@
-import { WIKI_MAIN_PAGE } from '@hrc/shared';
+import { WIKI_MAIN_PAGE } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpRight, BookOpen, ChevronRight, Compass, FolderOpen } from 'lucide-react';
 import { useMemo, type ReactNode } from 'react';
@@ -33,7 +33,7 @@ function Panel({
 }) {
   return (
     <section className="rounded-card border border-white/7 bg-night-850/80 p-5">
-      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold tracking-wide">
+      <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
         <Icon aria-hidden="true" className="size-5 text-gold-300" />
         {title}
       </h2>
@@ -51,15 +51,14 @@ export function WikiHomePage() {
   return (
     <div className="flex flex-col gap-6 animate-rise">
       <PageHeader
-        eyebrow="HikariRO"
         title="Wiki"
-        description="Guías, sistemas e instancias de la wiki oficial, sin salir del Companion."
+        description="Guías, sistemas e instancias de la wiki oficial, sin salir de Hikari Hub."
         actions={
           <a
             href={modules.wiki.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-gold-400/40 hover:text-ink"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
           >
             Wiki original <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
@@ -69,13 +68,13 @@ export function WikiHomePage() {
 
       <ArticleLink
         title={WIKI_MAIN_PAGE}
-        className="frame-gold group flex items-center gap-4 rounded-card p-5 transition hover:-translate-y-0.5"
+        className="panel group flex items-center gap-4 rounded-card p-5 transition"
       >
         <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-400/12 text-gold-300">
           <Compass aria-hidden="true" className="size-6" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-display text-lg font-semibold tracking-wide group-hover:text-gold-200">
+          <span className="block font-display text-lg font-semibold tracking-tight group-hover:text-gold-200">
             Página principal
           </span>
           <span className="block text-sm text-ink-muted">
@@ -120,7 +119,7 @@ export function WikiHomePage() {
                 <li key={category.name}>
                   <CategoryLink
                     name={category.name}
-                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/10 px-3 text-sm text-ink-muted transition hover:border-gold-400/40 hover:text-gold-200"
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/10 px-3 text-sm text-ink-muted transition hover:border-white/20 hover:text-gold-200"
                   >
                     {category.name}
                     <span className="text-xs tabular-nums text-ink-faint">{category.pages}</span>
@@ -141,7 +140,7 @@ export function WikiHomePage() {
           <div className="columns-1 gap-6 sm:columns-2 lg:columns-3 xl:columns-4">
             {letters.map(([letter, titles]) => (
               <section key={letter} className="mb-4 break-inside-avoid">
-                <h3 className="mb-1 font-display text-sm font-bold text-gold-300">{letter}</h3>
+                <h3 className="mb-1 font-display text-sm font-semibold text-gold-300">{letter}</h3>
                 <ul>
                   {titles.map((title) => (
                     <li key={title}>

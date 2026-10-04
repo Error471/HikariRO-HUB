@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
 
 permissions:
@@ -27,6 +27,7 @@ jobs:
       - run: pnpm build
       - run: pnpm audit --prod --audit-level high
 
+  # La web servida por la API, como en la app de escritorio, contra el mock de HikariRO.
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -43,42 +44,3 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
-
-  # Comprueba que las imágenes de producción construyen (ARM64 = Oracle Ampere).
-  docker:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        image: [api, web]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: docker/${{ matrix.image }}.Dockerfile
-          platforms: linux/arm64
-          push: false
-          cache-from: type=gha,scope=${{ matrix.image }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
-
-  # Despliegue opcional por SSH. Actívalo creando la variable DEPLOY_ENABLED=true
-  # y los secretos DEPLOY_HOST, DEPLOY_USER y DEPLOY_SSH_KEY (ver docs/03-despliegue-gratuito.md).
-  deploy:
-    needs: [check, e2e, docker]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
-    runs-on: ubuntu-latest
-    environment: production
-    steps:
-      - uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key: ${{ secrets.DEPLOY_SSH_KEY }}
-          script_stop: true
-          script: |
-            cd ~/hikariro-companion
-            git pull --ff-only
-            docker compose up -d --build
-            docker image prune -f

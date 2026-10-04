@@ -5,8 +5,8 @@ type Variant = 'primary' | 'ghost' | 'subtle';
 
 const variants: Record<Variant, string> = {
   primary:
-    'bg-gradient-to-b from-gold-300 to-gold-500 text-night-950 font-semibold shadow-glow hover:from-gold-200 hover:to-gold-400 active:translate-y-px',
-  subtle: 'bg-night-700/70 text-ink hover:bg-night-600 border border-white/8',
+    'bg-gold-400 text-night-950 font-semibold shadow-glow hover:bg-gold-300 active:translate-y-px',
+  subtle: 'bg-night-800 text-ink hover:bg-night-700 border border-white/8',
   ghost: 'text-ink-muted hover:text-ink hover:bg-white/5',
 };
 

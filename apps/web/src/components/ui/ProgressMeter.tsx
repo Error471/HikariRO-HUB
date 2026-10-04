@@ -31,7 +31,7 @@ export function ProgressMeter({ label, obtained, total, unit, className }: Progr
         className="h-2.5 overflow-hidden rounded-full bg-white/8"
       >
         <div
-          className="h-full rounded-full bg-gradient-to-r from-gold-500 via-gold-400 to-gold-200 transition-[width] duration-700 ease-out"
+          className="h-full rounded-full bg-gold-400 transition-[width] duration-700 ease-out"
           style={{ width: `${Math.min(100, percent)}%` }}
         />
       </div>

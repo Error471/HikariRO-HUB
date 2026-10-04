@@ -4,7 +4,7 @@ import {
   marketShopsResponseSchema,
   type MarketShop,
   type MarketType,
-} from '@hrc/shared';
+} from '@hikari-hub/shared';
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api-client';
 

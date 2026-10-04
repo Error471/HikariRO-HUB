@@ -1,4 +1,5 @@
-import { loginRequestSchema } from '@hrc/shared';
+import { loginRequestSchema } from '@hikari-hub/shared';
+import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { AlertTriangle, Eye, EyeOff, Hourglass, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useId, useState, type FormEvent } from 'react';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { errorMessage } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
+import { publicInfoQuery } from '@/features/privacy/public-info';
 import { useLogin } from './session';
 
 interface LoginPageProps {
@@ -20,11 +22,13 @@ const inputClass =
 export function LoginPage({ redirectTo, reason }: LoginPageProps) {
   const navigate = useNavigate();
   const login = useLogin();
+  const rememberAvailable = useQuery(publicInfoQuery).data?.rememberAvailable === true;
   const [showPassword, setShowPassword] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const userId = useId();
   const passwordId = useId();
   const errorId = useId();
+  const rememberHintId = useId();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -32,6 +36,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
     const parsed = loginRequestSchema.safeParse({
       username: form.get('username'),
       password: form.get('password'),
+      remember: rememberAvailable && form.get('remember') === 'on',
     });
     if (!parsed.success) {
       setValidationError(parsed.error.issues[0]?.message ?? 'Revisa los datos.');
@@ -47,17 +52,10 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
-      <section className="relative hidden overflow-hidden border-r border-white/6 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(40rem_28rem_at_30%_35%,rgb(231_183_95/0.16),transparent_65%),radial-gradient(30rem_24rem_at_80%_90%,rgb(124_198_255/0.12),transparent_60%)]"
-        />
+      <section className="relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
         <Brand />
         <div className="relative max-w-lg animate-rise">
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.3em] text-gold-400/80">
-            Rune-Midgard te espera
-          </p>
-          <h1 className="font-display text-5xl leading-tight font-bold text-balance">
+          <h1 className="font-display text-5xl leading-[1.1] font-semibold tracking-tight text-balance">
             Tu centro de control de <span className="text-gold-300">HikariRO</span>
           </h1>
           <p className="mt-5 text-lg text-ink-muted">
@@ -74,7 +72,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
           <div className="mb-8 lg:hidden">
             <Brand />
           </div>
-          <h2 className="font-display text-2xl font-bold">Iniciar sesión</h2>
+          <h2 className="font-display text-2xl font-semibold">Iniciar sesión</h2>
           <p className="mt-2 text-sm text-ink-muted">
             Usa las credenciales de tu cuenta de HikariRO.
           </p>
@@ -148,6 +146,24 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
               </div>
             </div>
 
+            {rememberAvailable && (
+              <label className="flex cursor-pointer items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="remember"
+                  aria-describedby={rememberHintId}
+                  className="mt-0.5 size-4.5 shrink-0 accent-gold-400"
+                />
+                <span>
+                  Mantener la sesión iniciada en este PC
+                  <span id={rememberHintId} className="mt-0.5 block text-xs text-ink-faint">
+                    Guarda tu contraseña cifrada por Windows para volver a entrar sola si HikariRO
+                    cierra la sesión. Se borra al cerrar sesión.
+                  </span>
+                </span>
+              </label>
+            )}
+
             <Button type="submit" className="mt-2 w-full" disabled={login.isPending}>
               {login.isPending ? (
                 <Spinner />
@@ -160,8 +176,8 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
 
           <p className="mt-6 flex items-start gap-2 text-xs leading-relaxed text-ink-faint">
             <ShieldCheck aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-leaf-400/80" />
-            El Companion envía tu contraseña por HTTPS a HikariRO solo para iniciar sesión. No la
-            almacena ni la registra.
+            Hikari Hub envía tu contraseña por HTTPS a HikariRO para iniciar sesión. Nunca la
+            registra y solo la guarda, cifrada, si marcas la casilla.
           </p>
           <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-faint">
             <Link to="/privacidad" className="text-mana-400 underline-offset-2 hover:underline">

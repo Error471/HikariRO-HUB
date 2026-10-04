@@ -1,4 +1,4 @@
-import type { MarketOffer, MarketShop } from '@hrc/shared';
+import type { MarketOffer, MarketShop } from '@hikari-hub/shared';
 
 const MAX_RESULTS = 100;
 

@@ -1,4 +1,4 @@
-import type { Mvp } from '@hrc/shared';
+import type { Mvp } from '@hikari-hub/shared';
 import { describe, expect, it } from 'vitest';
 import { filterMvps, formatCountdown, sortMvpViews, spawnState, toMvpView } from './mvp-status';
 

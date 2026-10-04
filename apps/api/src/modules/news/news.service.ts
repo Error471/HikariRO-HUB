@@ -1,4 +1,9 @@
-import { newsSections, type NewsListResponse, type NewsPost, type NewsSection } from '@hrc/shared';
+import {
+  newsSections,
+  type NewsListResponse,
+  type NewsPost,
+  type NewsSection,
+} from '@hikari-hub/shared';
 import { z } from 'zod';
 import type { HikariClient } from '../../hikari/hikari-client.js';
 import { parseUpstreamJson } from '../../hikari/upstream-json.js';

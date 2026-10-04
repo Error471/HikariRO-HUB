@@ -1,4 +1,4 @@
-import { wikiPath } from '@hrc/shared';
+import { wikiPath } from '@hikari-hub/shared';
 import { describe, expect, it } from 'vitest';
 import { titleFromPath } from './wiki-query';
 

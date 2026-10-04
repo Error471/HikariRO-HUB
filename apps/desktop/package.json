@@ -1,0 +1,26 @@
+{
+  "name": "@hikari-hub/desktop",
+  "productName": "Hikari Hub",
+  "version": "0.1.1",
+  "private": true,
+  "description": "App de escritorio no oficial para jugadores de HikariRO",
+  "author": "Hikari Hub",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "pnpm --filter @hikari-hub/web build && node build.mjs && electron .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dist": "pnpm --filter @hikari-hub/web build && node build.mjs && electron-builder --win --publish never"
+  },
+  "devDependencies": {
+    "@hikari-hub/api": "workspace:*",
+    "@hikari-hub/shared": "workspace:*",
+    "@types/node": "^22.18.0",
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3",
+    "electron-updater": "^6.8.9",
+    "esbuild": "^0.28.1",
+    "vitest": "^4.0.0"
+  }
+}

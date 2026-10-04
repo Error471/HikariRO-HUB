@@ -10,6 +10,8 @@ export const loginRequestSchema = z.object({
     .string()
     .min(1, 'Introduce tu contraseña.')
     .max(64, 'La contraseña es demasiado larga.'),
+  /** Guardar la contraseña cifrada para volver a entrar solo (solo en la app de escritorio). */
+  remember: z.boolean().optional(),
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
@@ -27,5 +29,9 @@ export type SessionResponse = z.infer<typeof sessionResponseSchema>;
 
 export const CSRF_HEADER = 'x-csrf-token';
 
-export const publicInfoSchema = z.object({ privacyContact: z.string().nullable() });
+export const publicInfoSchema = z.object({
+  privacyContact: z.string().nullable(),
+  /** La app permite mantener la sesión iniciada (guardar la contraseña cifrada). */
+  rememberAvailable: z.boolean(),
+});
 export type PublicInfo = z.infer<typeof publicInfoSchema>;

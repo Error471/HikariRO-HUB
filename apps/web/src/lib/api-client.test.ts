@@ -1,4 +1,4 @@
-import { sessionResponseSchema } from '@hrc/shared';
+import { sessionResponseSchema } from '@hikari-hub/shared';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, apiRequest, setCsrfToken } from './api-client';
 

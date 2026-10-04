@@ -1,4 +1,4 @@
-import { favoritesSchema } from '@hrc/shared';
+import { favoritesSchema } from '@hikari-hub/shared';
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';

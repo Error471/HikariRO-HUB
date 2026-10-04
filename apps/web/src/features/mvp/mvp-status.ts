@@ -1,4 +1,4 @@
-import type { Mvp, MvpSpawn } from '@hrc/shared';
+import type { Mvp, MvpSpawn } from '@hikari-hub/shared';
 
 export type SpawnStateKey = 'window' | 'cooldown' | 'ready';
 

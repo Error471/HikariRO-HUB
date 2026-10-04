@@ -12,14 +12,14 @@ import { MarketService } from '../src/modules/markets/market.service.js';
 import { MvpService } from '../src/modules/mvp/mvp.service.js';
 import { NewsService } from '../src/modules/news/news.service.js';
 import { WikiService } from '../src/modules/wiki/wiki.service.js';
-import { PushService } from '../src/modules/push/push.service.js';
-import type { PushSender } from '../src/modules/push/push-sender.js';
+import { AlertService } from '../src/modules/alerts/alerts.service.js';
+import type { Notifier } from '../src/modules/alerts/notifier.js';
 import { SessionService } from '../src/session/session-service.js';
 import { MemorySessionStore } from '../src/session/session-store.js';
 import { MemoryUserDataStore } from '../src/user/user-data-store.js';
 
 export const HIKARI = 'https://hikariro.test';
-export const APP_ORIGIN = 'https://companion.test';
+export const APP_ORIGIN = 'https://hub.test';
 export const NEWS_FEED = 'https://api.hikariro.test';
 
 export const fixture = (name: string) =>
@@ -43,7 +43,18 @@ export function createMockHikari() {
 
 export async function createTestApp(
   agent: MockAgent,
-  { pushSender = null }: { pushSender?: PushSender | null } = {},
+  {
+    notifier = null,
+    webDir,
+    remember = false,
+    revalidateMs = 300_000,
+  }: {
+    notifier?: Notifier | null;
+    webDir?: string;
+    /** Activa "Mantener la sesión iniciada" (como en la app de escritorio). */
+    remember?: boolean;
+    revalidateMs?: number;
+  } = {},
 ) {
   const client = new HikariClient({
     baseUrl: HIKARI,
@@ -57,17 +68,22 @@ export async function createTestApp(
     timeoutMs: 2000,
     dispatcher: agent,
   });
+  const hikariAuth = new HikariAuth(client);
   const sessions = new SessionService(
     new MemorySessionStore(),
     new Sealer(testEnv.SESSION_ENCRYPTION_KEY),
-    { ttlMs: 3_600_000, revalidateMs: 300_000 },
+    {
+      ttlMs: 3_600_000,
+      revalidateMs,
+      ...(remember && { relogin: (user: string, pass: string) => hikariAuth.login(user, pass) }),
+    },
   );
   const userData = new MemoryUserDataStore();
-  const push = new PushService(userData, pushSender);
+  const alerts = new AlertService(userData, notifier);
   const mvp = new MvpService(client, HIKARI);
   const app = await buildApp({
-    env: testEnv,
-    hikariAuth: new HikariAuth(client),
+    env: webDir ? { ...testEnv, WEB_DIST_DIR: webDir } : testEnv,
+    hikariAuth,
     sessions,
     loginThrottle: new MemoryLoginThrottle({ maxAttempts: 3, windowMs: 60_000 }),
     mvp,
@@ -76,9 +92,9 @@ export async function createTestApp(
     wiki: new WikiService(client, HIKARI),
     albums: new AlbumService(client, HIKARI),
     userData,
-    push,
+    alerts,
   });
-  return { app, sessions, userData, push, mvp };
+  return { app, sessions, userData, alerts, mvp, hikariAuth };
 }
 
 /** Prepara un login correcto en el mock de HikariRO. */
@@ -120,13 +136,13 @@ export function cookieFrom(setCookie: string | string[] | undefined): string {
 
 type Pool = ReturnType<MockAgent['get']>;
 
-/** Inicia sesión contra el mock y devuelve la cookie del Companion y el token CSRF. */
-export async function loginAs(app: FastifyInstance, pool: Pool) {
+/** Inicia sesión contra el mock y devuelve la cookie de Hikari Hub y el token CSRF. */
+export async function loginAs(app: FastifyInstance, pool: Pool, { remember = false } = {}) {
   mockSuccessfulLogin(pool);
   const response = await app.inject({
     method: 'POST',
     url: '/api/auth/login',
-    payload: { username: 'ivan', password: 'correcta' },
+    payload: { username: 'ivan', password: 'correcta', remember },
     headers: { origin: APP_ORIGIN },
   });
   return { cookie: cookieFrom(response.headers['set-cookie']), csrf: response.json().csrfToken };

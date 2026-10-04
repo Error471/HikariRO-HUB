@@ -19,12 +19,12 @@ export function SessionExpiredDialog({ open }: { open: boolean }) {
         <Dialog.Content
           onEscapeKeyDown={(event) => event.preventDefault()}
           onPointerDownOutside={(event) => event.preventDefault()}
-          className="frame-gold fixed top-1/2 left-1/2 z-50 w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-card p-6 text-center shadow-2xl data-[state=open]:animate-rise"
+          className="panel fixed top-1/2 left-1/2 z-50 w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-card p-6 text-center shadow-2xl data-[state=open]:animate-rise"
         >
           <span className="mx-auto mb-4 grid size-12 place-items-center rounded-full bg-gold-400/12 text-gold-300">
             <Hourglass aria-hidden="true" className="size-6" />
           </span>
-          <Dialog.Title className="font-display text-xl font-bold">
+          <Dialog.Title className="font-display text-xl font-semibold">
             Tu sesión ha expirado
           </Dialog.Title>
           <Dialog.Description className="mt-2 text-sm text-ink-muted">

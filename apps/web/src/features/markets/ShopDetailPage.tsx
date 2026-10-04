@@ -1,4 +1,4 @@
-import type { MarketType } from '@hrc/shared';
+import type { MarketType } from '@hikari-hub/shared';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { ArrowUpRight, ChevronRight, MapPin, PackageSearch, Store, User } from 'lucide-react';
@@ -86,11 +86,9 @@ export function ShopDetailPage({ type, shopId }: { type: MarketType; shopId: num
     <div className="flex flex-col gap-6 animate-rise">
       {breadcrumbs}
 
-      <section className="frame-gold rounded-card p-5 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold-400/80">
-          {meta.shopLabel}
-        </p>
-        <h1 className="mt-2 font-display text-2xl font-bold tracking-wide text-balance sm:text-3xl">
+      <section className="panel rounded-card p-5 sm:p-6">
+        <p className="text-sm font-medium text-ink-faint">{meta.shopLabel}</p>
+        <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
           {shop.title || 'Tienda sin título'}
         </h1>
         <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-muted">

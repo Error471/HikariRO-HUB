@@ -28,9 +28,9 @@ test('el diálogo de avisos informa del estado', async ({ page }) => {
   await page.getByRole('button', { name: 'Avisos' }).click();
   const dialog = page.getByRole('dialog', { name: 'Avisos de MVP' });
   await expect(dialog).toBeVisible();
-  // El servidor de e2e no tiene claves VAPID.
+  // Fuera de la app de escritorio no hay notificaciones de Windows.
   await expect(
-    dialog.getByText('Los avisos no están configurados en este servidor.'),
+    dialog.getByText('Los avisos solo funcionan en la app de escritorio de Hikari Hub.'),
   ).toBeVisible();
   await dialog.getByRole('button', { name: 'Cerrar' }).click();
   await expect(dialog).toBeHidden();

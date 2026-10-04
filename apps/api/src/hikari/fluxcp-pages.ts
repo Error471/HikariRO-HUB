@@ -52,6 +52,12 @@ export function isAuthenticatedPage(response: HikariResponse): boolean {
   return $('a[href*="action=logout"]').length > 0;
 }
 
+/** Página con el formulario de login (FluxCP a veces lo muestra sin redirigir). */
+export function isLoginPage(response: HikariResponse): boolean {
+  if (response.status !== 200) return false;
+  return cheerio.load(response.body)('input[name="password"]').length > 0;
+}
+
 function normalizeAction(action: string): string {
   if (action.startsWith('/')) return action;
   if (action.startsWith('?')) return `/${action}`;

@@ -2,8 +2,8 @@ packages:
   - apps/*
   - packages/*
 onlyBuiltDependencies:
+  - electron
   - esbuild
   - '@tailwindcss/oxide'
-overrides:
-  # GHSA-g7r4-m6w7-qqqr: tsup aún depende de esbuild 0.27.
-  'tsup>esbuild': ^0.28.1
+ignoredBuiltDependencies:
+  - electron-winstaller

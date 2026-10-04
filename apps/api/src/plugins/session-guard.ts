@@ -1,4 +1,4 @@
-import { CSRF_HEADER } from '@hrc/shared';
+import { CSRF_HEADER } from '@hikari-hub/shared';
 import type {
   FastifyInstance,
   FastifyReply,
@@ -27,7 +27,7 @@ export class SessionCookie {
   readonly name: string;
 
   constructor(private readonly options: SessionCookieOptions) {
-    this.name = options.secure ? '__Host-hrc_sid' : 'hrc_sid';
+    this.name = options.secure ? '__Host-hh_sid' : 'hh_sid';
   }
 
   set(reply: FastifyReply, sessionId: string): void {

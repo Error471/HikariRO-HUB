@@ -16,12 +16,12 @@ const HIKARI = 'https://hikariro.com';
 export const stateStyles: Record<SpawnStateKey, { pill: string; bar: string; text: string }> = {
   window: {
     pill: 'bg-ember-400/12 text-ember-400 ring-ember-400/35',
-    bar: 'bg-gradient-to-r from-ember-400/70 to-gold-400',
+    bar: 'bg-ember-400',
     text: 'text-ember-400',
   },
   cooldown: {
     pill: 'bg-mana-400/12 text-mana-300 ring-mana-400/30',
-    bar: 'bg-gradient-to-r from-mana-600 to-mana-400',
+    bar: 'bg-mana-400',
     text: 'text-mana-300',
   },
   ready: {
@@ -132,7 +132,7 @@ export function MvpCard({ mvp, favorite, onToggleFavorite }: MvpCardProps) {
       <header className="flex items-start gap-4">
         <MvpPortrait src={mvp.imageUrl} name={mvp.name} />
         <div className="min-w-0 flex-1">
-          <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold tracking-wide">
+          <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold tracking-tight">
             <a
               href={mvp.detailUrl}
               target="_blank"

@@ -1,4 +1,4 @@
-# HikariRO Companion — Análisis técnico y propuesta de arquitectura
+# Hikari Hub: análisis técnico y propuesta de arquitectura
 
 > Fecha del análisis: 03/10/2026 · Estado: **pendiente de aprobación** antes de empezar la Fase 1.
 
@@ -75,14 +75,14 @@
 
 ## 2. Limitaciones y riesgos
 
-| ID  | Riesgo                                                                                                                                                             | Impacto                                       | Mitigación propuesta                                                                                                                                                                                                                                                |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| R1  | **Las credenciales pasan por nuestro servidor.** No hay OAuth ni API de tokens; la única integración posible es que el backend haga el login en nombre del usuario | Alto (confianza)                              | HTTPS obligatorio, la contraseña solo vive en memoria durante la petición, nunca se registra ni se guarda; logs con redacción. **Recomendado: hablar con el staff de HikariRO** (idealmente alojar en `companion.hikariro.com` o que expongan un endpoint de token) |
-| R2  | **Cloudflare** puede bloquear o desafiar peticiones desde IPs de datacenter                                                                                        | Alto (bloqueante)                             | Verificarlo en la Fase 1 antes de seguir. Si ocurre: allowlist de nuestra IP por parte del staff                                                                                                                                                                    |
-| R3  | Todos los logins salen de **una sola IP** → posibles bloqueos por intentos fallidos                                                                                | Medio                                         | Rate limiting propio estricto (por IP y por usuario) antes de tocar HikariRO                                                                                                                                                                                        |
-| R4  | **Scraping frágil**: cambios en el HTML rompen parsers                                                                                                             | Medio                                         | Parsers aislados con tests de fixtures, validación con Zod, degradación controlada + enlace "Ver en HikariRO"                                                                                                                                                       |
-| R5  | Términos de uso desconocidos                                                                                                                                       | Medio                                         | Consultar al staff; tráfico mínimo (cache, sin crawling agresivo), User-Agent identificable                                                                                                                                                                         |
-| R6  | La cookie de HikariRO no es `HttpOnly` ni `Secure`                                                                                                                 | Bajo para nosotros (nunca llega al navegador) | Informar al staff como mejora de seguridad                                                                                                                                                                                                                          |
+| ID  | Riesgo                                                                                                                                                             | Impacto                                       | Mitigación propuesta                                                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | **Las credenciales pasan por nuestro servidor.** No hay OAuth ni API de tokens; la única integración posible es que el backend haga el login en nombre del usuario | Alto (confianza)                              | HTTPS obligatorio, la contraseña solo vive en memoria durante la petición, nunca se registra ni se guarda; logs con redacción. **Recomendado: hablar con el staff de HikariRO** (idealmente alojar en `hub.hikariro.com` o que expongan un endpoint de token) |
+| R2  | **Cloudflare** puede bloquear o desafiar peticiones desde IPs de datacenter                                                                                        | Alto (bloqueante)                             | Verificarlo en la Fase 1 antes de seguir. Si ocurre: allowlist de nuestra IP por parte del staff                                                                                                                                                              |
+| R3  | Todos los logins salen de **una sola IP** → posibles bloqueos por intentos fallidos                                                                                | Medio                                         | Rate limiting propio estricto (por IP y por usuario) antes de tocar HikariRO                                                                                                                                                                                  |
+| R4  | **Scraping frágil**: cambios en el HTML rompen parsers                                                                                                             | Medio                                         | Parsers aislados con tests de fixtures, validación con Zod, degradación controlada + enlace "Ver en HikariRO"                                                                                                                                                 |
+| R5  | Términos de uso desconocidos                                                                                                                                       | Medio                                         | Consultar al staff; tráfico mínimo (cache, sin crawling agresivo), User-Agent identificable                                                                                                                                                                   |
+| R6  | La cookie de HikariRO no es `HttpOnly` ni `Secure`                                                                                                                 | Bajo para nosotros (nunca llega al navegador) | Informar al staff como mejora de seguridad                                                                                                                                                                                                                    |
 
 ## 3. Arquitectura propuesta
 
@@ -90,9 +90,9 @@ Patrón **BFF (Backend-for-Frontend)**: el navegador solo habla con nuestra API;
 
 ```text
 Navegador (SPA React)
-  │  cookie propia hrc_sid (HttpOnly, Secure, SameSite=Strict) + cabecera CSRF
+  │  cookie propia hh_sid (HttpOnly, Secure, SameSite=Strict) + cabecera CSRF
   ▼
-API Companion (Fastify, Node 22)
+API Hikari Hub (Fastify, Node 22)
   ├── auth/        login, logout, me — sesiones propias
   ├── session/     SessionStore (memoria en dev, Redis en prod); guarda la cookie FluxCP cifrada (AES-256-GCM)
   ├── hikari/      HikariClient (undici): cookies, timeouts, reintentos, detección de "sesión expirada"
@@ -109,7 +109,7 @@ HikariRO: FluxCP (HTML + MVP JSON) · api.hikariro.com (noticias) · MediaWiki A
 2. API → `GET` login de FluxCP (obtiene `fluxSessionData` y el valor de `server`) → `POST` con credenciales.
 3. Verificación: `GET /?module=account&action=view` no redirige al login → éxito.
 4. Se guarda en el SessionStore `{ fluxSession (cifrada), username, createdAt }`. **La contraseña se descarta.**
-5. La API emite `hrc_sid` (ID aleatorio opaco) + token CSRF.
+5. La API emite `hh_sid` (ID aleatorio opaco) + token CSRF.
 6. Cada llamada autenticada que reciba la redirección a login → la API borra la sesión y responde `401 SESSION_EXPIRED` → el frontend muestra "Tu sesión ha expirado · [Iniciar sesión nuevamente]".
 7. Logout: llamada a `/?module=account&action=logout` en HikariRO + borrado de sesión + cookie.
 
@@ -133,7 +133,7 @@ HikariRO: FluxCP (HTML + MVP JSON) · api.hikariro.com (noticias) · MediaWiki A
 ### Estructura de carpetas
 
 ```text
-hikariro-companion/
+hikari-hub/
 ├── apps/
 │   ├── web/                     # SPA React
 │   │   └── src/
@@ -168,11 +168,11 @@ hikariro-companion/
 | GET    | `/api/albums/cards?page&status&q&sort`                                     | ✓    | 5 min por usuario | `cartaslog`                         |
 | GET    | `/api/albums/fishing`                                                      | ✓    | 5 min por usuario | `fishingalbum`                      |
 
-\* Públicos en HikariRO, pero dentro de la app se exige sesión para que todo el companion sea privado y nadie use la API como proxy abierto.
+\* Públicos en HikariRO, pero dentro de la app se exige sesión para que toda la app sea privada y nadie use la API como proxy abierto.
 
 ### Seguridad (resumen)
 
-HTTPS (Caddy) + HSTS · cookie `hrc_sid` `HttpOnly; Secure; SameSite=Strict` · CSRF con token sincronizado + comprobación de `Origin` · CSP estricta (`img-src` limitado a hikariro.com y CDN de Discord) · sanitizado de todo HTML externo · validación Zod de entradas y salidas · rate limit (login: 5 intentos / 15 min por IP y por usuario) · cookie FluxCP cifrada en reposo, nunca enviada al navegador · logs con `pino` y redacción de `password`, cookies y cabeceras · secretos solo en `.env` (con `.env.example` en Git) · errores normalizados al usuario, sin stack traces.
+HTTPS (Caddy) + HSTS · cookie `hh_sid` `HttpOnly; Secure; SameSite=Strict` · CSRF con token sincronizado + comprobación de `Origin` · CSP estricta (`img-src` limitado a hikariro.com y CDN de Discord) · sanitizado de todo HTML externo · validación Zod de entradas y salidas · rate limit (login: 5 intentos / 15 min por IP y por usuario) · cookie FluxCP cifrada en reposo, nunca enviada al navegador · logs con `pino` y redacción de `password`, cookies y cabeceras · secretos solo en `.env` (con `.env.example` en Git) · errores normalizados al usuario, sin stack traces.
 
 ### Rendimiento (resumen)
 

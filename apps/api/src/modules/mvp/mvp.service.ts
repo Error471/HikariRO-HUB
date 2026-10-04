@@ -1,4 +1,4 @@
-import type { Mvp, MvpListResponse } from '@hrc/shared';
+import type { Mvp, MvpListResponse } from '@hikari-hub/shared';
 import { z } from 'zod';
 import { fluxRoutes } from '../../hikari/fluxcp-pages.js';
 import type { HikariClient } from '../../hikari/hikari-client.js';
