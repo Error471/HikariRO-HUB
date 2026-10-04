@@ -32,7 +32,7 @@ function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-white/7 bg-night-850/80 p-5">
+    <section className="min-w-0 rounded-card border border-white/7 bg-night-850/80 p-5">
       <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
         <Icon aria-hidden="true" className="size-5 text-gold-300" />
         {title}
@@ -88,7 +88,7 @@ export function WikiHomePage() {
         />
       </ArticleLink>
 
-      <div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <Panel title={FEATURED_CATEGORY} icon={BookOpen}>
           {guides.isPending ? (
             <Skeleton className="h-48" />

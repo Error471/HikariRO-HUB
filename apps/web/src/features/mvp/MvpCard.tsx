@@ -55,7 +55,7 @@ function SpawnRow({ spawn }: { spawn: SpawnView }) {
   const { state } = spawn;
   const styles = stateStyles[state.key];
   return (
-    <li className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-white/6 py-3 text-sm first:border-t-0 sm:grid-cols-[1.1fr_1fr_1.3fr_auto]">
+    <li className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-white/6 py-3 text-sm first:border-t-0 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto]">
       <div className="min-w-0">
         <p className="text-[0.68rem] uppercase tracking-wider text-ink-faint">Mapa</p>
         <a

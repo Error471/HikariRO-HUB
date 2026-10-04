@@ -133,6 +133,13 @@
     font-size: 0.95rem;
     overflow-wrap: anywhere;
     box-shadow: 0 20px 50px -30px rgb(0 0 0 / 0.8);
+    /* Algunos artículos traen anchos fijos en línea: que nunca desborden la página. */
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .wiki-content :where(div, figure, iframe, video) {
+    max-width: 100%;
   }
 
   @media (min-width: 640px) {

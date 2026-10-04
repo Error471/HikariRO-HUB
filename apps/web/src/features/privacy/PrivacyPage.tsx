@@ -103,7 +103,7 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
                 <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-leaf-400" />
                 {item.what}
               </p>
-              <dl className="mt-2 grid gap-1 pl-6 sm:grid-cols-[7rem_1fr]">
+              <dl className="mt-2 grid gap-1 pl-6 sm:grid-cols-[7rem_minmax(0,1fr)]">
                 <dt className="text-ink-faint">Para qué</dt>
                 <dd>{item.why}</dd>
                 <dt className="text-ink-faint">Hasta cuándo</dt>

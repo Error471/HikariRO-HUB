@@ -51,7 +51,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
   const error = validationError ?? (login.isError ? errorMessage(login.error) : null);
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[1.1fr_1fr]">
+    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <section className="relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
         <Brand />
         <div className="relative max-w-lg animate-rise">
