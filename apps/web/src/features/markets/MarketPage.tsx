@@ -14,12 +14,11 @@ import { ShopCard } from './ShopCard';
 import { marketMeta } from './market-meta';
 import { marketListQuery, normalizeText, shopTotals } from './market-query';
 
-export type ShopSort = 'id' | 'owner' | 'map' | 'value';
+export type ShopSort = 'id' | 'owner' | 'value';
 
 const sorters: Record<ShopSort, (a: MarketShop, b: MarketShop) => number> = {
   id: (a, b) => a.id - b.id,
   owner: (a, b) => a.owner.localeCompare(b.owner),
-  map: (a, b) => a.map.localeCompare(b.map) || a.id - b.id,
   value: (a, b) => shopTotals(b).value - shopTotals(a).value,
 };
 
@@ -81,7 +80,6 @@ export function MarketPage({ type, sort, onSortChange }: MarketPageProps) {
             >
               <option value="id">Nº de tienda</option>
               <option value="owner">{meta.ownerLabel}</option>
-              <option value="map">Mapa</option>
               <option value="value">{meta.totalLabel}</option>
             </select>
           </label>

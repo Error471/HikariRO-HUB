@@ -153,7 +153,7 @@ const newsDetailRoute = createRoute({
 });
 
 const shopSortSchema = z.object({
-  sort: z.enum(['id', 'owner', 'map', 'value']).default('id').catch('id'),
+  sort: z.enum(['id', 'owner', 'value']).default('id').catch('id'),
 });
 
 const vendingRoute = createRoute({
