@@ -53,6 +53,16 @@ jobs:
       - run: pnpm --filter @hikari-hub/web build
       - run: pnpm --filter @hikari-hub/desktop build
       # Se sube todo a un borrador y se publica al final: así la release nunca queda a medias.
+      # El borrador se crea antes: si lo crea electron-builder, cada archivo puede abrir uno distinto.
+      - name: Crear el borrador
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: >
+          gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1 ||
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft
+          --title "$VERSION" --target "$GITHUB_SHA" --generate-notes
       - name: Crear el instalador y subirlo a un borrador
         working-directory: apps/desktop
         # Bash: PowerShell parte los argumentos -c.publish.*
