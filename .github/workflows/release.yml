@@ -52,6 +52,14 @@ jobs:
         run: node apps/desktop/scripts/set-version.mjs "$env:VERSION"
       - run: pnpm --filter @hikari-hub/web build
       - run: pnpm --filter @hikari-hub/desktop build
+      # GitHub exige que la etiqueta exista antes de publicar la release.
+      - name: Crear la etiqueta
+        shell: bash
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          git tag -f "v$VERSION"
+          git push origin "refs/tags/v$VERSION"
       - name: Crear el instalador y publicarlo
         working-directory: apps/desktop
         # Bash: PowerShell parte los argumentos -c.publish.*
