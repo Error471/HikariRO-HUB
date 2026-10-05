@@ -22,7 +22,12 @@ const stored: { what: string; why: string; until: string }[] = [
     until: 'Hasta que cierres sesión o borres tus datos.',
   },
   {
-    what: 'Tus MVPs favoritos y la configuración de los avisos',
+    what: 'Si conectas Telegram: el token de tu bot (cifrado), su nombre y el ID de tu chat',
+    why: 'Enviarte los avisos de MVP por Telegram.',
+    until: 'Hasta que quites el bot o borres tus datos.',
+  },
+  {
+    what: 'Tus MVPs favoritos, por dónde avisarte de cada MVP y la antelación elegida',
     why: 'Mostrártelos y avisarte de ellos.',
     until: 'Hasta que los quites o borres tus datos.',
   },
@@ -132,8 +137,10 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
       <Section title="Con quién se comparten">
         <p>
           Solo con <strong className="text-ink">HikariRO</strong>, para iniciar sesión y consultar
-          tus datos. La app también consulta GitHub para saber si hay una versión nueva, sin enviar
-          ningún dato tuyo. Los avisos de MVP los muestra Windows en tu propio PC.
+          tus datos. Si conectas un bot de <strong className="text-ink">Telegram</strong>, los
+          avisos de los MVPs que marques se envían a tu chat a través de Telegram (nombre del MVP,
+          mapa y hora). La app también consulta GitHub para saber si hay una versión nueva, sin
+          enviar ningún dato tuyo. Las notificaciones de Windows se muestran en tu propio PC.
         </p>
       </Section>
 
@@ -141,7 +148,8 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
         <p>
           En el panel de usuario (abajo en la barra lateral) pulsa{' '}
           <strong className="text-ink">Borrar mis datos</strong>. Se eliminan al momento tus
-          favoritos, tus avisos y la sesión guardada, y se cierra tu sesión en HikariRO.
+          favoritos, tus avisos (incluido el bot de Telegram) y la sesión guardada, y se cierra tu
+          sesión en HikariRO.
         </p>
         <p>
           Al desinstalar Hikari Hub desde la configuración de Windows se borra también toda su

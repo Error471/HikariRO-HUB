@@ -58,6 +58,7 @@ function loggerOptions(env: Env): FastifyServerOptions['logger'] {
         'res.headers["set-cookie"]',
         'password',
         '*.password',
+        '*.botToken',
       ],
       censor: '[redacted]',
     },

@@ -23,15 +23,39 @@ test('los favoritos se guardan en la cuenta y sobreviven a otro navegador', asyn
   await expect(star).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('el diálogo de avisos informa del estado', async ({ page }) => {
+test('configura Telegram y elige el canal de aviso de cada MVP', async ({ page }) => {
   await login(page, '/mvp');
-  await page.getByRole('button', { name: 'Avisos' }).click();
+  await page.getByRole('button', { name: 'Avisos', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Avisos de MVP' });
-  await expect(dialog).toBeVisible();
   // Fuera de la app de escritorio no hay notificaciones de Windows.
   await expect(
-    dialog.getByText('Los avisos solo funcionan en la app de escritorio de Hikari Hub.'),
+    dialog.getByText('Las notificaciones de Windows solo funcionan en la app de escritorio.'),
   ).toBeVisible();
+
+  const removeBot = dialog.getByRole('button', { name: 'Quitar el bot' });
+  if (await removeBot.isVisible()) await removeBot.click();
+  await dialog.getByLabel('Token del bot').fill('123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw');
+  await dialog.getByRole('button', { name: 'Conectar bot' }).click();
+  await expect(dialog.getByText('@hikari_demo_bot').first()).toBeVisible();
+  await dialog.getByRole('button', { name: 'Detectar chat' }).click();
+  await expect(dialog.getByText('Conectado', { exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: 'Cerrar' }).click();
-  await expect(dialog).toBeHidden();
+
+  await page.getByRole('button', { name: /^Avisos de Baphomet/ }).click();
+  await page
+    .getByRole('menuitemradio', { name: /Telegram/ })
+    .first()
+    .click();
+  await expect(page.getByRole('button', { name: 'Avisos de Baphomet: Telegram' })).toBeVisible();
+
+  await page.getByRole('button', { name: /^Con avisos/ }).click();
+  await expect(page.getByRole('heading', { name: 'Baphomet' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Pharaoh' })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Avisos de Baphomet: Telegram' }).click();
+  await page.getByRole('menuitemradio', { name: 'Sin avisos' }).click();
+  // Con el filtro «Con avisos» activo, el MVP desaparece de la lista.
+  await expect(
+    page.getByText('Pulsa la campana de un MVP para elegir cómo avisarte.'),
+  ).toBeVisible();
 });

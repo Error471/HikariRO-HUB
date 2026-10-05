@@ -14,6 +14,7 @@ import { NewsService } from '../src/modules/news/news.service.js';
 import { WikiService } from '../src/modules/wiki/wiki.service.js';
 import { AlertService } from '../src/modules/alerts/alerts.service.js';
 import type { Notifier } from '../src/modules/alerts/notifier.js';
+import { TelegramClient } from '../src/modules/alerts/telegram-client.js';
 import { SessionService } from '../src/session/session-service.js';
 import { MemorySessionStore } from '../src/session/session-store.js';
 import { MemoryUserDataStore } from '../src/user/user-data-store.js';
@@ -21,6 +22,7 @@ import { MemoryUserDataStore } from '../src/user/user-data-store.js';
 export const HIKARI = 'https://hikariro.test';
 export const APP_ORIGIN = 'https://hub.test';
 export const NEWS_FEED = 'https://api.hikariro.test';
+export const TELEGRAM = 'https://telegram.test';
 
 export const fixture = (name: string) =>
   readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
@@ -38,7 +40,12 @@ export const testEnv = loadEnv({
 export function createMockHikari() {
   const agent = new MockAgent();
   agent.disableNetConnect();
-  return { agent, pool: agent.get(HIKARI), newsPool: agent.get(NEWS_FEED) };
+  return {
+    agent,
+    pool: agent.get(HIKARI),
+    newsPool: agent.get(NEWS_FEED),
+    telegramPool: agent.get(TELEGRAM),
+  };
 }
 
 export async function createTestApp(
@@ -72,17 +79,19 @@ export async function createTestApp(
     dispatcher: agent,
   });
   const hikariAuth = new HikariAuth(client);
-  const sessions = new SessionService(
-    new MemorySessionStore(),
-    new Sealer(testEnv.SESSION_ENCRYPTION_KEY),
-    {
-      ttlMs: 3_600_000,
-      revalidateMs,
-      ...(remember && { relogin: (user: string, pass: string) => hikariAuth.login(user, pass) }),
-    },
-  );
+  const sealer = new Sealer(testEnv.SESSION_ENCRYPTION_KEY);
+  const sessions = new SessionService(new MemorySessionStore(), sealer, {
+    ttlMs: 3_600_000,
+    revalidateMs,
+    ...(remember && { relogin: (user: string, pass: string) => hikariAuth.login(user, pass) }),
+  });
   const userData = new MemoryUserDataStore();
-  const alerts = new AlertService(userData, notifier);
+  const alerts = new AlertService(
+    userData,
+    notifier,
+    new TelegramClient({ baseUrl: TELEGRAM, timeoutMs: 2000, dispatcher: agent }),
+    sealer,
+  );
   const mvp = new MvpService(client, HIKARI);
   const app = await buildApp({
     env: { ...testEnv, ...env, ...(webDir && { WEB_DIST_DIR: webDir }) },

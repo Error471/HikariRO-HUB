@@ -17,6 +17,7 @@ const apiEnv = {
   WEB_DIST_DIR: fileURLToPath(new URL('./apps/web/dist', import.meta.url)),
   HIKARI_BASE_URL: `http://localhost:${MOCK_PORT}`,
   HIKARI_NEWS_FEED_URL: `http://localhost:${MOCK_PORT}/discord/feed.php`,
+  TELEGRAM_API_URL: `http://localhost:${MOCK_PORT}/telegram`,
   SESSION_SECRET: randomBytes(48).toString('base64url'),
   SESSION_ENCRYPTION_KEY: randomBytes(32).toString('base64'),
   COOKIE_SECURE: 'false',

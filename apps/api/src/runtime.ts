@@ -10,7 +10,7 @@ export interface RunningServer {
   close(): Promise<void>;
 }
 
-/** Arranca la API, el mantenimiento de sesiones y, si hay a quién avisar, el vigilante de MVPs. */
+/** Arranca la API, el mantenimiento de sesiones y el vigilante de MVPs. */
 export async function startServer(
   env: Env,
   options: ContainerOptions = {},
@@ -25,17 +25,16 @@ export async function startServer(
     throw error;
   }
 
-  const watcher = deps.alerts.available
-    ? new MvpWatcher({
-        store: deps.userData,
-        sessions: deps.sessions,
-        mvp: deps.mvp,
-        alerts: deps.alerts,
-        intervalMs: env.ALERT_POLL_SECONDS * 1000,
-        logger: app.log,
-      })
-    : null;
-  watcher?.start();
+  // Siempre activo: aunque no haya Windows, los avisos pueden ir por Telegram.
+  const watcher = new MvpWatcher({
+    store: deps.userData,
+    sessions: deps.sessions,
+    mvp: deps.mvp,
+    alerts: deps.alerts,
+    intervalMs: env.ALERT_POLL_SECONDS * 1000,
+    logger: app.log,
+  });
+  watcher.start();
 
   const keeper =
     env.KEEPALIVE_MINUTES > 0
@@ -52,7 +51,7 @@ export async function startServer(
     app,
     async close() {
       keeper?.stop();
-      watcher?.stop();
+      watcher.stop();
       await app.close();
     },
   };

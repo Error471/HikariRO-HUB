@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useNow } from '@/hooks/useNow';
 import { cn } from '@/lib/cn';
 import { NotificationsDialog } from '@/features/notifications/NotificationsDialog';
+import { useMvpChannels } from '@/features/notifications/alerts';
 import { useFavorites } from './favorites';
 import { MvpCard } from './MvpCard';
 import { useMvpList } from './mvp-query';
@@ -33,6 +34,7 @@ function MvpGridSkeleton() {
 export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
   const { data, error, isPending, isFetching, refetch, offset } = useMvpList();
   const favorites = useFavorites();
+  const alerts = useMvpChannels();
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
   const now = useNow(1000) + offset;
@@ -45,16 +47,23 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
     filter,
     query: deferredQuery,
     favorites: favorites.values,
+    alerted: alerts.alerted,
   });
 
   const count = (key: MvpFilter) =>
-    filterMvps(views, { filter: key, query: '', favorites: favorites.values }).length;
+    filterMvps(views, {
+      filter: key,
+      query: '',
+      favorites: favorites.values,
+      alerted: alerts.alerted,
+    }).length;
   const options: FilterOption<MvpFilter>[] = [
     { value: 'all', label: 'Todos', count: views.length },
     { value: 'window', label: 'Respawn aleatorio', count: count('window') },
     { value: 'cooldown', label: 'En espera', count: count('cooldown') },
     { value: 'ready', label: 'Disponibles', count: count('ready') },
     { value: 'favorites', label: 'Favoritos', count: favorites.values.size },
+    { value: 'alerts', label: 'Con avisos', count: count('alerts') },
   ];
 
   return (
@@ -64,7 +73,7 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
         description="Respawns registrados en el servidor. Se actualiza cada 15 segundos."
         actions={
           <div className="flex flex-wrap gap-2">
-            <NotificationsDialog favoritesCount={favorites.values.size} />
+            <NotificationsDialog />
             <button
               type="button"
               onClick={() => void refetch()}
@@ -107,10 +116,15 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
           fallbackUrl={modules.mvp.sourceUrl}
         />
       ) : visible.length === 0 ? (
-        <EmptyState icon={filter === 'favorites' ? Hourglass : SearchX} title="No hay resultados">
+        <EmptyState
+          icon={filter === 'favorites' || filter === 'alerts' ? Hourglass : SearchX}
+          title="No hay resultados"
+        >
           {filter === 'favorites'
             ? 'Marca MVPs con la estrella para verlos aquí.'
-            : 'Prueba con otro filtro o búsqueda.'}
+            : filter === 'alerts'
+              ? 'Pulsa la campana de un MVP para elegir cómo avisarte.'
+              : 'Prueba con otro filtro o búsqueda.'}
         </EmptyState>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
@@ -120,6 +134,9 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
               mvp={mvp}
               favorite={favorites.values.has(mvp.id)}
               onToggleFavorite={favorites.toggle}
+              alertChannel={alerts.channelOf(mvp.id)}
+              alertConfig={alerts.config}
+              onAlertChannelChange={alerts.setChannel}
             />
           ))}
         </div>

@@ -6,6 +6,7 @@ import { Sealer } from './lib/crypto.js';
 import { AlbumService } from './modules/albums/album.service.js';
 import { AlertService } from './modules/alerts/alerts.service.js';
 import type { Notifier } from './modules/alerts/notifier.js';
+import { TelegramClient } from './modules/alerts/telegram-client.js';
 import { MemoryLoginThrottle } from './modules/auth/login-throttle.js';
 import { MarketService } from './modules/markets/market.service.js';
 import { MvpService } from './modules/mvp/mvp.service.js';
@@ -17,7 +18,7 @@ import { FileUserDataStore, MemoryUserDataStore } from './user/user-data-store.j
 import type { AppDependencies } from './app.js';
 
 export interface ContainerOptions {
-  /** Muestra los avisos de MVP; sin él los avisos no están disponibles. */
+  /** Muestra las notificaciones de Windows; sin él solo hay avisos por Telegram. */
   notifier?: Notifier | null;
 }
 
@@ -38,9 +39,10 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
 
   const hikariAuth = new HikariAuth(client);
   const dataDir = env.DATA_DIR;
+  const sealer = new Sealer(env.SESSION_ENCRYPTION_KEY);
   const sessions = new SessionService(
     dataDir ? new FileSessionStore(join(dataDir, 'sessions.json')) : new MemorySessionStore(),
-    new Sealer(env.SESSION_ENCRYPTION_KEY),
+    sealer,
     {
       ttlMs: env.SESSION_TTL_HOURS * 3_600_000,
       revalidateMs: env.SESSION_REVALIDATE_SECONDS * 1000,
@@ -64,7 +66,12 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
     wiki: new WikiService(client, origin),
     albums: new AlbumService(client, origin),
     userData,
-    alerts: new AlertService(userData, options.notifier ?? null),
+    alerts: new AlertService(
+      userData,
+      options.notifier ?? null,
+      new TelegramClient({ baseUrl: env.TELEGRAM_API_URL, timeoutMs: env.HIKARI_TIMEOUT_MS }),
+      sealer,
+    ),
     loginThrottle: new MemoryLoginThrottle({
       maxAttempts: env.LOGIN_MAX_ATTEMPTS,
       windowMs: env.LOGIN_WINDOW_MINUTES * 60_000,

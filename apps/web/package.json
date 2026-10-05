@@ -15,6 +15,7 @@
     "@fontsource-variable/geist-mono": "^5.3.0",
     "@hikari-hub/shared": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@tanstack/react-query": "^5.90.0",
     "@tanstack/react-router": "^1.130.0",
     "clsx": "^2.1.1",

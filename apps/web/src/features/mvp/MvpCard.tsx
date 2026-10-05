@@ -1,7 +1,10 @@
+import type { AlertConfigResponse } from '@hikari-hub/shared';
 import { ExternalLink, Skull, Star } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
 import { formatEpoch, formatEpochRange } from '@/lib/format';
+import type { ChannelChoice } from '@/features/notifications/alerts';
+import { MvpAlertMenu } from './MvpAlertMenu';
 import {
   formatCountdown,
   stateDescriptions,
@@ -118,9 +121,19 @@ interface MvpCardProps {
   mvp: MvpView;
   favorite: boolean;
   onToggleFavorite: (id: number) => void;
+  alertChannel: ChannelChoice;
+  alertConfig: AlertConfigResponse | undefined;
+  onAlertChannelChange: (id: number, channel: ChannelChoice) => void;
 }
 
-export function MvpCard({ mvp, favorite, onToggleFavorite }: MvpCardProps) {
+export function MvpCard({
+  mvp,
+  favorite,
+  onToggleFavorite,
+  alertChannel,
+  alertConfig,
+  onAlertChannelChange,
+}: MvpCardProps) {
   const styles = stateStyles[mvp.state.key];
   return (
     <article
@@ -158,20 +171,28 @@ export function MvpCard({ mvp, favorite, onToggleFavorite }: MvpCardProps) {
             {stateLabels[mvp.state.key]}
           </span>
         </div>
-        <button
-          type="button"
-          onClick={() => onToggleFavorite(mvp.id)}
-          aria-pressed={favorite}
-          aria-label={
-            favorite ? `Quitar ${mvp.name} de favoritos` : `Añadir ${mvp.name} a favoritos`
-          }
-          className="grid size-10 shrink-0 place-items-center rounded-lg text-ink-faint transition hover:bg-white/5 hover:text-gold-300"
-        >
-          <Star
-            aria-hidden="true"
-            className={cn('size-5', favorite && 'fill-gold-400 text-gold-400')}
+        <div className="flex shrink-0 items-center gap-1">
+          <MvpAlertMenu
+            mvpName={mvp.name}
+            value={alertChannel}
+            config={alertConfig}
+            onChange={(channel) => onAlertChannelChange(mvp.id, channel)}
           />
-        </button>
+          <button
+            type="button"
+            onClick={() => onToggleFavorite(mvp.id)}
+            aria-pressed={favorite}
+            aria-label={
+              favorite ? `Quitar ${mvp.name} de favoritos` : `Añadir ${mvp.name} a favoritos`
+            }
+            className="grid size-10 shrink-0 place-items-center rounded-lg text-ink-faint transition hover:bg-white/5 hover:text-gold-300"
+          >
+            <Star
+              aria-hidden="true"
+              className={cn('size-5', favorite && 'fill-gold-400 text-gold-400')}
+            />
+          </button>
+        </div>
       </header>
       <ul className="mt-3">
         {mvp.spawns.map((spawn, index) => (

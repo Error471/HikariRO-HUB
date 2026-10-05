@@ -124,7 +124,10 @@ const mvpRoute = createRoute({
   getParentRoute: () => appRoute,
   path: modules.mvp.path,
   validateSearch: z.object({
-    filter: z.enum(['all', 'window', 'cooldown', 'ready', 'favorites']).default('all').catch('all'),
+    filter: z
+      .enum(['all', 'window', 'cooldown', 'ready', 'favorites', 'alerts'])
+      .default('all')
+      .catch('all'),
   }),
   component: lazyRouteComponent(() => import('./routes/MvpRoute'), 'MvpRoute'),
   pendingComponent: PageSkeleton,

@@ -103,20 +103,31 @@ export function formatCountdown(totalSeconds: number): string {
   return days ? `${days}d ${clock}` : clock;
 }
 
-export type MvpFilter = 'all' | SpawnStateKey | 'favorites';
+export type MvpFilter = 'all' | SpawnStateKey | 'favorites' | 'alerts';
+
+interface FilterOptions {
+  filter: MvpFilter;
+  query: string;
+  favorites: ReadonlySet<number>;
+  /** MVPs con avisos (Windows, Telegram o ambos). */
+  alerted?: ReadonlySet<number>;
+}
+
+const byMvp = new Set<MvpFilter>(['all', 'favorites', 'alerts']);
 
 export function filterMvps(
   views: MvpView[],
-  { filter, query, favorites }: { filter: MvpFilter; query: string; favorites: Set<number> },
+  { filter, query, favorites, alerted = new Set() }: FilterOptions,
 ): MvpView[] {
   const needle = query.trim().toLowerCase();
   return views.flatMap((mvp) => {
     if (filter === 'favorites' && !favorites.has(mvp.id)) return [];
+    if (filter === 'alerts' && !alerted.has(mvp.id)) return [];
     const nameMatches = mvp.name.toLowerCase().includes(needle);
     const spawns = mvp.spawns.filter(
       (spawn) =>
         (!needle || nameMatches || spawn.map.toLowerCase().includes(needle)) &&
-        (filter === 'all' || filter === 'favorites' || spawn.state.key === filter),
+        (byMvp.has(filter) || spawn.state.key === filter),
     );
     return spawns.length ? [{ ...mvp, spawns }] : [];
   });

@@ -78,6 +78,11 @@ describe('orden y filtros', () => {
     expect(
       filterMvps(views, { filter: 'favorites', query: '', favorites }).map((v) => v.id),
     ).toEqual([4]);
+    expect(
+      filterMvps(views, { filter: 'alerts', query: '', favorites, alerted: new Set([4]) }).map(
+        (v) => v.id,
+      ),
+    ).toEqual([4]);
   });
 });
 

@@ -1,25 +1,49 @@
-import { leadMinutesSchema, type LeadMinutes } from '@hikari-hub/shared';
+import {
+  alertChannelSchema,
+  leadMinutesSchema,
+  type AlertChannel,
+  type LeadMinutes,
+} from '@hikari-hub/shared';
 import { z } from 'zod';
 import { JsonFile } from '../lib/json-file.js';
+
+export interface TelegramSettings {
+  /** Token del bot cifrado con la clave de la instalación. */
+  token: string;
+  botName: string;
+  chatId: string | null;
+}
 
 export interface AlertState {
   enabled: boolean;
   leadMinutes: LeadMinutes;
   /** Sesión de Hikari Hub que usa el vigilante de MVPs para consultar HikariRO. */
   watchSessionId: string | null;
+  /** Canal de aviso de cada MVP (id → canal). */
+  channels: Record<string, AlertChannel>;
+  telegram: TelegramSettings | null;
 }
 
 export const defaultAlertState = (): AlertState => ({
-  enabled: false,
+  enabled: true,
   leadMinutes: 5,
   watchSessionId: null,
+  channels: {},
+  telegram: null,
 });
 
 const alertStateSchema = z.object({
   enabled: z.boolean(),
   leadMinutes: leadMinutesSchema,
   watchSessionId: z.string().nullable(),
+  // Opcionales para leer los datos de versiones anteriores (avisos solo de favoritos).
+  channels: z.record(z.string(), alertChannelSchema).optional(),
+  telegram: z
+    .object({ token: z.string(), botName: z.string(), chatId: z.string().nullable() })
+    .nullable()
+    .optional(),
 });
+type StoredAlertState = z.infer<typeof alertStateSchema>;
 
 /**
  * Datos propios de Hikari Hub por cuenta de HikariRO (favoritos y avisos).
@@ -30,7 +54,7 @@ export interface UserDataStore {
   setFavorites(username: string, ids: number[]): Promise<void>;
   getAlerts(username: string): Promise<AlertState>;
   setAlerts(username: string, state: AlertState): Promise<void>;
-  /** Usuarios con los avisos activados. */
+  /** Usuarios con los avisos activados y algún MVP marcado. */
   alertUsers(): Promise<string[]>;
   /** Marca un aviso como enviado; devuelve `false` si ya lo estaba (evita duplicados). */
   claimNotification(key: string, ttlSeconds: number): Promise<boolean>;
@@ -48,6 +72,18 @@ const userDataSchema = z.object({
 type UserData = z.infer<typeof userDataSchema>;
 
 const emptyData = (): UserData => ({ favorites: {}, alerts: {}, claims: {} });
+
+/** Antes solo se avisaba de los favoritos, por Windows: se conservan como canal `windows`. */
+function upgradeAlertState(stored: StoredAlertState, favorites: number[]): AlertState {
+  const state = structuredClone(stored);
+  const legacyChannels = (): Record<string, AlertChannel> =>
+    state.enabled ? Object.fromEntries(favorites.map((id) => [String(id), 'windows'])) : {};
+  return {
+    ...state,
+    channels: state.channels ?? legacyChannels(),
+    telegram: state.telegram ?? null,
+  };
+}
 
 const without = <T>(record: Record<string, T>, key: string): Record<string, T> =>
   Object.fromEntries(Object.entries(record).filter(([entry]) => entry !== key));
@@ -70,8 +106,9 @@ export class MemoryUserDataStore implements UserDataStore {
   }
 
   async getAlerts(username: string): Promise<AlertState> {
-    const state = this.data.alerts[userKey(username)];
-    return state ? structuredClone(state) : defaultAlertState();
+    const key = userKey(username);
+    const state = this.data.alerts[key];
+    return state ? upgradeAlertState(state, this.data.favorites[key] ?? []) : defaultAlertState();
   }
 
   async setAlerts(username: string, state: AlertState): Promise<void> {
@@ -80,9 +117,12 @@ export class MemoryUserDataStore implements UserDataStore {
   }
 
   async alertUsers(): Promise<string[]> {
-    return Object.entries(this.data.alerts)
-      .filter(([, state]) => state.enabled)
-      .map(([username]) => username);
+    const users: string[] = [];
+    for (const username of Object.keys(this.data.alerts)) {
+      const state = await this.getAlerts(username);
+      if (state.enabled && Object.keys(state.channels).length > 0) users.push(username);
+    }
+    return users;
   }
 
   async claimNotification(key: string, ttlSeconds: number): Promise<boolean> {

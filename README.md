@@ -94,25 +94,30 @@ docs/                   análisis técnico y sistema visual
 
 Módulos (todos requieren sesión):
 
-| Método   | Ruta                           | Descripción                                                                                   |
-| -------- | ------------------------------ | --------------------------------------------------------------------------------------------- |
-| `GET`    | `/api/mvp`                     | MVPs con su estado, mapa y hora del servidor                                                  |
-| `GET`    | `/api/news`                    | Noticias, eventos y changelog del Discord oficial                                             |
-| `GET`    | `/api/markets/:type`           | Tiendas abiertas (`vending` o `buying`)                                                       |
-| `GET`    | `/api/markets/:type/:shopId`   | Detalle de una tienda: objetos, precios y cantidades                                          |
-| `GET`    | `/api/markets/search?q=`       | Búsqueda unificada de un objeto en ventas y compras                                           |
-| `GET`    | `/api/wiki/page?title=`        | Artículo de la wiki con HTML saneado                                                          |
-| `GET`    | `/api/wiki/search?q=`          | Búsqueda en la wiki                                                                           |
-| `GET`    | `/api/wiki/categories[/:name]` | Categorías y sus artículos                                                                    |
-| `GET`    | `/api/wiki/index`              | Portada e índice de la wiki                                                                   |
-| `GET`    | `/api/albums/cards`            | Álbum de cartas. Query: `status` (`all`/`found`/`missing`), `sort` (`id`/`name`), `q`, `page` |
-| `GET`    | `/api/albums/fishing`          | Álbum de pesca: progreso y especies (las no descubiertas sin nombre)                          |
-| `GET`    | `/api/mvp/favorites`           | MVPs favoritos de la cuenta                                                                   |
-| `PUT`    | `/api/mvp/favorites`           | `{ ids }` → guarda los favoritos (máx. 300)                                                   |
-| `GET`    | `/api/alerts/config`           | Si hay avisos disponibles (solo en la app), si están activos y la antelación                  |
-| `PUT`    | `/api/alerts/settings`         | `{ enabled?, leadMinutes?: 0 \| 5 \| 10 \| 15 }`                                              |
-| `POST`   | `/api/alerts/test`             | Muestra una notificación de prueba (3/min)                                                    |
-| `DELETE` | `/api/account/data`            | Borra favoritos, avisos y la sesión, y cierra la sesión en HikariRO                           |
+| Método   | Ruta                           | Descripción                                                                                          |
+| -------- | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/mvp`                     | MVPs con su estado, mapa y hora del servidor                                                         |
+| `GET`    | `/api/news`                    | Noticias, eventos y changelog del Discord oficial                                                    |
+| `GET`    | `/api/markets/:type`           | Tiendas abiertas (`vending` o `buying`)                                                              |
+| `GET`    | `/api/markets/:type/:shopId`   | Detalle de una tienda: objetos, precios y cantidades                                                 |
+| `GET`    | `/api/markets/search?q=`       | Búsqueda unificada de un objeto en ventas y compras                                                  |
+| `GET`    | `/api/wiki/page?title=`        | Artículo de la wiki con HTML saneado                                                                 |
+| `GET`    | `/api/wiki/search?q=`          | Búsqueda en la wiki                                                                                  |
+| `GET`    | `/api/wiki/categories[/:name]` | Categorías y sus artículos                                                                           |
+| `GET`    | `/api/wiki/index`              | Portada e índice de la wiki                                                                          |
+| `GET`    | `/api/albums/cards`            | Álbum de cartas. Query: `status` (`all`/`found`/`missing`), `sort` (`id`/`name`), `q`, `page`        |
+| `GET`    | `/api/albums/fishing`          | Álbum de pesca: progreso y especies (las no descubiertas sin nombre)                                 |
+| `GET`    | `/api/mvp/favorites`           | MVPs favoritos de la cuenta                                                                          |
+| `PUT`    | `/api/mvp/favorites`           | `{ ids }` → guarda los favoritos (máx. 300)                                                          |
+| `GET`    | `/api/alerts/config`           | Avisos: pausa, antelación, canal de cada MVP, Windows disponible y estado de Telegram (sin el token) |
+| `PUT`    | `/api/alerts/settings`         | `{ enabled?, leadMinutes?: 0 \| 5 \| 10 \| 15 }`                                                     |
+| `PUT`    | `/api/alerts/mvps/:mvpId`      | `{ channel: "windows" \| "telegram" \| "both" \| "none" }`                                           |
+| `PUT`    | `/api/alerts/telegram`         | `{ botToken }` → comprueba el bot con Telegram y lo guarda cifrado                                   |
+| `POST`   | `/api/alerts/telegram/detect`  | Busca el chat del último mensaje enviado al bot y lo vincula                                         |
+| `PUT`    | `/api/alerts/telegram/chat`    | `{ chatId }` → vincula un grupo o canal a mano                                                       |
+| `DELETE` | `/api/alerts/telegram`         | Quita el bot                                                                                         |
+| `POST`   | `/api/alerts/test`             | `{ channel: "windows" \| "telegram" }` → aviso de prueba (5/min)                                     |
+| `DELETE` | `/api/account/data`            | Borra favoritos, avisos y la sesión, y cierra la sesión en HikariRO                                  |
 
 Errores siempre con el formato `{ "error": { "code", "message" } }` y mensajes aptos para el usuario. Cualquier otra ruta `GET` devuelve la web (`index.html`).
 
@@ -178,7 +183,8 @@ Todo desde la web de GitHub:
 ### Módulos
 
 - **MVP Timer**: misma lógica de estados que la web original (_Disponible_, _En espera_, _Respawn aleatorio_). La cuenta atrás se calcula con la hora del servidor y los datos se refrescan cada 15 s. Filtro guardado en la URL (`?filter=window`). Favoritos guardados por cuenta.
-- **Avisos de MVP**: un vigilante dentro de la app consulta el MVP Timer cada `ALERT_POLL_SECONDS` (60 s) con la sesión del usuario y muestra una notificación de Windows N minutos antes y al abrirse la ventana de respawn de cada favorito. Cada aviso se muestra una sola vez. Si la sesión de HikariRO caduca, los avisos se pausan y se avisa para volver a entrar. Al pulsar la notificación se abre la app en el MVP Timer.
+- **Avisos de MVP**: la campana de cada MVP elige el canal: **Windows**, **Telegram**, **ambos** o **ninguno** (filtro «Con avisos»). Un vigilante dentro de la app consulta el MVP Timer cada `ALERT_POLL_SECONDS` (60 s) con la sesión del usuario y avisa N minutos antes y al abrirse la ventana de respawn. Cada aviso se envía una sola vez; si Telegram falla, los avisos por Windows siguen llegando. Si la sesión de HikariRO caduca, los avisos se pausan y se avisa por los canales en uso. Al pulsar la notificación de Windows se abre la app en el MVP Timer. Los favoritos con avisos de versiones anteriores pasan a «Windows».
+- **Telegram**: en «Avisos» se pega el token de un bot creado con @BotFather (se comprueba con `getMe` y se guarda cifrado con AES-256-GCM; nunca vuelve a la web), se pulsa Iniciar en el chat con el bot y «Detectar chat» lo vincula (`getUpdates`); también se puede escribir el ID de un grupo o canal. Los mensajes son texto plano, sin formato.
 - **Privacidad**: página `/privacidad` (enlazada desde el login) con qué se guarda, qué no y cómo borrarlo. Botón **Borrar mis datos** en el panel de usuario.
 - **Mercados**: HikariRO no tiene API de mercados y su búsqueda de items no es fiable, así que la API lee el listado y el detalle de cada tienda (máx. 3 peticiones simultáneas) y guarda una instantánea de 60 s. Si HikariRO falla, se sirve la última instantánea durante 10 min.
 - **Wiki**: usa la API oficial de MediaWiki (no scraping). El HTML de cada artículo se sanea con una lista blanca de etiquetas, atributos, clases y propiedades CSS. Los enlaces internos se convierten en rutas de la app y los externos se abren en el navegador del sistema.

@@ -272,8 +272,25 @@ function sessionOf(cookie: string | undefined): string | undefined {
   return cookie?.match(/fluxSessionData=([^;]+)/)?.[1];
 }
 
+/** API de bots de Telegram simulada (/telegram/bot<token>/<método>) para las pruebas e2e. */
+function telegramApi(method: string): unknown {
+  if (method === 'getMe') return { ok: true, result: { username: 'hikari_demo_bot' } };
+  if (method === 'getUpdates') {
+    return { ok: true, result: [{ update_id: 1, message: { chat: { id: 4242 } } }] };
+  }
+  if (method === 'sendMessage') return { ok: true, result: { message_id: 1 } };
+  return { ok: false, error_code: 404 };
+}
+
 createServer((req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`);
+  const telegram = /^\/telegram\/bot[^/]+\/(\w+)$/.exec(url.pathname);
+  if (telegram) {
+    req.resume();
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify(telegramApi(telegram[1] ?? '')));
+    return;
+  }
   const action = `${url.searchParams.get('module')}/${url.searchParams.get('action')}`;
   const sid = sessionOf(req.headers.cookie) ?? randomUUID();
   res.setHeader('set-cookie', `fluxSessionData=${sid}; path=/; SameSite=Lax`);

@@ -41,6 +41,9 @@ const envSchema = z.object({
   /** Contacto del responsable de esta instancia, mostrado en la página de privacidad. */
   PRIVACY_CONTACT: z.string().trim().max(200).optional(),
 
+  /** API de bots de Telegram (configurable para las pruebas). */
+  TELEGRAM_API_URL: z.url().default('https://api.telegram.org'),
+
   /** Cada cuánto consulta el MVP Timer el vigilante de avisos. */
   ALERT_POLL_SECONDS: z.coerce.number().int().min(30).max(600).default(60),
 

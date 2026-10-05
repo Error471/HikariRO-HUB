@@ -36,7 +36,13 @@ describe('DELETE /api/account/data', () => {
   it('borra favoritos, avisos y la sesión', async () => {
     const { cookie, csrf } = await loginAs(app, pool);
     await userData.setFavorites('ivan', [1039]);
-    await userData.setAlerts('ivan', { enabled: true, leadMinutes: 10, watchSessionId: 'x' });
+    await userData.setAlerts('ivan', {
+      enabled: true,
+      leadMinutes: 10,
+      watchSessionId: 'x',
+      channels: { '1039': 'both' },
+      telegram: null,
+    });
 
     pool
       .intercept({ path: '/?module=account&action=logout', method: 'GET' })
@@ -46,10 +52,7 @@ describe('DELETE /api/account/data', () => {
     expect(response.statusCode).toBe(204);
     expect(String(response.headers['set-cookie'])).toMatch(/__Host-hh_sid=;/);
     expect(await userData.getFavorites('ivan')).toEqual([]);
-    expect(await userData.getAlerts('ivan')).toMatchObject({
-      enabled: false,
-      watchSessionId: null,
-    });
+    expect(await userData.getAlerts('ivan')).toMatchObject({ channels: {}, watchSessionId: null });
     expect(await userData.alertUsers()).toEqual([]);
 
     const me = await app.inject({ method: 'GET', url: '/api/auth/me', headers: { cookie } });
