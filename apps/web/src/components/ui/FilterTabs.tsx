@@ -13,7 +13,7 @@ interface FilterTabsProps<T extends string> {
   onChange: (value: T) => void;
 }
 
-/** Grupo de filtros excluyentes con scroll horizontal en móvil. */
+/** Grupo de filtros excluyentes; pasa a varias líneas si no caben. */
 export function FilterTabs<T extends string>({
   label,
   options,
@@ -21,11 +21,7 @@ export function FilterTabs<T extends string>({
   onChange,
 }: FilterTabsProps<T>) {
   return (
-    <div
-      role="group"
-      aria-label={label}
-      className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0"
-    >
+    <div role="group" aria-label={label} className="flex min-w-0 flex-wrap gap-1.5">
       {options.map((option) => {
         const active = option.value === value;
         return (

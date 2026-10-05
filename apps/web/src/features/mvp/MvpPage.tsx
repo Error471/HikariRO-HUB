@@ -91,7 +91,7 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
         }
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <FilterTabs
           label="Filtrar por estado"
           options={options}
@@ -100,7 +100,7 @@ export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
         />
         <SearchInput
           label="Buscar MVP o mapa"
-          className="lg:w-72"
+          className="lg:w-72 lg:shrink-0"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar MVP o mapa…"
