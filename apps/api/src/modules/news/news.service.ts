@@ -7,6 +7,7 @@ import {
 import { z } from 'zod';
 import type { HikariClient } from '../../hikari/hikari-client.js';
 import { parseUpstreamJson } from '../../hikari/upstream-json.js';
+import { untracked, type UpstreamTracker } from '../../hikari/upstream-monitor.js';
 import { TtlCache } from '../../lib/ttl-cache.js';
 import { bodyWithoutTitle, extractTitleAndSummary } from './news-text.js';
 
@@ -69,12 +70,14 @@ export class NewsService {
   constructor(
     private readonly client: HikariClient,
     private readonly feedPath: string,
+    private readonly monitor: UpstreamTracker = untracked,
   ) {}
 
   list(): Promise<NewsListResponse> {
     return this.cache.get('feed', async () => {
-      const response = await this.client.get(this.feedPath);
-      const data = parseUpstreamJson(response, upstreamSchema);
+      const data = await this.monitor.track('news', async () =>
+        parseUpstreamJson(await this.client.get(this.feedPath), upstreamSchema),
+      );
       return { updatedAt: data.updated_at ?? null, posts: data.posts.map(toPost) };
     });
   }

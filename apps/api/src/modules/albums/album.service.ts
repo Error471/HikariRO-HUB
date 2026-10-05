@@ -1,6 +1,7 @@
 import type { CardAlbumQuery, CardAlbumResponse, FishingAlbumResponse } from '@hikari-hub/shared';
 import { isLoginRedirect } from '../../hikari/fluxcp-pages.js';
 import type { HikariClient, HikariResponse } from '../../hikari/hikari-client.js';
+import { untracked, type UpstreamTracker } from '../../hikari/upstream-monitor.js';
 import { AppError } from '../../lib/app-error.js';
 import type { CookieJar } from '../../lib/cookie-jar.js';
 import { TtlCache } from '../../lib/ttl-cache.js';
@@ -26,6 +27,7 @@ export class AlbumService {
   constructor(
     private readonly client: HikariClient,
     private readonly baseUrl: string,
+    private readonly monitor: UpstreamTracker = untracked,
   ) {}
 
   cardPage(username: string, query: CardAlbumQuery, jar: CookieJar): Promise<CardAlbumResponse> {
@@ -45,8 +47,12 @@ export class AlbumService {
       if (query.q) params.set('q', query.q);
       if (query.page > 1) params.set('p', String(query.page));
 
-      const html = assertAlbumPage(await this.client.get(`/?${params.toString()}`, jar));
-      const parsed = parseCardAlbum(html, this.baseUrl);
+      const parsed = await this.monitor.track('cards', async () =>
+        parseCardAlbum(
+          assertAlbumPage(await this.client.get(`/?${params.toString()}`, jar)),
+          this.baseUrl,
+        ),
+      );
       return {
         ...parsed,
         // HikariRO devuelve la última página si se pide una mayor.
@@ -59,8 +65,12 @@ export class AlbumService {
 
   fishingAlbum(username: string, jar: CookieJar): Promise<FishingAlbumResponse> {
     return this.fishing.get(username.toLowerCase(), async () => {
-      const html = assertAlbumPage(await this.client.get('/?module=fishingalbum', jar));
-      return parseFishingAlbum(html, this.baseUrl);
+      return this.monitor.track('fishing', async () =>
+        parseFishingAlbum(
+          assertAlbumPage(await this.client.get('/?module=fishingalbum', jar)),
+          this.baseUrl,
+        ),
+      );
     });
   }
 }

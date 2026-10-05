@@ -128,6 +128,8 @@ const mvpRoute = createRoute({
       .enum(['all', 'window', 'cooldown', 'ready', 'favorites', 'alerts'])
       .default('all')
       .catch('all'),
+    /** Búsqueda inicial (desde la búsqueda global). */
+    q: z.string().max(64).optional().catch(undefined),
   }),
   component: lazyRouteComponent(() => import('./routes/MvpRoute'), 'MvpRoute'),
   pendingComponent: PageSkeleton,
@@ -247,6 +249,13 @@ const fishingAlbumRoute = createRoute({
   pendingComponent: PageSkeleton,
 });
 
+const diagnosticsRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/diagnostico',
+  component: lazyRouteComponent(() => import('./routes/DiagnosticsRoute'), 'DiagnosticsRoute'),
+  pendingComponent: PageSkeleton,
+});
+
 const routeTree = rootRoute.addChildren([
   loginRoute,
   privacyRoute,
@@ -266,6 +275,7 @@ const routeTree = rootRoute.addChildren([
     wikiArticleRoute,
     cardAlbumRoute,
     fishingAlbumRoute,
+    diagnosticsRoute,
   ]),
 ]);
 

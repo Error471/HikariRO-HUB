@@ -5,7 +5,9 @@ import { buildApp } from '../src/app.js';
 import { loadEnv } from '../src/config/env.js';
 import { HikariAuth } from '../src/hikari/hikari-auth.js';
 import { HikariClient } from '../src/hikari/hikari-client.js';
+import { UpstreamMonitor } from '../src/hikari/upstream-monitor.js';
 import { Sealer } from '../src/lib/crypto.js';
+import { ErrorJournal } from '../src/lib/error-journal.js';
 import { AlbumService } from '../src/modules/albums/album.service.js';
 import { MemoryLoginThrottle } from '../src/modules/auth/login-throttle.js';
 import { MarketService } from '../src/modules/markets/market.service.js';
@@ -78,7 +80,9 @@ export async function createTestApp(
     timeoutMs: 2000,
     dispatcher: agent,
   });
-  const hikariAuth = new HikariAuth(client);
+  const monitor = new UpstreamMonitor();
+  const journal = new ErrorJournal();
+  const hikariAuth = new HikariAuth(client, monitor);
   const sealer = new Sealer(testEnv.SESSION_ENCRYPTION_KEY);
   const sessions = new SessionService(new MemorySessionStore(), sealer, {
     ttlMs: 3_600_000,
@@ -92,21 +96,23 @@ export async function createTestApp(
     new TelegramClient({ baseUrl: TELEGRAM, timeoutMs: 2000, dispatcher: agent }),
     sealer,
   );
-  const mvp = new MvpService(client, HIKARI);
+  const mvp = new MvpService(client, HIKARI, monitor);
   const app = await buildApp({
     env: { ...testEnv, ...env, ...(webDir && { WEB_DIST_DIR: webDir }) },
     hikariAuth,
     sessions,
     loginThrottle: new MemoryLoginThrottle({ maxAttempts: 3, windowMs: 60_000 }),
     mvp,
-    news: new NewsService(newsClient, '/discord/feed.php'),
-    markets: new MarketService(client, HIKARI),
-    wiki: new WikiService(client, HIKARI),
-    albums: new AlbumService(client, HIKARI),
+    news: new NewsService(newsClient, '/discord/feed.php', monitor),
+    markets: new MarketService(client, HIKARI, { monitor }),
+    wiki: new WikiService(client, HIKARI, monitor),
+    albums: new AlbumService(client, HIKARI, monitor),
     userData,
     alerts,
+    monitor,
+    journal,
   });
-  return { app, sessions, userData, alerts, mvp, hikariAuth };
+  return { app, sessions, userData, alerts, mvp, hikariAuth, monitor, journal };
 }
 
 /** Prepara un login correcto en el mock de HikariRO. */

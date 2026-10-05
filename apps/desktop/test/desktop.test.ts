@@ -2,6 +2,8 @@ import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { sanitizeLogText } from '@hikari-hub/api/desktop';
+import { formatDiagnostics } from '../src/diagnostics.js';
 import { createMainLogger, prepareLogFile } from '../src/log.js';
 import { appRoute, isAppUrl, isExternalWebUrl } from '../src/navigation.js';
 import { readPreferences, writePreferences } from '../src/preferences.js';
@@ -92,5 +94,33 @@ describe('preferencias', () => {
     expect(readPreferences(path)).toEqual({ trayHintShown: false });
     writePreferences(path, { trayHintShown: true });
     expect(readPreferences(path)).toEqual({ trayHintShown: true });
+  });
+});
+
+describe('formatDiagnostics', () => {
+  const info = { version: '9.9.9', platform: 'Windows_NT 10 (x64)', sanitize: sanitizeLogText };
+
+  it('resume los últimos avisos y errores sin datos sensibles', () => {
+    const log = [
+      JSON.stringify({ level: 30, time: 1, msg: 'arranque' }),
+      'línea rota',
+      JSON.stringify({ level: 40, time: 2, msg: 'upstream error', code: 'UPSTREAM_CHANGED' }),
+      JSON.stringify({
+        level: 50,
+        time: 3,
+        msg: 'fallo',
+        err: { type: 'Error', message: 'bot123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw' },
+      }),
+    ].join('\n');
+    const text = formatDiagnostics(log, info);
+    expect(text).toContain('Hikari Hub 9.9.9');
+    expect(text).toContain('UPSTREAM_CHANGED');
+    expect(text).not.toContain('arranque');
+    expect(text).not.toContain('AAHdqTcv');
+    expect(text.indexOf('fallo')).toBeLessThan(text.indexOf('upstream error'));
+  });
+
+  it('indica cuando no hay nada que reportar', () => {
+    expect(formatDiagnostics('', info)).toContain('No hay avisos ni errores recientes.');
   });
 });

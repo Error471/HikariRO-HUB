@@ -8,6 +8,7 @@ import {
   parseLoginForm,
 } from './fluxcp-pages.js';
 import type { HikariClient } from './hikari-client.js';
+import { untracked, type UpstreamTracker } from './upstream-monitor.js';
 
 /**
  * Estado de la sesión en HikariRO. `unknown` = respuesta inesperada (mantenimiento, error
@@ -17,9 +18,16 @@ export type AuthState = 'authenticated' | 'anonymous' | 'unknown';
 
 /** Autenticación contra FluxCP. La contraseña solo vive durante la llamada a `login`. */
 export class HikariAuth {
-  constructor(private readonly client: HikariClient) {}
+  constructor(
+    private readonly client: HikariClient,
+    private readonly monitor: UpstreamTracker = untracked,
+  ) {}
 
-  async login(username: string, password: string): Promise<CookieJar> {
+  login(username: string, password: string): Promise<CookieJar> {
+    return this.monitor.track('login', () => this.submitLogin(username, password));
+  }
+
+  private async submitLogin(username: string, password: string): Promise<CookieJar> {
     const jar = new CookieJar();
     const loginPage = await this.client.get(fluxRoutes.login, jar);
     const form = parseLoginForm(loginPage.body);

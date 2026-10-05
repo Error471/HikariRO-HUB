@@ -6,6 +6,7 @@ import type {
   MarketType,
 } from '@hikari-hub/shared';
 import type { HikariClient } from '../../hikari/hikari-client.js';
+import { untracked, type UpstreamTracker } from '../../hikari/upstream-monitor.js';
 import { AppError } from '../../lib/app-error.js';
 import { mapLimit } from '../../lib/map-limit.js';
 import { TtlCache } from '../../lib/ttl-cache.js';
@@ -31,6 +32,7 @@ export interface MarketServiceOptions {
   maxPages?: number;
   /** Tiempo durante el que se sirve la última instantánea si HikariRO falla. */
   staleMs?: number;
+  monitor?: UpstreamTracker;
 }
 
 /**
@@ -42,6 +44,7 @@ export class MarketService {
   private readonly concurrency: number;
   private readonly maxPages: number;
   private readonly staleMs: number;
+  private readonly monitor: UpstreamTracker;
   private lastGood: MarketSnapshot | null = null;
 
   constructor(
@@ -53,6 +56,7 @@ export class MarketService {
     this.concurrency = options.concurrency ?? 3;
     this.maxPages = options.maxPages ?? 10;
     this.staleMs = options.staleMs ?? 10 * 60_000;
+    this.monitor = options.monitor ?? untracked;
   }
 
   async list(type: MarketType): Promise<MarketShopsResponse> {
@@ -83,7 +87,9 @@ export class MarketService {
 
   private async snapshot(): Promise<MarketSnapshot> {
     try {
-      return await this.cache.get('markets', () => this.build());
+      return await this.cache.get('markets', () =>
+        this.monitor.track('markets', () => this.build()),
+      );
     } catch (error) {
       if (this.lastGood && Date.now() - this.lastGood.fetchedAtMs < this.staleMs)
         return this.lastGood;

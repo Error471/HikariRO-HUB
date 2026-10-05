@@ -8,9 +8,21 @@ function handleExpiredSession(client: () => QueryClient, error: unknown) {
   }
 }
 
+/** Si HikariRO ha cambiado su web, el aviso global se actualiza sin esperar al siguiente sondeo. */
+function refreshUpstreamStatus(client: () => QueryClient, error: unknown) {
+  if (error instanceof ApiError && error.code === 'UPSTREAM_CHANGED') {
+    void client().invalidateQueries({ queryKey: ['diagnostics'] });
+  }
+}
+
 export function createQueryClient(): QueryClient {
   const client: QueryClient = new QueryClient({
-    queryCache: new QueryCache({ onError: (error) => handleExpiredSession(() => client, error) }),
+    queryCache: new QueryCache({
+      onError: (error) => {
+        handleExpiredSession(() => client, error);
+        refreshUpstreamStatus(() => client, error);
+      },
+    }),
     mutationCache: new MutationCache({
       onError: (error) => handleExpiredSession(() => client, error),
     }),

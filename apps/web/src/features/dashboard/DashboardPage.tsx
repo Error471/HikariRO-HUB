@@ -3,8 +3,12 @@ import { ArrowUpRight } from 'lucide-react';
 import { modules, type ModuleDefinition } from '@/app/navigation';
 import { Badge } from '@/components/ui/Badge';
 import { MarketSearchBox } from '@/features/markets/MarketSearchBox';
+import { SearchButton } from '@/features/search/CommandPalette';
+import { AlbumsWidget } from './AlbumsWidget';
+import { AlertsWidget } from './AlertsWidget';
 import { MvpWidget } from './MvpWidget';
 import { NewsWidget } from './NewsWidget';
+import { StatusChip } from './StatusChip';
 
 const moreModules = [
   modules.vending,
@@ -46,30 +50,61 @@ function ModuleTile({ module }: { module: ModuleDefinition }) {
 
 export function DashboardPage({ username }: { username: string }) {
   return (
-    <div className="flex flex-col gap-8 animate-rise">
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-6 animate-rise">
+      <section className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm text-ink-muted">{greeting()},</p>
           <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
             {username}
           </h1>
         </div>
-        <a
-          href="https://hikariro.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink sm:self-auto"
-        >
-          Web oficial
-          <ArrowUpRight aria-hidden="true" className="size-4" />
-        </a>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusChip />
+          <SearchButton className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink lg:inline-flex" />
+          <a
+            href="https://hikariro.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
+          >
+            Web oficial
+            <ArrowUpRight aria-hidden="true" className="size-4" />
+          </a>
+        </div>
       </section>
 
-      <MarketSearchBox />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2 lg:row-span-2">
+          <MvpWidget />
+        </div>
+        <AlertsWidget />
+        <AlbumsWidget />
+      </div>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
-        <MvpWidget />
-        <NewsWidget />
+      <div className="grid gap-4 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <NewsWidget />
+        </div>
+        <section
+          aria-labelledby="widget-market"
+          className="flex flex-col gap-3 rounded-card border border-white/7 bg-night-850/80 p-5"
+        >
+          <h2 id="widget-market" className="font-display text-lg font-semibold tracking-tight">
+            Mercado
+          </h2>
+          <p className="text-sm text-ink-muted">
+            Compara al momento quién vende y quién compra un objeto.
+          </p>
+          <MarketSearchBox />
+          <div className="mt-auto flex flex-wrap gap-x-4 gap-y-1 pt-1 text-sm">
+            <Link to="/mercados/vending" className="text-gold-300 hover:text-gold-200">
+              Vending
+            </Link>
+            <Link to="/mercados/buying-store" className="text-gold-300 hover:text-gold-200">
+              Buying Store
+            </Link>
+          </div>
+        </section>
       </div>
 
       <section aria-labelledby="dash-modules">

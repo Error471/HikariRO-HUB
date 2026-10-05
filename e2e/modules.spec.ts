@@ -11,6 +11,7 @@ const pages = [
   { path: '/wiki', heading: 'Wiki' },
   { path: '/albumes/cartas', heading: 'Cartas' },
   { path: '/albumes/pesca', heading: 'Pesca' },
+  { path: '/diagnostico', heading: 'Diagnóstico' },
 ];
 
 test('todos los módulos cargan sin errores', async ({ page }) => {
@@ -59,4 +60,30 @@ test('al borrar la búsqueda se vuelve a la página de origen', async ({ page })
   await page.getByRole('searchbox', { name: 'Buscar item en todos los mercados' }).fill('');
   await expect(page).toHaveURL(/\/mercados\/vending(\?.*)?$/);
   await expect(page.getByRole('heading', { level: 1, name: 'Vending' })).toBeVisible();
+});
+
+test('la búsqueda global (Ctrl+K) lleva a un MVP y a la wiki', async ({ page }) => {
+  await login(page);
+  await expect(page.getByRole('heading', { level: 1, name: /demo/i })).toBeVisible();
+  await page.keyboard.press('Control+k');
+  const dialog = page.getByRole('dialog', { name: 'Búsqueda global' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('combobox').fill('baph');
+  await dialog.getByRole('option', { name: /Baphomet/ }).click();
+  await expect(page).toHaveURL(/\/mvp\?q=Baphomet/);
+  await expect(page.getByRole('searchbox', { name: 'Buscar MVP o mapa' })).toHaveValue('Baphomet');
+
+  await page.getByRole('button', { name: 'Buscar' }).first().click();
+  await dialog.getByRole('combobox').fill('poring');
+  await dialog.getByRole('option', { name: 'Poring Village' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Poring Village' })).toBeVisible();
+});
+
+test('el diagnóstico muestra el estado de HikariRO tras usar la app', async ({ page }) => {
+  await login(page, '/mvp');
+  await expect(page.getByRole('heading', { level: 1, name: 'MVP Timer' })).toBeVisible();
+  await page.goto('/diagnostico');
+  const mvp = page.getByRole('main').getByRole('listitem').filter({ hasText: 'MVP Timer' });
+  await expect(mvp).toContainText('Funciona');
+  await expect(page.getByRole('button', { name: 'Copiar diagnóstico' })).toBeEnabled();
 });

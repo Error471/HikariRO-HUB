@@ -1,10 +1,11 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { Link } from '@tanstack/react-router';
-import { Menu, X } from 'lucide-react';
+import { Menu, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { Brand } from '@/components/ui/Brand';
+import { useOpenCommandPalette } from '@/features/search/CommandPalette';
 import { dashboardLink, modules } from '../navigation';
-import { NavLinks } from './NavLinks';
+import { HelpLinks, NavLinks } from './NavLinks';
 import { UserPanel } from './UserPanel';
 
 const quickLinks = [dashboardLink, modules.mvp, modules.vending, modules.wiki] as const;
@@ -12,6 +13,7 @@ const quickLinks = [dashboardLink, modules.mvp, modules.vending, modules.wiki] a
 /** Barra superior + drawer con el menú completo + barra inferior de accesos rápidos (< lg). */
 export function MobileNav({ username }: { username: string }) {
   const [open, setOpen] = useState(false);
+  const openSearch = useOpenCommandPalette();
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -19,12 +21,22 @@ export function MobileNav({ username }: { username: string }) {
         <Link to="/" aria-label="Ir al dashboard">
           <Brand />
         </Link>
-        <Dialog.Trigger
-          aria-label="Abrir menú"
-          className="grid size-11 place-items-center rounded-xl text-ink-muted hover:bg-white/5 hover:text-ink"
-        >
-          <Menu aria-hidden="true" className="size-5" />
-        </Dialog.Trigger>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={openSearch}
+            aria-label="Buscar"
+            className="grid size-11 place-items-center rounded-xl text-ink-muted hover:bg-white/5 hover:text-ink"
+          >
+            <Search aria-hidden="true" className="size-5" />
+          </button>
+          <Dialog.Trigger
+            aria-label="Abrir menú"
+            className="grid size-11 place-items-center rounded-xl text-ink-muted hover:bg-white/5 hover:text-ink"
+          >
+            <Menu aria-hidden="true" className="size-5" />
+          </Dialog.Trigger>
+        </div>
       </header>
 
       <Dialog.Portal>
@@ -44,7 +56,8 @@ export function MobileNav({ username }: { username: string }) {
           </div>
           <Dialog.Title className="sr-only">Menú principal</Dialog.Title>
           <NavLinks onNavigate={() => setOpen(false)} />
-          <div className="mt-auto">
+          <div className="mt-auto flex flex-col gap-3">
+            <HelpLinks onNavigate={() => setOpen(false)} />
             <UserPanel username={username} />
           </div>
         </Dialog.Content>

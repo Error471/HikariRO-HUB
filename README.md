@@ -118,6 +118,8 @@ Módulos (todos requieren sesión):
 | `DELETE` | `/api/alerts/telegram`         | Quita el bot                                                                                         |
 | `POST`   | `/api/alerts/test`             | `{ channel: "windows" \| "telegram" }` → aviso de prueba (5/min)                                     |
 | `DELETE` | `/api/account/data`            | Borra favoritos, avisos y la sesión, y cierra la sesión en HikariRO                                  |
+| `GET`    | `/api/diagnostics`             | Versión, sistema, estado de cada sección de HikariRO y últimos avisos/errores (sin datos sensibles)  |
+| `DELETE` | `/api/diagnostics/entries`     | Vacía el registro de errores                                                                         |
 
 Errores siempre con el formato `{ "error": { "code", "message" } }` y mensajes aptos para el usuario. Cualquier otra ruta `GET` devuelve la web (`index.html`).
 
@@ -182,6 +184,10 @@ Todo desde la web de GitHub:
 
 ### Módulos
 
+- **Dashboard**: tus MVPs (favoritos y con aviso) con cuenta atrás, completado con los próximos en salir; estado de los avisos (Windows/Telegram); progreso de los álbumes; últimas noticias; buscador del mercado y estado de HikariRO.
+- **Búsqueda global (Ctrl+K / ⌘K)**: secciones, MVPs (por nombre o mapa), objetos del mercado con su mejor precio, páginas de la wiki y tus cartas, más atajos para buscar el texto en cada módulo. También desde el botón «Buscar…» del menú.
+- **Cambios en la web de HikariRO**: cada servicio informa a un `UpstreamMonitor` del resultado de sus consultas. Si HikariRO responde con un formato que la app no reconoce (`UPSTREAM_CHANGED`, también cuando hay elementos en la página pero ninguno se entiende), la sección muestra «HikariRO ha cambiado su web» con enlace a la web oficial, aparece un aviso en toda la app y, en escritorio, una notificación de Windows (una vez por sección hasta que vuelva a funcionar).
+- **Diagnóstico**: página `/diagnostico` con el estado de cada sección y los últimos 100 avisos/errores de la API (copiados desde el logger, sin tokens, contraseñas, cookies ni rutas de usuario) y botón «Copiar diagnóstico». En la bandeja: _Ver diagnóstico_, _Copiar diagnóstico_ (resume el log del archivo) y _Abrir carpeta de registros_.
 - **MVP Timer**: misma lógica de estados que la web original (_Disponible_, _En espera_, _Respawn aleatorio_). La cuenta atrás se calcula con la hora del servidor y los datos se refrescan cada 15 s. Filtro guardado en la URL (`?filter=window`). Favoritos guardados por cuenta.
 - **Avisos de MVP**: la campana de cada MVP elige el canal: **Windows**, **Telegram**, **ambos** o **ninguno** (filtro «Con avisos»). Un vigilante dentro de la app consulta el MVP Timer cada `ALERT_POLL_SECONDS` (60 s) con la sesión del usuario y avisa N minutos antes y al abrirse la ventana de respawn. Cada aviso se envía una sola vez; si Telegram falla, los avisos por Windows siguen llegando. Si la sesión de HikariRO caduca, los avisos se pausan y se avisa por los canales en uso. Al pulsar la notificación de Windows se abre la app en el MVP Timer. Los favoritos con avisos de versiones anteriores pasan a «Windows».
 - **Telegram**: en «Avisos» se pega el token de un bot creado con @BotFather (se comprueba con `getMe` y se guarda cifrado con AES-256-GCM; nunca vuelve a la web), se pulsa Iniciar en el chat con el bot y «Detectar chat» lo vincula (`getUpdates`); también se puede escribir el ID de un grupo o canal. Los mensajes son texto plano, sin formato.

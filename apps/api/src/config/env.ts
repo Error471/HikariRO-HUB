@@ -13,6 +13,8 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  /** Versión mostrada en la página de diagnóstico. */
+  APP_VERSION: z.string().min(1).default('dev'),
 
   APP_ORIGIN: z.url(),
 

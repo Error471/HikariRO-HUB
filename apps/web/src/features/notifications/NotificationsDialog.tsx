@@ -402,12 +402,12 @@ function DialogBody() {
 }
 
 /** Configuración de los avisos de MVP: antelación, Windows y bot de Telegram. */
-export function NotificationsDialog() {
+export function NotificationsDialog({ label = 'Avisos' }: { label?: string }) {
   return (
     <Dialog.Root>
       <Dialog.Trigger className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink">
         <Bell aria-hidden="true" className="size-4" />
-        Avisos
+        {label}
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-night-950/80 backdrop-blur-sm data-[state=open]:animate-fade" />

@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { buildApp } from './app.js';
 import type { Env } from './config/env.js';
 import { createDependencies, type ContainerOptions } from './container.js';
+import { upstreamModuleLabels } from '@hikari-hub/shared';
 import { MvpWatcher } from './modules/alerts/mvp-watcher.js';
 import { SessionKeeper } from './session/session-keeper.js';
 
@@ -24,6 +25,21 @@ export async function startServer(
     await app.close();
     throw error;
   }
+
+  // Aviso cuando HikariRO cambia su web: una vez por módulo hasta que vuelva a funcionar.
+  deps.monitor.onChange((module, state) => {
+    if (state !== 'changed') return;
+    const label = upstreamModuleLabels[module];
+    app.log.warn({ module }, `HikariRO ha cambiado su web: ${label} no se puede leer`);
+    void options.notifier
+      ?.notify({
+        title: 'HikariRO ha cambiado su web',
+        body: `${label} no se puede mostrar ahora mismo. Hikari Hub necesitará una actualización.`,
+        tag: `upstream-${module}`,
+        url: '/diagnostico',
+      })
+      .catch(() => undefined);
+  });
 
   // Siempre activo: aunque no haya Windows, los avisos pueden ir por Telegram.
   const watcher = new MvpWatcher({

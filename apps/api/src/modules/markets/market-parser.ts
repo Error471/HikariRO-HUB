@@ -1,6 +1,7 @@
 import type { MarketItem, MarketShop, MarketType } from '@hikari-hub/shared';
 import * as cheerio from 'cheerio';
 import type { AnyNode } from 'domhandler';
+import { AppError } from '../../lib/app-error.js';
 
 /** Rutas de FluxCP por tipo de mercado (observadas el 03/10/2026). */
 export const marketModules: Record<MarketType, string> = {
@@ -45,27 +46,33 @@ export function parsePageCount(html: string): number {
   return match ? Math.max(1, Number(match[1])) : 1;
 }
 
+/** Hay tarjetas de tienda pero ninguna se entiende: HikariRO ha cambiado su HTML. */
+function assertRecognized(found: number, parsed: number): void {
+  if (found > 0 && parsed === 0) throw new AppError('UPSTREAM_CHANGED');
+}
+
 export function parseShopList(html: string, type: MarketType, baseUrl: string): ShopSummary[] {
   const $ = cheerio.load(html);
-  return $('.hro-shop-card')
-    .toArray()
-    .flatMap((card) => {
-      const link = $(card).find('h3 a').first();
-      const id = idFromHref(link.attr('href'));
-      if (id === null) return [];
-      const meta = $(card).find('.hro-shop-card__meta span');
-      return [
-        {
-          id,
-          type,
-          title: clean(link.text()),
-          owner: clean($(card).find('.hro-shop-owner').text()),
-          map: clean(meta.eq(0).text()),
-          ...parseCoords(meta.eq(1).text()),
-          sourceUrl: shopSourceUrl(baseUrl, type, id),
-        },
-      ];
-    });
+  const cards = $('.hro-shop-card').toArray();
+  const shops = cards.flatMap((card) => {
+    const link = $(card).find('h3 a').first();
+    const id = idFromHref(link.attr('href'));
+    if (id === null) return [];
+    const meta = $(card).find('.hro-shop-card__meta span');
+    return [
+      {
+        id,
+        type,
+        title: clean(link.text()),
+        owner: clean($(card).find('.hro-shop-owner').text()),
+        map: clean(meta.eq(0).text()),
+        ...parseCoords(meta.eq(1).text()),
+        sourceUrl: shopSourceUrl(baseUrl, type, id),
+      },
+    ];
+  });
+  assertRecognized(cards.length, shops.length);
+  return shops;
 }
 
 function tagNumber($: cheerio.CheerioAPI, item: AnyNode, icon: string): number | null {
@@ -123,9 +130,10 @@ function parseItem($: cheerio.CheerioAPI, item: AnyNode, baseUrl: string): Marke
 export function parseShopDetail(html: string, baseUrl: string): MarketItem[] | null {
   const $ = cheerio.load(html);
   if ($('.hro-shop-detail').length === 0) return null;
-  return $('.hro-market-item')
-    .toArray()
-    .flatMap((item) => parseItem($, item, baseUrl) ?? []);
+  const nodes = $('.hro-market-item').toArray();
+  const items = nodes.flatMap((item) => parseItem($, item, baseUrl) ?? []);
+  assertRecognized(nodes.length, items.length);
+  return items;
 }
 
 /** El listado debe contener la estructura de tiendas aunque esté vacío. */

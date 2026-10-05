@@ -17,6 +17,7 @@ import { useMvpList } from './mvp-query';
 import { filterMvps, sortMvpViews, toMvpView, type MvpFilter } from './mvp-status';
 
 interface MvpPageProps {
+  initialQuery?: string;
   filter: MvpFilter;
   onFilterChange: (filter: MvpFilter) => void;
 }
@@ -31,11 +32,11 @@ function MvpGridSkeleton() {
   );
 }
 
-export function MvpPage({ filter, onFilterChange }: MvpPageProps) {
+export function MvpPage({ initialQuery = '', filter, onFilterChange }: MvpPageProps) {
   const { data, error, isPending, isFetching, refetch, offset } = useMvpList();
   const favorites = useFavorites();
   const alerts = useMvpChannels();
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const deferredQuery = useDeferredValue(query);
   const now = useNow(1000) + offset;
 

@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { Activity } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { dashboardLink, navigation, type ModuleDefinition } from '../navigation';
 
@@ -74,6 +75,23 @@ export function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
           </div>
         );
       })}
+    </nav>
+  );
+}
+
+/** Enlaces de ayuda, al pie del menú. */
+export function HelpLinks({ onNavigate }: { onNavigate?: () => void }) {
+  return (
+    <nav aria-label="Ayuda">
+      <Link
+        to="/diagnostico"
+        onClick={onNavigate}
+        className={linkBase}
+        activeProps={{ className: linkActive, 'aria-current': 'page' }}
+      >
+        <Activity aria-hidden="true" className="size-4.5 shrink-0 opacity-80" />
+        Diagnóstico
+      </Link>
     </nav>
   );
 }

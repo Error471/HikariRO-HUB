@@ -36,26 +36,28 @@ export function parseCardAlbum(html: string, baseUrl: string): CardPage {
   const info = album.find('.info-text').first().text();
   const infoMatch = /total de\s+([\d.]+)\s+registro.*?en\s+(\d+)\s+página/i.exec(info);
 
-  const cards = album
-    .find('.hro-card-album__card')
-    .toArray()
-    .flatMap((card) => {
-      const element = $(card);
-      const id =
-        parseInteger(/ID:\s*(\d+)/.exec(element.find('.hro-card-album__meta').text())?.[1]) ??
-        itemIdFromPath(element.find('img').attr('src'));
-      if (id === null) return [];
-      return [
-        {
-          id,
-          name: element.find('.hro-card-album__name').text().trim(),
-          imageUrl: `${baseUrl}/data/items/images/${id}.png`,
-          iconUrl: `${baseUrl}/data/items/icons/${id}.png`,
-          detailUrl: `${baseUrl}/?module=item&action=view&id=${id}`,
-          obtained: element.hasClass('is-found'),
-        },
-      ];
-    });
+  const cardNodes = album.find('.hro-card-album__card').toArray();
+  const cards = cardNodes.flatMap((card) => {
+    const element = $(card);
+    const id =
+      parseInteger(/ID:\s*(\d+)/.exec(element.find('.hro-card-album__meta').text())?.[1]) ??
+      itemIdFromPath(element.find('img').attr('src'));
+    if (id === null) return [];
+    return [
+      {
+        id,
+        name: element.find('.hro-card-album__name').text().trim(),
+        imageUrl: `${baseUrl}/data/items/images/${id}.png`,
+        iconUrl: `${baseUrl}/data/items/icons/${id}.png`,
+        detailUrl: `${baseUrl}/?module=item&action=view&id=${id}`,
+        obtained: element.hasClass('is-found'),
+      },
+    ];
+  });
+  // Sin progreso ni cartas reconocibles, la página ya no tiene el formato esperado.
+  if ((cardNodes.length > 0 && cards.length === 0) || (!progressMatch && cardNodes.length === 0)) {
+    throw new AppError('UPSTREAM_CHANGED');
+  }
 
   return {
     progress: {
@@ -80,42 +82,41 @@ export function parseFishingAlbum(
   if (album.length === 0) throw new AppError('UPSTREAM_CHANGED');
 
   const head = /(\d+)\s*\/\s*(\d+)/.exec(album.find('.fish-head').text());
-  const fish = album
-    .find('.fish-card')
-    .toArray()
-    .map((card): Fish => {
-      const element = $(card);
-      const src = element.find('img').attr('src') ?? '';
-      const itemId = itemIdFromPath(src);
-      const imageUrl = itemId
-        ? `${baseUrl}/data/items/images/${itemId}.png`
-        : src.startsWith('data:image/')
-          ? src
-          : '';
+  const fishNodes = album.find('.fish-card').toArray();
+  // El álbum lista todas las especies (también las bloqueadas): nunca está vacío.
+  if (fishNodes.length === 0) throw new AppError('UPSTREAM_CHANGED');
+  const fish = fishNodes.map((card): Fish => {
+    const element = $(card);
+    const src = element.find('img').attr('src') ?? '';
+    const itemId = itemIdFromPath(src);
+    const imageUrl = itemId
+      ? `${baseUrl}/data/items/images/${itemId}.png`
+      : src.startsWith('data:image/')
+        ? src
+        : '';
 
-      if (element.hasClass('locked')) return { discovered: false, imageUrl };
+    if (element.hasClass('locked')) return { discovered: false, imageUrl };
 
-      const [measures = '', record = ''] = (element.find('.fish-meta').html() ?? '').split(
-        /<br\s*\/?>/i,
-      );
-      const [size, weight] = cheerio.load(measures).text().split('·');
-      const [catches, map] = cheerio.load(record).text().split('·');
-      const bestMap = map?.trim() ?? '';
+    const [measures = '', record = ''] = (element.find('.fish-meta').html() ?? '').split(
+      /<br\s*\/?>/i,
+    );
+    const [size, weight] = cheerio.load(measures).text().split('·');
+    const [catches, map] = cheerio.load(record).text().split('·');
+    const bestMap = map?.trim() ?? '';
 
-      return {
-        discovered: true,
-        itemId,
-        name: element.find('h4').text().trim(),
-        imageUrl,
-        iconUrl: itemId ? `${baseUrl}/data/items/icons/${itemId}.png` : null,
-        stars: [...element.find('.fish-stars').text()].filter((char) => char === STAR_FILLED)
-          .length,
-        sizeCm: parseDecimal(size),
-        weightKg: parseDecimal(weight),
-        catches: parseInteger(catches),
-        bestMap: bestMap && bestMap.toLowerCase() !== 'unknown' ? bestMap : null,
-      };
-    });
+    return {
+      discovered: true,
+      itemId,
+      name: element.find('h4').text().trim(),
+      imageUrl,
+      iconUrl: itemId ? `${baseUrl}/data/items/icons/${itemId}.png` : null,
+      stars: [...element.find('.fish-stars').text()].filter((char) => char === STAR_FILLED).length,
+      sizeCm: parseDecimal(size),
+      weightKg: parseDecimal(weight),
+      catches: parseInteger(catches),
+      bestMap: bestMap && bestMap.toLowerCase() !== 'unknown' ? bestMap : null,
+    };
+  });
 
   return {
     progress: {

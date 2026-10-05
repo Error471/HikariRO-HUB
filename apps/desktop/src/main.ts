@@ -1,7 +1,8 @@
-import { startDesktopServer, type DesktopServer } from '@hikari-hub/api/desktop';
+import { sanitizeLogText, startDesktopServer, type DesktopServer } from '@hikari-hub/api/desktop';
 import {
   app,
   BrowserWindow,
+  clipboard,
   dialog,
   Menu,
   Notification,
@@ -10,7 +11,9 @@ import {
   shell,
   type Tray,
 } from 'electron';
-import { join } from 'node:path';
+import { arch, release, type } from 'node:os';
+import { dirname, join } from 'node:path';
+import { formatDiagnostics, readLogText } from './diagnostics.js';
 import { createMainLogger, prepareLogFile } from './log.js';
 import { appRoute, isAppUrl, isExternalWebUrl } from './navigation.js';
 import { WindowsNotifier } from './notifier.js';
@@ -202,6 +205,8 @@ async function start() {
         });
       });
     },
+    copyDiagnostics: () => copyDiagnostics(),
+    openLogs: () => void shell.openPath(dirname(logFile)),
     quit: () => {
       quitting = true;
       app.quit();
@@ -209,6 +214,23 @@ async function start() {
   });
 
   logger.info(`Hikari Hub ${app.getVersion()} en ${server.url}`);
+}
+
+// --- Diagnóstico ---
+function copyDiagnostics() {
+  clipboard.writeText(
+    formatDiagnostics(readLogText(logFile), {
+      version: app.getVersion(),
+      platform: `${type()} ${release()} (${arch()})`,
+      sanitize: sanitizeLogText,
+    }),
+  );
+  if (!Notification.isSupported()) return;
+  new Notification({
+    title: 'Diagnóstico copiado',
+    body: 'Pégalo en tu mensaje al reportar el problema. No incluye contraseñas ni tokens.',
+    icon: appIcon,
+  }).show();
 }
 
 // --- Cierre ---

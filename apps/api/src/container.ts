@@ -2,7 +2,9 @@ import { join } from 'node:path';
 import type { Env } from './config/env.js';
 import { HikariAuth } from './hikari/hikari-auth.js';
 import { HikariClient } from './hikari/hikari-client.js';
+import { UpstreamMonitor } from './hikari/upstream-monitor.js';
 import { Sealer } from './lib/crypto.js';
+import { ErrorJournal } from './lib/error-journal.js';
 import { AlbumService } from './modules/albums/album.service.js';
 import { AlertService } from './modules/alerts/alerts.service.js';
 import type { Notifier } from './modules/alerts/notifier.js';
@@ -37,7 +39,8 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
     timeoutMs: env.HIKARI_TIMEOUT_MS,
   });
 
-  const hikariAuth = new HikariAuth(client);
+  const monitor = new UpstreamMonitor();
+  const hikariAuth = new HikariAuth(client, monitor);
   const dataDir = env.DATA_DIR;
   const sealer = new Sealer(env.SESSION_ENCRYPTION_KEY);
   const sessions = new SessionService(
@@ -60,11 +63,13 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
     env,
     sessions,
     hikariAuth,
-    mvp: new MvpService(client, origin),
-    news: new NewsService(feedClient, feedUrl.pathname + feedUrl.search),
-    markets: new MarketService(client, origin),
-    wiki: new WikiService(client, origin),
-    albums: new AlbumService(client, origin),
+    monitor,
+    journal: new ErrorJournal(),
+    mvp: new MvpService(client, origin, monitor),
+    news: new NewsService(feedClient, feedUrl.pathname + feedUrl.search, monitor),
+    markets: new MarketService(client, origin, { monitor }),
+    wiki: new WikiService(client, origin, monitor),
+    albums: new AlbumService(client, origin, monitor),
     userData,
     alerts: new AlertService(
       userData,

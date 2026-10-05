@@ -2,11 +2,14 @@ import cookie from '@fastify/cookie';
 import Fastify, { type FastifyServerOptions } from 'fastify';
 import type { Env } from './config/env.js';
 import type { HikariAuth } from './hikari/hikari-auth.js';
+import type { UpstreamMonitor } from './hikari/upstream-monitor.js';
+import { journalHook, type ErrorJournal } from './lib/error-journal.js';
 import { accountRoutes } from './modules/account/account.routes.js';
 import { alertRoutes } from './modules/alerts/alerts.routes.js';
 import type { AlertService } from './modules/alerts/alerts.service.js';
 import { albumRoutes } from './modules/albums/album.routes.js';
 import type { AlbumService } from './modules/albums/album.service.js';
+import { diagnosticsRoutes } from './modules/diagnostics/diagnostics.routes.js';
 import { AuthService } from './modules/auth/auth.service.js';
 import { authRoutes } from './modules/auth/auth.routes.js';
 import type { LoginThrottle } from './modules/auth/login-throttle.js';
@@ -43,12 +46,15 @@ export interface AppDependencies {
   albums: AlbumService;
   userData: UserDataStore;
   alerts: AlertService;
+  monitor: UpstreamMonitor;
+  journal: ErrorJournal;
 }
 
-function loggerOptions(env: Env): FastifyServerOptions['logger'] {
+function loggerOptions(env: Env, journal: ErrorJournal): FastifyServerOptions['logger'] {
   if (env.NODE_ENV === 'test') return false;
   return {
     level: env.LOG_LEVEL,
+    hooks: journalHook(journal),
     ...(env.LOG_FILE && { file: env.LOG_FILE }),
     redact: {
       paths: [
@@ -70,7 +76,7 @@ function loggerOptions(env: Env): FastifyServerOptions['logger'] {
 export async function buildApp(deps: AppDependencies) {
   const { env } = deps;
   const app = Fastify({
-    logger: loggerOptions(env),
+    logger: loggerOptions(env, deps.journal),
     bodyLimit: 16 * 1024,
   });
 
@@ -137,6 +143,15 @@ export async function buildApp(deps: AppDependencies) {
     prefix: '/api/albums',
     albums: deps.albums,
     upstream,
+    requireSession,
+  });
+
+  await app.register(diagnosticsRoutes, {
+    prefix: '/api/diagnostics',
+    version: env.APP_VERSION,
+    startedAt: new Date(),
+    monitor: deps.monitor,
+    journal: deps.journal,
     requireSession,
   });
 

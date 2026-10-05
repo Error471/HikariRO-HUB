@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { fluxRoutes } from '../../hikari/fluxcp-pages.js';
 import type { HikariClient } from '../../hikari/hikari-client.js';
 import { parseUpstreamJson } from '../../hikari/upstream-json.js';
+import { untracked, type UpstreamTracker } from '../../hikari/upstream-monitor.js';
 import type { CookieJar } from '../../lib/cookie-jar.js';
 import { TtlCache } from '../../lib/ttl-cache.js';
 
@@ -32,14 +33,17 @@ export class MvpService {
   constructor(
     private readonly client: HikariClient,
     private readonly hikariBaseUrl: string,
+    private readonly monitor: UpstreamTracker = untracked,
   ) {}
 
   /** Cache por cuenta: no está verificado que todas las cuentas reciban los mismos datos. */
   async list(username: string, jar: CookieJar): Promise<MvpListResponse> {
     const { data, fetchedAtMs } = await this.cache.get(username.toLowerCase(), async () => {
-      const response = await this.client.get(fluxRoutes.mvpTimerData, jar);
+      const upstream = await this.monitor.track('mvp', async () =>
+        parseUpstreamJson(await this.client.get(fluxRoutes.mvpTimerData, jar), upstreamSchema),
+      );
       return {
-        data: this.toResponse(parseUpstreamJson(response, upstreamSchema)),
+        data: this.toResponse(upstream),
         fetchedAtMs: Date.now(),
       };
     });

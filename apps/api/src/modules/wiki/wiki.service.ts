@@ -8,6 +8,7 @@ import type {
 import { z } from 'zod';
 import type { HikariClient } from '../../hikari/hikari-client.js';
 import { parseUpstreamJson } from '../../hikari/upstream-json.js';
+import { untracked, type UpstreamTracker } from '../../hikari/upstream-monitor.js';
 import { AppError } from '../../lib/app-error.js';
 import { TtlCache } from '../../lib/ttl-cache.js';
 import { rewriteWikiHtml, sanitizeWikiHtml, toPlainText } from './wiki-html.js';
@@ -85,6 +86,7 @@ export class WikiService {
   constructor(
     private readonly client: HikariClient,
     private readonly origin: string,
+    private readonly monitor: UpstreamTracker = untracked,
   ) {}
 
   page(title: string): Promise<WikiPage> {
@@ -217,7 +219,14 @@ export class WikiService {
     });
   }
 
-  private async call<TSchema extends z.ZodType>(
+  private call<TSchema extends z.ZodType>(
+    params: Record<string, string>,
+    schema: TSchema,
+  ): Promise<z.infer<TSchema>> {
+    return this.monitor.track('wiki', () => this.request(params, schema));
+  }
+
+  private async request<TSchema extends z.ZodType>(
     params: Record<string, string>,
     schema: TSchema,
   ): Promise<z.infer<TSchema>> {
