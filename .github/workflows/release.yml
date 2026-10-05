@@ -52,15 +52,8 @@ jobs:
         run: node apps/desktop/scripts/set-version.mjs "$env:VERSION"
       - run: pnpm --filter @hikari-hub/web build
       - run: pnpm --filter @hikari-hub/desktop build
-      # GitHub exige que la etiqueta exista antes de publicar la release.
-      - name: Crear la etiqueta
-        shell: bash
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          git tag -f "v$VERSION"
-          git push origin "refs/tags/v$VERSION"
-      - name: Crear el instalador y publicarlo
+      # Se sube todo a un borrador y se publica al final: así la release nunca queda a medias.
+      - name: Crear el instalador y subirlo a un borrador
         working-directory: apps/desktop
         # Bash: PowerShell parte los argumentos -c.publish.*
         shell: bash
@@ -70,3 +63,14 @@ jobs:
           pnpm exec electron-builder --win --x64 --publish always
           -c.publish.owner=${{ github.repository_owner }}
           -c.publish.repo=${{ github.event.repository.name }}
+          -c.publish.releaseType=draft
+      - name: Publicar la release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          for file in latest.yml "Hikari-Hub-Setup-$VERSION.exe" "Hikari-Hub-Setup-$VERSION.exe.blockmap"; do
+            gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | grep -qx "$file" || { echo "::error::Falta $file en la release"; exit 1; }
+          done
+          gh release edit "v$VERSION" --repo "$GITHUB_REPOSITORY" --draft=false --latest --target "$GITHUB_SHA"
