@@ -34,5 +34,5 @@ nsis:
 publish:
   provider: github
   owner: Error471
-  repo: hikariro-companion
+  repo: hub
   releaseType: release

@@ -3,8 +3,6 @@ import { app, Menu, Tray } from 'electron';
 export interface TrayActions {
   open(route?: string): void;
   checkUpdates(): void;
-  copyDiagnostics(): void;
-  openLogs(): void;
   quit(): void;
 }
 
@@ -37,10 +35,6 @@ export function createTray(iconPath: string, actions: TrayActions): Tray {
         },
       },
       { label: 'Buscar actualizaciones', click: () => actions.checkUpdates() },
-      { type: 'separator' },
-      { label: 'Ver diagnóstico', click: () => actions.open('/diagnostico') },
-      { label: 'Copiar diagnóstico', click: () => actions.copyDiagnostics() },
-      { label: 'Abrir carpeta de registros', click: () => actions.openLogs() },
       { type: 'separator' },
       { label: 'Salir', click: () => actions.quit() },
     ]);

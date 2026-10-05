@@ -68,6 +68,10 @@ test('la búsqueda global (Ctrl+K) lleva a un MVP y a la wiki', async ({ page })
   await page.keyboard.press('Control+k');
   const dialog = page.getByRole('dialog', { name: 'Búsqueda global' });
   await expect(dialog).toBeVisible();
+  // El diagnóstico no se lista como una sección más: solo aparece al buscarlo.
+  await expect(dialog.getByRole('option', { name: 'Diagnóstico' })).toHaveCount(0);
+  await dialog.getByRole('combobox').fill('diagnos');
+  await expect(dialog.getByRole('option', { name: 'Diagnóstico' })).toBeVisible();
   await dialog.getByRole('combobox').fill('baph');
   await dialog.getByRole('option', { name: /Baphomet/ }).click();
   await expect(page).toHaveURL(/\/mvp\?q=Baphomet/);
@@ -81,6 +85,7 @@ test('la búsqueda global (Ctrl+K) lleva a un MVP y a la wiki', async ({ page })
 
 test('el diagnóstico muestra el estado de HikariRO tras usar la app', async ({ page }) => {
   await login(page, '/mvp');
+  await expect(page.getByRole('link', { name: 'Diagnóstico' })).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1, name: 'MVP Timer' })).toBeVisible();
   await page.goto('/diagnostico');
   const mvp = page.getByRole('main').getByRole('listitem').filter({ hasText: 'MVP Timer' });

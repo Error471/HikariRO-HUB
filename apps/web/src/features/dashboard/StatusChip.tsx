@@ -10,15 +10,16 @@ export function StatusChip() {
 
   const states = data.modules.map((module) => module.state);
   const status = states.includes('changed')
-    ? { label: 'HikariRO ha cambiado', dot: 'bg-gold-400' }
+    ? { label: 'HikariRO ha cambiado', hint: 'HikariRO ha cambiado su web', dot: 'bg-gold-400' }
     : states.includes('unavailable')
-      ? { label: 'HikariRO no responde', dot: 'bg-ember-400' }
-      : { label: 'HikariRO funciona', dot: 'bg-leaf-400' };
+      ? { label: 'HikariRO no responde', hint: 'HikariRO no responde', dot: 'bg-ember-400' }
+      : { label: 'HikariRO', hint: 'HikariRO funciona', dot: 'bg-leaf-400' };
 
   return (
     <Link
       to="/diagnostico"
-      title="Ver diagnóstico"
+      title={`${status.hint} · Ver diagnóstico`}
+      aria-label={`${status.hint}. Ver diagnóstico`}
       className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-ink-muted transition hover:bg-white/5 hover:text-ink"
     >
       <span aria-hidden="true" className={cn('size-2 rounded-full', status.dot)} />

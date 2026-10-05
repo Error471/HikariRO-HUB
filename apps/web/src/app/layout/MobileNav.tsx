@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Brand } from '@/components/ui/Brand';
 import { useOpenCommandPalette } from '@/features/search/CommandPalette';
 import { dashboardLink, modules } from '../navigation';
-import { HelpLinks, NavLinks } from './NavLinks';
+import { NavLinks } from './NavLinks';
 import { UserPanel } from './UserPanel';
 
 const quickLinks = [dashboardLink, modules.mvp, modules.vending, modules.wiki] as const;
@@ -56,8 +56,7 @@ export function MobileNav({ username }: { username: string }) {
           </div>
           <Dialog.Title className="sr-only">Menú principal</Dialog.Title>
           <NavLinks onNavigate={() => setOpen(false)} />
-          <div className="mt-auto flex flex-col gap-3">
-            <HelpLinks onNavigate={() => setOpen(false)} />
+          <div className="mt-auto">
             <UserPanel username={username} />
           </div>
         </Dialog.Content>

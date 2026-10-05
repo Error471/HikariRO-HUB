@@ -5,7 +5,7 @@ import { SESSION_REFRESH_MS, sessionQuery } from '@/features/auth/session';
 import { UpstreamBanner } from '@/features/diagnostics/UpstreamBanner';
 import { CommandPaletteProvider, SearchButton } from '@/features/search/CommandPalette';
 import { MobileNav } from './MobileNav';
-import { HelpLinks, NavLinks } from './NavLinks';
+import { NavLinks } from './NavLinks';
 import { SessionExpiredDialog } from './SessionExpiredDialog';
 import { UserPanel } from './UserPanel';
 
@@ -29,8 +29,7 @@ export function AppShell({ username }: { username: string }) {
           </Link>
           <SearchButton />
           <NavLinks />
-          <div className="mt-auto flex flex-col gap-3">
-            <HelpLinks />
+          <div className="mt-auto">
             <UserPanel username={username} />
           </div>
         </aside>

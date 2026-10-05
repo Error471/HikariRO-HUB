@@ -47,6 +47,8 @@ const moduleKeywords: Record<string, string> = {
 };
 
 interface PageEntry {
+  /** No se lista con la búsqueda vacía. */
+  hidden?: boolean;
   label: string;
   path: string;
   icon: LucideIcon;
@@ -61,7 +63,14 @@ const pages: PageEntry[] = [
     icon: module.icon,
     keywords: moduleKeywords[module.id] ?? '',
   })),
-  { label: 'Diagnóstico', path: '/diagnostico', icon: Activity, keywords: 'errores estado ayuda' },
+  // Solo aparece al buscarlo: no es un módulo más.
+  {
+    label: 'Diagnóstico',
+    path: '/diagnostico',
+    icon: Activity,
+    keywords: 'errores estado ayuda',
+    hidden: true,
+  },
   { label: 'Privacidad', path: '/privacidad', icon: ShieldCheck, keywords: 'datos borrar' },
 ];
 
@@ -101,7 +110,7 @@ function PaletteResults({ query, go }: { query: string; go: (href: string) => vo
   const trimmed = query.trim();
   const visiblePages = trimmed
     ? pages.filter((page) => matches(`${page.label} ${page.keywords}`, trimmed))
-    : pages;
+    : pages.filter((page) => !page.hidden);
   const mvps = searchMvps(mvp.data?.mvps ?? [], trimmed);
   const titles = searchTitles(wiki.data?.pages ?? [], trimmed);
   // Los resultados anteriores se mantienen mientras llega la nueva búsqueda: se filtran aquí.

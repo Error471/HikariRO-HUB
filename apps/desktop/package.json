@@ -1,7 +1,7 @@
 {
   "name": "@hikari-hub/desktop",
   "productName": "Hikari Hub",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "App de escritorio no oficial para jugadores de HikariRO",
   "author": "Hikari Hub",

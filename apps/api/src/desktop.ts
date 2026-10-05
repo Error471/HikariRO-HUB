@@ -62,5 +62,3 @@ export async function startDesktopServer(options: DesktopServerOptions): Promise
   }
   throw new Error('No hay ningún puerto libre para arrancar Hikari Hub.');
 }
-
-export { sanitizeLogText } from './lib/error-journal.js';
