@@ -72,9 +72,7 @@ export function AlertsWidget() {
             label="Telegram"
             value={
               data.telegram.chatLinked
-                ? data.telegram.botName
-                  ? `@${data.telegram.botName}`
-                  : 'Conectado'
+                ? (data.telegram.botName ?? 'Conectado')
                 : data.telegram.configured
                   ? 'Falta vincular el chat'
                   : 'Sin configurar'
