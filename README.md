@@ -2,7 +2,6 @@
 
 App de escritorio para Windows para jugadores de **HikariRO** (Ragnarok Online): MVP Timer con avisos, mercados, noticias, wiki y álbumes de colección en una sola aplicación, usando tu cuenta de HikariRO.
 
-> Proyecto de la comunidad, no afiliado oficialmente a HikariRO.
 
 ## Instalar (jugadores)
 
@@ -18,7 +17,7 @@ App de escritorio para Windows para jugadores de **HikariRO** (Ragnarok Online):
 
 ## Arquitectura
 
-No hay servidores: todo se ejecuta en el PC de cada jugador. GitHub guarda el código, compila el instalador y lo distribuye.
+No hay servidores: todo se ejecuta en el PC. GitHub guarda el código, compila el instalador y lo distribuye.
 
 ```text
 Hikari Hub (Electron)
@@ -36,9 +35,7 @@ Hikari Hub (Electron)
 ```
 
 - La contraseña viaja de tu PC a HikariRO y nunca se registra. Solo se guarda (cifrada) si el jugador marca _Mantener la sesión iniciada_.
-- HikariRO borra su sesión tras un rato sin actividad. Mientras la app está abierta, visita la cuenta cada `KEEPALIVE_MINUTES` (5 min) para mantenerla viva. Si aun así caduca y hay contraseña guardada, la app vuelve a entrar sola y repite la petición; si no, pide iniciar sesión.
 - La web nunca ve la cookie de HikariRO. La API detecta la redirección de FluxCP al login y responde `SESSION_EXPIRED`; la web muestra _"Tu sesión ha expirado"_ y permite volver a entrar sin perder la ruta.
-- Cada jugador entra desde su propia IP, así que Cloudflare no ve todos los logins desde un mismo servidor.
 
 ### Stack
 
@@ -82,106 +79,6 @@ e2e/                    tests end-to-end (Playwright)
 docs/                   análisis técnico y sistema visual
 ```
 
-### Endpoints de la API local
-
-| Método | Ruta               | Descripción                                                                         |
-| ------ | ------------------ | ----------------------------------------------------------------------------------- |
-| `GET`  | `/api/health`      | Estado del servicio                                                                 |
-| `GET`  | `/api/info`        | Información pública (contacto de privacidad, si se configura)                       |
-| `POST` | `/api/auth/login`  | `{ username, password }` → inicia sesión en HikariRO y crea la sesión de Hikari Hub |
-| `GET`  | `/api/auth/me`     | Usuario actual + token CSRF. Revalida contra HikariRO cada 5 min                    |
-| `POST` | `/api/auth/logout` | Cierra sesión en HikariRO y en Hikari Hub (requiere `x-csrf-token`)                 |
-
-Módulos (todos requieren sesión):
-
-| Método   | Ruta                           | Descripción                                                                                          |
-| -------- | ------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| `GET`    | `/api/mvp`                     | MVPs con su estado, mapa y hora del servidor                                                         |
-| `GET`    | `/api/news`                    | Noticias, eventos y changelog del Discord oficial                                                    |
-| `GET`    | `/api/markets/:type`           | Tiendas abiertas (`vending` o `buying`)                                                              |
-| `GET`    | `/api/markets/:type/:shopId`   | Detalle de una tienda: objetos, precios y cantidades                                                 |
-| `GET`    | `/api/markets/search?q=`       | Búsqueda unificada de un objeto en ventas y compras                                                  |
-| `GET`    | `/api/wiki/page?title=`        | Artículo de la wiki con HTML saneado                                                                 |
-| `GET`    | `/api/wiki/search?q=`          | Búsqueda en la wiki                                                                                  |
-| `GET`    | `/api/wiki/categories[/:name]` | Categorías y sus artículos                                                                           |
-| `GET`    | `/api/wiki/index`              | Portada e índice de la wiki                                                                          |
-| `GET`    | `/api/albums/cards`            | Álbum de cartas. Query: `status` (`all`/`found`/`missing`), `sort` (`id`/`name`), `q`, `page`        |
-| `GET`    | `/api/albums/fishing`          | Álbum de pesca: progreso y especies (las no descubiertas sin nombre)                                 |
-| `GET`    | `/api/mvp/favorites`           | MVPs favoritos de la cuenta                                                                          |
-| `PUT`    | `/api/mvp/favorites`           | `{ ids }` → guarda los favoritos (máx. 300)                                                          |
-| `GET`    | `/api/alerts/config`           | Avisos: pausa, antelación, canal de cada MVP, Windows disponible y estado de Telegram (sin el token) |
-| `PUT`    | `/api/alerts/settings`         | `{ enabled?, leadMinutes?: 0 \| 5 \| 10 \| 15 }`                                                     |
-| `PUT`    | `/api/alerts/mvps/:mvpId`      | `{ channel: "windows" \| "telegram" \| "both" \| "none" }`                                           |
-| `PUT`    | `/api/alerts/telegram`         | `{ botToken }` → comprueba el bot con Telegram y lo guarda cifrado                                   |
-| `POST`   | `/api/alerts/telegram/detect`  | Busca el chat del último mensaje enviado al bot y lo vincula                                         |
-| `PUT`    | `/api/alerts/telegram/chat`    | `{ chatId }` → vincula un grupo o canal a mano                                                       |
-| `DELETE` | `/api/alerts/telegram`         | Quita el bot                                                                                         |
-| `POST`   | `/api/alerts/test`             | `{ channel: "windows" \| "telegram" }` → aviso de prueba (5/min)                                     |
-| `DELETE` | `/api/account/data`            | Borra favoritos, avisos y la sesión, y cierra la sesión en HikariRO                                  |
-| `GET`    | `/api/diagnostics`             | Versión, sistema, estado de cada sección de HikariRO y últimos avisos/errores (sin datos sensibles)  |
-| `DELETE` | `/api/diagnostics/entries`     | Vacía el registro de errores                                                                         |
-
-Errores siempre con el formato `{ "error": { "code", "message" } }` y mensajes aptos para el usuario. Cualquier otra ruta `GET` devuelve la web (`index.html`).
-
-## Desarrollo
-
-Requisitos: Node.js 22+ y pnpm 10 (`corepack enable`).
-
-```bash
-pnpm install
-cp .env.example .env     # y rellena los dos secretos (ver el propio archivo)
-```
-
-### En el navegador (lo más rápido para tocar la web)
-
-```bash
-pnpm dev            # API en :3000 y web en http://localhost:5173 (Vite hace proxy de /api)
-```
-
-Los avisos de MVP solo funcionan en la app de escritorio; en el navegador el diálogo lo indica.
-
-### La app de escritorio
-
-```bash
-pnpm --filter @hikari-hub/desktop start     # compila la web y abre la app (contra hikariro.com)
-pnpm --filter @hikari-hub/desktop dist      # crea el instalador en apps/desktop/release (en Windows)
-```
-
-### Sin conexión con HikariRO
-
-Hay un servidor que imita FluxCP (login, MVP Timer, mercados, wiki, álbumes y noticias):
-
-```bash
-pnpm --filter @hikari-hub/api mock:hikari    # http://localhost:4010 · usuario demo / contraseña demo
-```
-
-- Navegador: en `.env`, `HIKARI_BASE_URL=http://localhost:4010` y `HIKARI_NEWS_FEED_URL=http://localhost:4010/discord/feed.php`.
-- App de escritorio (solo sin instalar): variables de entorno `HIKARI_HUB_HIKARI_URL` y `HIKARI_HUB_NEWS_URL` con esas mismas URLs.
-
-### Scripts
-
-| Comando                                   | Qué hace                                                           |
-| ----------------------------------------- | ------------------------------------------------------------------ |
-| `pnpm dev`                                | API + web en modo desarrollo                                       |
-| `pnpm test`                               | Tests de todos los paquetes                                        |
-| `pnpm lint`                               | ESLint                                                             |
-| `pnpm format` / `pnpm format:check`       | Prettier                                                           |
-| `pnpm typecheck`                          | TypeScript en todos los paquetes                                   |
-| `pnpm build`                              | Build de la web y del proceso principal de la app                  |
-| `pnpm test:e2e`                           | Tests e2e (Playwright, contra el mock y la web servida por la API) |
-| `pnpm --filter @hikari-hub/desktop start` | Abre la app de escritorio sin instalarla                           |
-
-## Publicar una versión nueva
-
-Todo desde la web de GitHub:
-
-1. Sube los cambios a la rama principal.
-2. **Actions → Publicar versión → Run workflow**, escribe la versión nueva (por ejemplo `0.2.0`, siempre mayor que la anterior) y pulsa **Run workflow**.
-3. GitHub pasa los tests, compila el instalador en Windows y crea la release `v0.2.0` con el `.exe`.
-4. Las apps instaladas la descargan solas y se actualizan al cerrarse.
-
-> El repositorio tiene que ser **público** para que otros jugadores puedan descargar el instalador y para que funcionen las actualizaciones automáticas. El código no contiene secretos: `.env` está en `.gitignore` y la app genera sus claves en cada PC.
-
 ### Módulos
 
 - **Dashboard**: tus MVPs (favoritos y con aviso) con cuenta atrás, completado con los próximos en salir; estado de los avisos (Windows/Telegram); progreso de los álbumes; últimas noticias; buscador del mercado y estado de HikariRO.
@@ -216,15 +113,3 @@ Todo desde la web de GitHub:
 - HikariRO no ofrece OAuth ni API: la app inicia sesión en su nombre. Si HikariRO cambia su formulario de login, la API responde `UPSTREAM_CHANGED` y hay que actualizar el parser (`apps/api/src/hikari/fluxcp-pages.ts`).
 - El instalador no está firmado: Windows SmartScreen avisa la primera vez. Firmarlo requiere un certificado de pago.
 - Los avisos solo llegan mientras la app está abierta (aunque sea solo junto al reloj).
-- Solo Windows. Para macOS o Linux habría que añadir sus objetivos en `electron-builder.yml`.
-
-## Tests
-
-```bash
-pnpm test
-PLAYWRIGHT_CHROMIUM_PATH=/ruta/a/chromium pnpm test:e2e   # opcional; si no, usa `pnpm exec playwright install chromium`
-```
-
-Cubren: avisos (antelación, duplicados, sesión caducada, activar/desactivar, sin notificador), almacenes en archivo (reinicio, sesiones caducadas, archivo dañado), web servida por la API (caché, CSP, rutas de la SPA, límite de peticiones), claves cifradas de la instalación, navegación segura de la ventana, favoritos, parsers de MVP, mercados, wiki y álbumes, cifrado de sesiones, login correcto/incorrecto, bloqueo por intentos, CSRF, Cloudflare, HikariRO caído, logout y cabeceras de seguridad.
-
-Los e2e levantan el mock de HikariRO y la API sirviendo el build de la web (como en la app) y prueban en ventana ancha y estrecha: login, redirección, logout, todos los módulos, filtros del álbum, favoritos, diálogo de avisos y borrado de datos.
