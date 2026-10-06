@@ -3,7 +3,7 @@
 App de escritorio para Windows para jugadores de **HikariRO** (Ragnarok Online): MVP Timer con avisos, mercados, noticias, wiki y álbumes de colección en una sola aplicación, usando tu cuenta de HikariRO.
 
 
-## Instalar (jugadores)
+## Instalar
 
 1. Abre la página **Releases** del repositorio en GitHub y descarga `Hikari-Hub-Setup-x.y.z.exe` de la última versión.
 2. Ábrelo. Como el instalador no está firmado, Windows puede mostrar _"Windows protegió su PC"_: pulsa **Más información → Ejecutar de todos modos**.
