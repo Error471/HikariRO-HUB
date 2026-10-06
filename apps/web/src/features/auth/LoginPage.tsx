@@ -62,9 +62,8 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
             MVPs, mercados, noticias, wiki y tus álbumes de colección en un solo lugar.
           </p>
         </div>
-        <p className="relative text-xs text-ink-faint">
-          Proyecto de la comunidad. No afiliado oficialmente a HikariRO.
-        </p>
+        {/* Mantiene el titular centrado entre el logo y el pie. */}
+        <div aria-hidden="true" />
       </section>
 
       <section className="flex items-center justify-center px-4 py-10 sm:px-8">

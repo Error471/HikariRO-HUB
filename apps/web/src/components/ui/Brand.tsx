@@ -32,12 +32,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
     <span className="flex items-center gap-3">
       <Emblem />
       {!compact && (
-        <span className="leading-tight">
-          <span className="block text-[1.05rem] font-semibold tracking-tight text-ink">
-            Hikari Hub
-          </span>
-          <span className="block text-xs text-ink-faint">para HikariRO</span>
-        </span>
+        <span className="text-[1.05rem] font-semibold tracking-tight text-ink">Hikari Hub</span>
       )}
     </span>
   );
