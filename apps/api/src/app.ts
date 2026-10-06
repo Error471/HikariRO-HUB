@@ -78,6 +78,8 @@ export async function buildApp(deps: AppDependencies) {
   const app = Fastify({
     logger: loggerOptions(env, deps.journal),
     bodyLimit: 16 * 1024,
+    // Al cerrar no se espera a las peticiones en curso (p. ej. la instantánea de mercados).
+    forceCloseConnections: true,
   });
 
   registerErrorHandling(app, {

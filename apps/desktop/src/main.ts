@@ -23,6 +23,8 @@ import { setupUpdates } from './updater.js';
 const APP_ID = 'com.hikarihub.app';
 // Puerto fijo (con alternativas): el navegador interno guarda su estado por puerto.
 const PORTS = Array.from({ length: 10 }, (_, index) => 47231 + index);
+// Tiempo máximo para cerrar el servidor local antes de salir igualmente.
+const QUIT_TIMEOUT_MS = 3000;
 
 const resources = app.isPackaged ? process.resourcesPath : join(__dirname, '..');
 const webDir = app.isPackaged ? join(resources, 'web') : join(__dirname, '../../web/dist');
@@ -226,8 +228,20 @@ app.on('will-quit', (event) => {
   const closing = server;
   server = null;
   tray?.destroy();
-  void closing
-    .close()
-    .catch((error: unknown) => logger.warn('error al cerrar el servidor local', error))
-    .finally(() => app.quit());
+  mainWindow?.destroy();
+
+  // Tras cancelar will-quit, app.quit() ya no cierra la app: se sale con app.exit(), que sí
+  // emite 'quit' (el actualizador instala la versión nueva en ese evento).
+  const timeout = new Promise<void>((resolve) =>
+    setTimeout(() => {
+      logger.warn('el servidor local no se cerró a tiempo; se sale igualmente');
+      resolve();
+    }, QUIT_TIMEOUT_MS),
+  );
+  void Promise.race([
+    closing
+      .close()
+      .catch((error: unknown) => logger.warn('error al cerrar el servidor local', error)),
+    timeout,
+  ]).finally(() => app.exit(0));
 });
