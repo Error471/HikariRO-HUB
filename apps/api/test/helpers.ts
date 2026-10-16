@@ -73,6 +73,7 @@ export async function createTestApp(
     userAgent: 'test',
     timeoutMs: 2000,
     dispatcher: agent,
+    retryDelayMs: 5,
   });
   const newsClient = new HikariClient({
     baseUrl: NEWS_FEED,

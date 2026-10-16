@@ -7,6 +7,8 @@ export interface HikariClientOptions {
   userAgent: string;
   timeoutMs: number;
   dispatcher?: Dispatcher;
+  /** Espera base entre reintentos cuando FluxCP responde con su página de error. */
+  retryDelayMs?: number;
 }
 
 export interface HikariResponse {
@@ -18,6 +20,19 @@ export interface HikariResponse {
 }
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
+const SERVER_ERROR_RETRIES = 2;
+const SERVER_ERROR_MESSAGE =
+  'HikariRO tiene problemas en su servidor ahora mismo. Inténtalo de nuevo en unos minutos.';
+
+/**
+ * FluxCP responde 200 con su página "Critical Error" cuando falla su base de datos
+ * (p. ej. "Too many connections"). Es un fallo pasajero, no un cambio de la web.
+ */
+export function isFluxCriticalError(response: Pick<HikariResponse, 'status' | 'body'>): boolean {
+  return response.status === 200 && /<title>[^<]*Critical Error[^<]*<\/title>/i.test(response.body);
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Cliente HTTP de bajo nivel para HikariRO. Solo acepta rutas relativas al host
@@ -31,12 +46,29 @@ export class HikariClient {
     this.origin = new URL(options.baseUrl).origin;
   }
 
-  get(path: string, jar?: CookieJar): Promise<HikariResponse> {
-    return this.send('GET', path, undefined, jar);
+  /** Las lecturas se reintentan si FluxCP devuelve su página de error de servidor. */
+  async get(path: string, jar?: CookieJar): Promise<HikariResponse> {
+    const delayMs = this.options.retryDelayMs ?? 500;
+    for (let attempt = 0; ; attempt += 1) {
+      const response = await this.send('GET', path, undefined, jar);
+      if (!isFluxCriticalError(response)) return response;
+      if (attempt >= SERVER_ERROR_RETRIES) {
+        throw new AppError('UPSTREAM_UNAVAILABLE', { publicMessage: SERVER_ERROR_MESSAGE });
+      }
+      await wait(delayMs * (attempt + 1));
+    }
   }
 
-  postForm(path: string, form: Record<string, string>, jar?: CookieJar): Promise<HikariResponse> {
-    return this.send('POST', path, new URLSearchParams(form).toString(), jar);
+  async postForm(
+    path: string,
+    form: Record<string, string>,
+    jar?: CookieJar,
+  ): Promise<HikariResponse> {
+    const response = await this.send('POST', path, new URLSearchParams(form).toString(), jar);
+    if (isFluxCriticalError(response)) {
+      throw new AppError('UPSTREAM_UNAVAILABLE', { publicMessage: SERVER_ERROR_MESSAGE });
+    }
+    return response;
   }
 
   private async send(

@@ -78,6 +78,40 @@ describe('GET /api/mvp', () => {
     expect(response.statusCode).toBe(502);
     expect(response.json().error.code).toBe('UPSTREAM_CHANGED');
   });
+
+  // Página real de FluxCP cuando su base de datos falla ("Too many connections").
+  const criticalError =
+    "<html><head><title>rA's Flux Control Panel: Critical Error</title></head>" +
+    '<body><h2>Critical Error</h2><p>SQLSTATE[HY000] [1040] Too many connections</p></body></html>';
+  const html = { 'content-type': 'text/html; charset=utf-8' };
+
+  it('reintenta si FluxCP devuelve su página de error de servidor', async () => {
+    const { cookie } = await loginAs(app, pool);
+    mockMvp(200, criticalError, html);
+    mockMvp(200, fixture('mvp-timer.json'), { 'content-type': 'application/json' });
+
+    const response = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it('un error de servidor de HikariRO no se confunde con un cambio de su web', async () => {
+    const { cookie } = await loginAs(app, pool);
+    for (let i = 0; i < 3; i++) mockMvp(200, criticalError, html);
+
+    const response = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
+    expect(response.statusCode).toBe(502);
+    expect(response.json().error.code).toBe('UPSTREAM_UNAVAILABLE');
+
+    const diagnostics = await app.inject({
+      method: 'GET',
+      url: '/api/diagnostics',
+      headers: { cookie },
+    });
+    const mvp = diagnostics
+      .json()
+      .modules.find((entry: { module: string }) => entry.module === 'mvp');
+    expect(mvp.state).toBe('unavailable');
+  });
 });
 
 describe('GET /api/news', () => {
