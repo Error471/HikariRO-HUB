@@ -57,6 +57,7 @@ export async function createTestApp(
     webDir,
     remember = false,
     revalidateMs = 300_000,
+    now,
     env = {},
   }: {
     /** Cambios sobre la configuración de prueba. */
@@ -66,6 +67,8 @@ export async function createTestApp(
     /** Activa "Mantener la sesión iniciada" (como en la app de escritorio). */
     remember?: boolean;
     revalidateMs?: number;
+    /** Reloj del cliente de HikariRO (para la pausa tras errores de servidor). */
+    now?: () => number;
   } = {},
 ) {
   const client = new HikariClient({
@@ -74,6 +77,7 @@ export async function createTestApp(
     timeoutMs: 2000,
     dispatcher: agent,
     retryDelayMs: 5,
+    ...(now && { now }),
   });
   const newsClient = new HikariClient({
     baseUrl: NEWS_FEED,

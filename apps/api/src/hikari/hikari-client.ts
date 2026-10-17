@@ -9,6 +9,9 @@ export interface HikariClientOptions {
   dispatcher?: Dispatcher;
   /** Espera base entre reintentos cuando FluxCP responde con su página de error. */
   retryDelayMs?: number;
+  /** Pausa tras un error de servidor: empieza en `baseMs` y se duplica hasta `maxMs`. */
+  pause?: { baseMs: number; maxMs: number };
+  now?: () => number;
 }
 
 export interface HikariResponse {
@@ -21,6 +24,7 @@ export interface HikariResponse {
 
 const MAX_BODY_BYTES = 5 * 1024 * 1024;
 const SERVER_ERROR_RETRIES = 2;
+const DEFAULT_PAUSE = { baseMs: 30_000, maxMs: 5 * 60_000 };
 const SERVER_ERROR_MESSAGE =
   'HikariRO tiene problemas en su servidor ahora mismo. Inténtalo de nuevo en unos minutos.';
 
@@ -41,6 +45,8 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export class HikariClient {
   private readonly origin: string;
+  private pausedUntil = 0;
+  private serverErrors = 0;
 
   constructor(private readonly options: HikariClientOptions) {
     this.origin = new URL(options.baseUrl).origin;
@@ -48,13 +54,12 @@ export class HikariClient {
 
   /** Las lecturas se reintentan si FluxCP devuelve su página de error de servidor. */
   async get(path: string, jar?: CookieJar): Promise<HikariResponse> {
+    this.assertNotPaused();
     const delayMs = this.options.retryDelayMs ?? 500;
     for (let attempt = 0; ; attempt += 1) {
       const response = await this.send('GET', path, undefined, jar);
-      if (!isFluxCriticalError(response)) return response;
-      if (attempt >= SERVER_ERROR_RETRIES) {
-        throw new AppError('UPSTREAM_UNAVAILABLE', { publicMessage: SERVER_ERROR_MESSAGE });
-      }
+      if (!isFluxCriticalError(response)) return this.recovered(response);
+      if (attempt >= SERVER_ERROR_RETRIES) throw this.pauseAfterServerError();
       await wait(delayMs * (attempt + 1));
     }
   }
@@ -64,11 +69,34 @@ export class HikariClient {
     form: Record<string, string>,
     jar?: CookieJar,
   ): Promise<HikariResponse> {
+    this.assertNotPaused();
     const response = await this.send('POST', path, new URLSearchParams(form).toString(), jar);
-    if (isFluxCriticalError(response)) {
+    if (isFluxCriticalError(response)) throw this.pauseAfterServerError();
+    return this.recovered(response);
+  }
+
+  // Pausa ante errores de servidor: mientras dura no se consulta a HikariRO para no
+  // sumarle carga (avisos de MVP, mantener sesión, pantallas abiertas…).
+  private assertNotPaused(): void {
+    if (this.clock() < this.pausedUntil) {
       throw new AppError('UPSTREAM_UNAVAILABLE', { publicMessage: SERVER_ERROR_MESSAGE });
     }
+  }
+
+  private pauseAfterServerError(): AppError {
+    const { baseMs, maxMs } = this.options.pause ?? DEFAULT_PAUSE;
+    this.pausedUntil = this.clock() + Math.min(baseMs * 2 ** this.serverErrors, maxMs);
+    this.serverErrors += 1;
+    return new AppError('UPSTREAM_UNAVAILABLE', { publicMessage: SERVER_ERROR_MESSAGE });
+  }
+
+  private recovered(response: HikariResponse): HikariResponse {
+    this.serverErrors = 0;
     return response;
+  }
+
+  private clock(): number {
+    return this.options.now?.() ?? Date.now();
   }
 
   private async send(

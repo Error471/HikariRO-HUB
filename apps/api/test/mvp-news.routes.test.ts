@@ -112,6 +112,27 @@ describe('GET /api/mvp', () => {
       .modules.find((entry: { module: string }) => entry.module === 'mvp');
     expect(mvp.state).toBe('unavailable');
   });
+
+  it('tras un error de servidor deja de consultar a HikariRO durante un rato', async () => {
+    await app.close();
+    let now = 1_000_000;
+    ({ app } = await createTestApp(agent, { now: () => now }));
+    const { cookie } = await loginAs(app, pool);
+    for (let i = 0; i < 3; i++) mockMvp(200, criticalError, html);
+    mockMvp(200, fixture('mvp-timer.json'), { 'content-type': 'application/json' });
+
+    const first = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
+    expect(first.statusCode).toBe(502);
+
+    now += 10_000;
+    const paused = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
+    expect(paused.statusCode).toBe(502);
+    expect(agent.pendingInterceptors()).toHaveLength(1);
+
+    now += 30_000;
+    const resumed = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
+    expect(resumed.statusCode).toBe(200);
+  });
 });
 
 describe('GET /api/news', () => {
