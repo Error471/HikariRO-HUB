@@ -4,11 +4,20 @@ import {
   wikiIndexResponseSchema,
   wikiPageSchema,
   wikiSearchResponseSchema,
+  wikiStatusSchema,
 } from '@hikari-hub/shared';
 import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/api-client';
 
 const WIKI_STALE_MS = 10 * 60_000;
+
+/** Estado de la descarga de la wiki; se consulta cada segundo mientras dura. */
+export const wikiStatusQuery = queryOptions({
+  queryKey: ['wiki', 'status'],
+  queryFn: ({ signal }) => apiRequest('/wiki/status', { schema: wikiStatusSchema, signal }),
+  refetchInterval: (query) => (query.state.data?.state === 'downloading' ? 1000 : false),
+  staleTime: (query) => (query.state.data?.state === 'ready' ? Infinity : 0),
+});
 
 export const wikiPageQuery = (title: string) =>
   queryOptions({

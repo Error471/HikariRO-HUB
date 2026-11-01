@@ -11,6 +11,7 @@ export const errorCodes = [
   'UPSTREAM_BLOCKED',
   'UPSTREAM_CHANGED',
   'NOT_FOUND',
+  'WIKI_UNAVAILABLE',
   'INTERNAL',
 ] as const;
 
@@ -40,5 +41,6 @@ export const defaultErrorMessages: Record<ErrorCode, string> = {
   UPSTREAM_CHANGED:
     'HikariRO ha cambiado y esta sección no puede mostrarse ahora mismo. Ya estamos en ello.',
   NOT_FOUND: 'No se ha encontrado lo que buscabas.',
+  WIKI_UNAVAILABLE: 'La wiki todavía no se ha descargado.',
   INTERNAL: 'Ha ocurrido un error inesperado. Inténtalo de nuevo.',
 };

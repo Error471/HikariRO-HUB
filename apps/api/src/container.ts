@@ -1,3 +1,4 @@
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Env } from './config/env.js';
 import { HikariAuth } from './hikari/hikari-auth.js';
@@ -13,6 +14,7 @@ import { MemoryLoginThrottle } from './modules/auth/login-throttle.js';
 import { MarketService } from './modules/markets/market.service.js';
 import { MvpService } from './modules/mvp/mvp.service.js';
 import { NewsService } from './modules/news/news.service.js';
+import { WikiStore } from './modules/wiki/wiki-store.js';
 import { WikiService } from './modules/wiki/wiki.service.js';
 import { SessionService } from './session/session-service.js';
 import { FileSessionStore, MemorySessionStore } from './session/session-store.js';
@@ -58,6 +60,7 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
     ? new FileUserDataStore(join(dataDir, 'user-data.json'))
     : new MemoryUserDataStore();
   const origin = new URL(env.HIKARI_BASE_URL).origin;
+  const wiki = new WikiService(origin);
 
   return {
     env,
@@ -68,7 +71,13 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
     mvp: new MvpService(client, origin, monitor),
     news: new NewsService(feedClient, feedUrl.pathname + feedUrl.search, monitor),
     markets: new MarketService(client, origin, { monitor }),
-    wiki: new WikiService(origin),
+    wiki,
+    wikiStore: new WikiStore({
+      sourceUrl: env.WIKI_SOURCE_URL,
+      dir: join(dataDir ?? join(tmpdir(), 'hikari-hub'), 'wiki'),
+      wiki,
+      timeoutMs: env.HIKARI_TIMEOUT_MS * 3,
+    }),
     albums: new AlbumService(client, origin, monitor),
     userData,
     alerts: new AlertService(

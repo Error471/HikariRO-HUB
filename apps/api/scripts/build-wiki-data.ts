@@ -1,31 +1,51 @@
 /**
- * Importa la copia local de la wiki (las páginas HTML de HikariRO_Web/Wiki) al formato que lee la API:
- *   - apps/api/src/modules/wiki/data/wiki-pages.json   contenido, secciones, avisos y grupos
- *   - apps/web/public/wiki-img/                        imágenes que usan las páginas
+ * Importa la copia local de la wiki (las páginas HTML de HikariRO_Web/Wiki) al formato que descarga la app
+ * de GitHub, en la carpeta `wiki/` de la raíz del repositorio:
+ *   - wiki/pages.json      contenido, secciones, avisos y grupos
+ *   - wiki/img/            imágenes que usan las páginas
+ *   - wiki/manifest.json   versión y huella de cada archivo (la app solo baja lo que cambia)
  *
  * Uso:  pnpm --filter @hikari-hub/api wiki:import [carpeta-con-la-copia]
- * La carpeta por defecto es ../../HikariRO_Web (junto a la carpeta del proyecto). Debe contener Wiki/ y assets/.
+ * La carpeta por defecto es ../../HikariRO_Web (junto a la carpeta del proyecto). Debe contener Wiki/.
+ * Después hay que subir los cambios a GitHub (rama main): las apps instaladas los descargan solas.
  */
 import * as cheerio from 'cheerio';
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const source = resolve(process.argv[2] ?? join(root, '..', '..', 'HikariRO_Web'));
 const wikiDir = join(source, 'Wiki');
-const dataFile = join(root, 'apps', 'api', 'src', 'modules', 'wiki', 'data', 'wiki-pages.json');
-const imagesOut = join(root, 'apps', 'web', 'public', 'wiki-img');
+const outDir = join(root, 'wiki');
+const dataFile = join(outDir, 'pages.json');
+const imagesOut = join(outDir, 'img');
 const MAIN_PAGE = 'Página principal';
 
 if (!existsSync(join(wikiDir, 'index.html'))) {
-  console.error(`No encuentro ${join(wikiDir, 'index.html')}. Indica la carpeta de la copia local de la wiki.`);
+  console.error(
+    `No encuentro ${join(wikiDir, 'index.html')}. Indica la carpeta de la copia local de la wiki.`,
+  );
   process.exit(1);
 }
 
 const text = (value: string) => value.replace(/\s+/g, ' ').trim();
 const normalize = (value: string) =>
-  value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().replace(/[_\s]+/g, ' ').trim();
+  value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[_\s]+/g, ' ')
+    .trim();
 const wikiPath = (title: string) =>
   `/wiki/${encodeURIComponent(title.replace(/ /g, '_')).replace(/%2F/g, '/')}`;
 
@@ -52,7 +72,9 @@ for (const file of files) {
 // Grupos y títulos visibles: salen del directorio de la portada (que también conoce las tarjetas deshabilitadas).
 const home = parsed.get('index');
 if (!home) throw new Error('Falta index.html');
-const byH1 = new Map([...parsed.values()].filter((p) => p.h1).map((p) => [normalize(p.h1), p.slug]));
+const byH1 = new Map(
+  [...parsed.values()].filter((p) => p.h1).map((p) => [normalize(p.h1), p.slug]),
+);
 const titleBySlug = new Map<string, string>();
 const groups: { name: string; pages: string[] }[] = [];
 home.$('.wk-dir-group').each((_, element) => {
@@ -123,7 +145,8 @@ for (const { slug, $ } of parsed.values()) {
   let notice: Notice | null = null;
   const noticeBox = article.find('.wk-notice').first();
   if (noticeBox.length) {
-    const kind = /wk-notice-(\w+)/.exec(noticeBox.attr('class') ?? '')?.[1] as Notice['kind'] | undefined;
+    const kind = /wk-notice-(\w+)/.exec(noticeBox.attr('class') ?? '')?.[1] as
+      Notice['kind'] | undefined;
     notice = {
       kind: kind ?? 'warn',
       label: text(noticeBox.find('b').first().text()),
@@ -134,7 +157,10 @@ for (const { slug, $ } of parsed.values()) {
   if (isHome) {
     // El directorio de guías lo da la propia app (categorías y búsqueda).
     article.find('.wk-dir-group').remove();
-    article.find('.hro2-section-head').filter((_, e) => $(e).text().includes('Todas las guías')).remove();
+    article
+      .find('.hro2-section-head')
+      .filter((_, e) => $(e).text().includes('Todas las guías'))
+      .remove();
   }
 
   convertHtml($, article);
@@ -159,25 +185,44 @@ for (const { slug, $ } of parsed.values()) {
   });
 }
 
-pages.sort((a, b) => (a.title === MAIN_PAGE ? -1 : b.title === MAIN_PAGE ? 1 : a.title.localeCompare(b.title, 'es')));
+pages.sort((a, b) =>
+  a.title === MAIN_PAGE ? -1 : b.title === MAIN_PAGE ? 1 : a.title.localeCompare(b.title, 'es'),
+);
 
-mkdirSync(dirname(dataFile), { recursive: true });
+mkdirSync(outDir, { recursive: true });
 writeFileSync(dataFile, JSON.stringify({ groups, pages }) + '\n');
 
-// Imágenes: solo las que usan las páginas (más la ilustración de la portada).
+// Imágenes: solo las que usan las páginas.
 rmSync(imagesOut, { recursive: true, force: true });
 mkdirSync(imagesOut, { recursive: true });
 let copied = 0;
-for (const name of imagesUsed) {
+const images: Record<string, { sha256: string; size: number }> = {};
+for (const name of [...imagesUsed].sort()) {
   const from = join(wikiDir, 'img', name);
   if (!existsSync(from)) {
     console.warn(`Falta la imagen ${name}`);
     continue;
   }
   copyFileSync(from, join(imagesOut, name));
+  images[name] = fingerprint(readFileSync(from));
   copied += 1;
 }
-const hero = join(source, 'assets', 'img', 'hero-slide.webp');
-if (existsSync(hero)) copyFileSync(hero, join(imagesOut, 'hero-slide.webp'));
 
-console.log(`${pages.length} páginas en ${groups.length} categorías, ${copied} imágenes copiadas.`);
+function fingerprint(data: Buffer) {
+  return { sha256: createHash('sha256').update(data).digest('hex'), size: data.length };
+}
+
+const pagesEntry = fingerprint(readFileSync(dataFile));
+// La versión cambia solo si cambia algún archivo: así la app no revisa nada si no hay novedades.
+const version = createHash('sha256')
+  .update(JSON.stringify([pagesEntry, images]))
+  .digest('hex')
+  .slice(0, 16);
+writeFileSync(
+  join(outDir, 'manifest.json'),
+  JSON.stringify({ version, pages: pagesEntry, images }) + '\n',
+);
+
+console.log(
+  `${pages.length} páginas en ${groups.length} categorías, ${copied} imágenes (versión ${version}).`,
+);

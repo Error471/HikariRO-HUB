@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import type { MockAgent } from 'undici';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import bundled from '../src/modules/wiki/data/wiki-pages.json' with { type: 'json' };
 import { sanitizeWikiHtml } from '../src/modules/wiki/wiki-html.js';
 import { WikiService } from '../src/modules/wiki/wiki.service.js';
 import { createMockHikari, createTestApp, HIKARI, loginAs } from './helpers.js';
@@ -65,7 +66,10 @@ describe('WikiService (copia de prueba)', () => {
       result.results[0]?.snippet.some((part) => part.match && part.text.toLowerCase() === 'pesca'),
     ).toBe(true);
 
-    expect((await wiki.search('Sistema')).titles).toEqual(['Sistema de minería', 'Sistema de pesca']);
+    expect((await wiki.search('Sistema')).titles).toEqual([
+      'Sistema de minería',
+      'Sistema de pesca',
+    ]);
     expect((await wiki.search('cana')).results[0]?.title).toBe('Sistema de pesca');
     expect((await wiki.search('zzzz')).results).toEqual([]);
   });
@@ -86,15 +90,22 @@ describe('WikiService (copia de prueba)', () => {
   });
 });
 
-describe('copia local incluida en la app', () => {
-  const wiki = new WikiService(HIKARI);
+// La carpeta wiki/ del repositorio es lo que descargan las apps desde GitHub.
+const published = (name: string) =>
+  readFileSync(new URL(`../../../wiki/${name}`, import.meta.url), 'utf8');
+const bundled = JSON.parse(published('pages.json')) as { pages: unknown[] };
+
+describe('copia de la wiki publicada en GitHub', () => {
+  const wiki = new WikiService(HIKARI, bundled);
 
   it('tiene la portada y sus enlaces internos apuntan a páginas que existen', async () => {
     const home = await wiki.page('Página principal');
     expect(home.html).toContain('hro2-hero');
     const titles = (await wiki.index()).pages.map((title) => title.toLowerCase());
     for (const [, path] of home.html.matchAll(/href="\/wiki\/([^"#]+)/g)) {
-      const title = decodeURIComponent(path ?? '').replace(/_/g, ' ').toLowerCase();
+      const title = decodeURIComponent(path ?? '')
+        .replace(/_/g, ' ')
+        .toLowerCase();
       expect(titles, `enlace roto: ${title}`).toContain(title);
     }
   });
@@ -107,17 +118,27 @@ describe('copia local incluida en la app', () => {
     }
     expect(bundled.pages.length).toBeGreaterThan(20);
   });
+
+  it('el manifiesto lista todas las imágenes que usan las páginas', () => {
+    const manifest = JSON.parse(published('manifest.json')) as { images: Record<string, unknown> };
+    const used = [...published('pages.json').matchAll(/\/wiki-img\/([^"\\]+)/g)].map(
+      (match) => match[1] ?? '',
+    );
+    expect(used.length).toBeGreaterThan(50);
+    for (const name of used) expect(Object.keys(manifest.images), name).toContain(name);
+  });
 });
 
 describe('rutas /api/wiki', () => {
   let app: FastifyInstance;
+  let wikiDir: string;
   let agent: MockAgent;
   let pool: ReturnType<MockAgent['get']>;
   let cookie: string;
 
   beforeEach(async () => {
     ({ agent, pool } = createMockHikari());
-    ({ app } = await createTestApp(agent));
+    ({ app, wikiDir } = await createTestApp(agent));
     ({ cookie } = await loginAs(app, pool));
   });
 
@@ -132,6 +153,25 @@ describe('rutas /api/wiki', () => {
   it('se puede leer sin iniciar sesión', async () => {
     expect((await get('/api/wiki/index', {})).statusCode).toBe(200);
     expect((await get('/api/wiki/page?title=Sistema_de_pesca', {})).statusCode).toBe(200);
+  });
+
+  it('informa del estado de la descarga', async () => {
+    expect((await get('/api/wiki/status', {})).json()).toMatchObject({
+      state: 'ready',
+      message: null,
+    });
+  });
+
+  it('sirve las imágenes descargadas y rechaza nombres raros', async () => {
+    mkdirSync(join(wikiDir, 'img'));
+    writeFileSync(join(wikiDir, 'img', 'pez.png'), 'png');
+    writeFileSync(join(wikiDir, 'manifest.json'), '{}');
+    const image = await get('/wiki-img/pez.png', {});
+    expect(image.statusCode).toBe(200);
+    expect(image.headers['content-type']).toBe('image/png');
+    expect((await get('/wiki-img/no-existe.png', {})).statusCode).toBe(404);
+    expect((await get('/wiki-img/manifest.json', {})).statusCode).toBe(404);
+    expect((await get('/wiki-img/..%2Fmanifest.json', {})).statusCode).toBe(404);
   });
 
   it('devuelve una página saneada', async () => {

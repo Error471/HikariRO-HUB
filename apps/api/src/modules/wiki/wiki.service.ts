@@ -8,7 +8,6 @@ import {
 } from '@hikari-hub/shared';
 import { z } from 'zod';
 import { AppError } from '../../lib/app-error.js';
-import bundled from './data/wiki-pages.json' with { type: 'json' };
 import { sanitizeWikiHtml } from './wiki-html.js';
 
 const wikiDataSchema = z.object({
@@ -53,32 +52,50 @@ interface Entry {
 }
 
 /**
- * La wiki de HikariRO, servida desde la copia local incluida en la app (`data/wiki-pages.json`,
- * generada con `pnpm --filter @hikari-hub/api wiki:import`). No hace peticiones a HikariRO.
+ * La wiki de HikariRO, servida desde una copia local. El contenido (`pages.json`) no va dentro de la app:
+ * lo descarga `WikiStore` de GitHub la primera vez y lo entrega con `load()`. No hace peticiones a HikariRO.
  */
 export class WikiService {
-  private readonly entries: Entry[];
-  private readonly byKey = new Map<string, Entry>();
-  private readonly groups: WikiData['groups'];
+  private entries: Entry[] = [];
+  private byKey = new Map<string, Entry>();
+  private groups: WikiData['groups'] = [];
+  private loaded = false;
 
   constructor(
     private readonly origin: string,
-    data: unknown = bundled,
+    data?: unknown,
   ) {
+    if (data !== undefined) this.load(data);
+  }
+
+  get ready(): boolean {
+    return this.loaded;
+  }
+
+  /** Sustituye el contenido; lanza si el formato no es el esperado y deja el anterior intacto. */
+  load(data: unknown): void {
     const parsed = wikiDataSchema.parse(data);
-    this.groups = parsed.groups;
-    this.entries = parsed.pages.map((page) => ({
+    const entries = parsed.pages.map((page) => ({
       ...page,
       key: normalize(page.title),
       html: sanitizeWikiHtml(page.html),
       textKey: normalize(page.text),
     }));
-    for (const entry of this.entries) this.byKey.set(entry.key, entry);
+    this.groups = parsed.groups;
+    this.entries = entries;
+    this.byKey = new Map(entries.map((entry) => [entry.key, entry]));
+    this.loaded = true;
+  }
+
+  private ensureReady(): void {
+    if (!this.loaded) throw new AppError('WIKI_UNAVAILABLE');
   }
 
   async page(title: string): Promise<WikiPage> {
+    this.ensureReady();
     const entry = this.byKey.get(normalize(title));
-    if (!entry) throw new AppError('NOT_FOUND', { publicMessage: 'Esta página no existe en la wiki.' });
+    if (!entry)
+      throw new AppError('NOT_FOUND', { publicMessage: 'Esta página no existe en la wiki.' });
     return {
       title: entry.title,
       redirectedFrom: null,
@@ -92,6 +109,7 @@ export class WikiService {
   }
 
   async search(query: string): Promise<WikiSearchResponse> {
+    this.ensureReady();
     const terms = normalize(query).split(' ').filter(Boolean);
     const phrase = terms.join(' ');
     const scored = this.entries
@@ -125,18 +143,21 @@ export class WikiService {
   }
 
   async allCategories(): Promise<WikiCategoriesResponse> {
+    this.ensureReady();
     return {
       categories: this.groups.map((group) => ({ name: group.name, pages: group.pages.length })),
     };
   }
 
   async category(name: string): Promise<WikiCategoryResponse> {
+    this.ensureReady();
     const group = this.groups.find((item) => normalize(item.name) === normalize(name));
     if (!group) throw new AppError('NOT_FOUND', { publicMessage: 'Esta categoría no existe.' });
     return { name: group.name, pages: group.pages, subcategories: [] };
   }
 
   async index(): Promise<WikiIndexResponse> {
+    this.ensureReady();
     return { pages: this.entries.map((entry) => entry.title) };
   }
 }
@@ -144,7 +165,11 @@ export class WikiService {
 function countOccurrences(haystack: string, needle: string): number {
   if (!needle) return 0;
   let count = 0;
-  for (let at = haystack.indexOf(needle); at !== -1; at = haystack.indexOf(needle, at + needle.length)) {
+  for (
+    let at = haystack.indexOf(needle);
+    at !== -1;
+    at = haystack.indexOf(needle, at + needle.length)
+  ) {
     count += 1;
   }
   return count;
@@ -155,21 +180,28 @@ function countOccurrences(haystack: string, needle: string): number {
  * La búsqueda ignora tildes: se localiza en el texto normalizado (misma longitud que el original
  * al descomponer solo letras acentuadas) y se marca sobre el texto original.
  */
-function snippetFor(text: string, terms: string[]): WikiSearchResponse['results'][number]['snippet'] {
+function snippetFor(
+  text: string,
+  terms: string[],
+): WikiSearchResponse['results'][number]['snippet'] {
   if (!text) return [];
   const flat = text
     .normalize('NFD')
     .replace(/\p{Diacritic}/gu, '')
     .toLowerCase();
   // Si la normalización cambió la longitud, no se puede alinear: se devuelve el inicio sin marcas.
-  if (flat.length !== text.length) return [{ text: text.slice(0, SNIPPET_RADIUS * 2), match: false }];
+  if (flat.length !== text.length)
+    return [{ text: text.slice(0, SNIPPET_RADIUS * 2), match: false }];
 
   const hits = terms.map((term) => flat.indexOf(term)).filter((at) => at !== -1);
   const first = hits.length ? Math.min(...hits) : 0;
   const start = Math.max(0, first - SNIPPET_RADIUS);
   const end = Math.min(text.length, first + SNIPPET_RADIUS);
   const pattern = terms.length
-    ? new RegExp(`(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
+    ? new RegExp(
+        `(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`,
+        'g',
+      )
     : null;
 
   const parts: WikiSearchResponse['results'][number]['snippet'] = [];

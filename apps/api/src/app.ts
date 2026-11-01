@@ -20,7 +20,8 @@ import { mvpRoutes } from './modules/mvp/mvp.routes.js';
 import type { MvpService } from './modules/mvp/mvp.service.js';
 import { newsRoutes } from './modules/news/news.routes.js';
 import type { NewsService } from './modules/news/news.service.js';
-import { wikiRoutes } from './modules/wiki/wiki.routes.js';
+import { wikiImageRoutes, wikiRoutes } from './modules/wiki/wiki.routes.js';
+import type { WikiStore } from './modules/wiki/wiki-store.js';
 import type { WikiService } from './modules/wiki/wiki.service.js';
 import { registerErrorHandling } from './plugins/error-handler.js';
 import { registerSecurity } from './plugins/security.js';
@@ -43,6 +44,7 @@ export interface AppDependencies {
   news: NewsService;
   markets: MarketService;
   wiki: WikiService;
+  wikiStore: WikiStore;
   albums: AlbumService;
   userData: UserDataStore;
   alerts: AlertService;
@@ -140,7 +142,8 @@ export async function buildApp(deps: AppDependencies) {
     markets: deps.markets,
     requireSession,
   });
-  await app.register(wikiRoutes, { prefix: '/api/wiki', wiki: deps.wiki });
+  await app.register(wikiRoutes, { prefix: '/api/wiki', wiki: deps.wiki, store: deps.wikiStore });
+  await app.register(wikiImageRoutes, { store: deps.wikiStore });
   await app.register(albumRoutes, {
     prefix: '/api/albums',
     albums: deps.albums,

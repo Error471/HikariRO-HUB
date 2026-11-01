@@ -11,6 +11,7 @@ const statusByCode: Record<ErrorCode, number> = {
   UPSTREAM_BLOCKED: 503,
   UPSTREAM_CHANGED: 502,
   NOT_FOUND: 404,
+  WIKI_UNAVAILABLE: 503,
   INTERNAL: 500,
 };
 

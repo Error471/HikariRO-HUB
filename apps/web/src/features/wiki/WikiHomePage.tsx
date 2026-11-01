@@ -44,7 +44,7 @@ export function WikiHomePage() {
     <div className="flex flex-col gap-6 animate-rise">
       <PageHeader
         title="Wiki"
-        description="Guías, sistemas e instancias de HikariRO. Está guardada en la propia app: funciona sin conexión."
+        description="Guías, sistemas e instancias de HikariRO. Se descarga la primera vez y se guarda en tu PC: funciona sin conexión."
         actions={
           <a
             href={modules.wiki.sourceUrl}

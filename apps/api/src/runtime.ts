@@ -26,6 +26,9 @@ export async function startServer(
     throw error;
   }
 
+  // La wiki se descarga de GitHub la primera vez; en segundo plano para no retrasar el arranque.
+  deps.wikiStore.start(app.log);
+
   // Aviso cuando HikariRO cambia su web: una vez por módulo hasta que vuelva a funcionar.
   deps.monitor.onChange((module, state) => {
     if (state !== 'changed') return;

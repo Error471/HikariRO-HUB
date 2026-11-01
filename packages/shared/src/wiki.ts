@@ -75,6 +75,17 @@ export type WikiCategoryResponse = z.infer<typeof wikiCategoryResponseSchema>;
 export const wikiIndexResponseSchema = z.object({ pages: z.array(z.string()) });
 export type WikiIndexResponse = z.infer<typeof wikiIndexResponseSchema>;
 
+/** Estado de la copia local de la wiki (se descarga de GitHub la primera vez que se abre la app). */
+export const wikiStatusSchema = z.object({
+  state: z.enum(['ready', 'downloading', 'error']),
+  /** Archivos descargados y totales de la descarga en curso. */
+  done: z.number(),
+  total: z.number(),
+  /** Motivo del último fallo (solo con `state: 'error'`). */
+  message: z.string().nullable(),
+});
+export type WikiStatus = z.infer<typeof wikiStatusSchema>;
+
 export const wikiSearchQuerySchema = z.object({
   q: z.string().trim().min(2, 'Escribe al menos 2 caracteres.').max(100),
 });

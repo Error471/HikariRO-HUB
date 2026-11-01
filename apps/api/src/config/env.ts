@@ -37,6 +37,10 @@ const envSchema = z.object({
   DATA_DIR: z.string().min(1).optional(),
   /** Build de la web (`apps/web/dist`) para servirla desde la propia API. */
   WEB_DIST_DIR: z.string().min(1).optional(),
+  /** Carpeta de GitHub con la wiki (manifest.json, pages.json e img/); se descarga y se guarda en DATA_DIR. */
+  WIKI_SOURCE_URL: z
+    .url()
+    .default('https://raw.githubusercontent.com/Error471/HikariRO-HUB/main/wiki'),
   /** Archivo de log; sin él se escribe en la salida estándar. */
   LOG_FILE: z.string().min(1).optional(),
 

@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { MockAgent } from 'undici';
 import { buildApp } from '../src/app.js';
 import { loadEnv } from '../src/config/env.js';
@@ -13,6 +15,7 @@ import { MemoryLoginThrottle } from '../src/modules/auth/login-throttle.js';
 import { MarketService } from '../src/modules/markets/market.service.js';
 import { MvpService } from '../src/modules/mvp/mvp.service.js';
 import { NewsService } from '../src/modules/news/news.service.js';
+import { WikiStore } from '../src/modules/wiki/wiki-store.js';
 import { WikiService } from '../src/modules/wiki/wiki.service.js';
 import { AlertService } from '../src/modules/alerts/alerts.service.js';
 import type { Notifier } from '../src/modules/alerts/notifier.js';
@@ -103,6 +106,9 @@ export async function createTestApp(
     sealer,
   );
   const mvp = new MvpService(client, HIKARI, monitor);
+  const wiki = new WikiService(HIKARI, wikiTestData);
+  const wikiDir = mkdtempSync(join(tmpdir(), 'hikari-hub-wiki-'));
+  const wikiStore = new WikiStore({ sourceUrl: 'https://wiki.test', dir: wikiDir, wiki });
   const app = await buildApp({
     env: { ...testEnv, ...env, ...(webDir && { WEB_DIST_DIR: webDir }) },
     hikariAuth,
@@ -111,14 +117,15 @@ export async function createTestApp(
     mvp,
     news: new NewsService(newsClient, '/discord/feed.php', monitor),
     markets: new MarketService(client, HIKARI, { monitor }),
-    wiki: new WikiService(HIKARI, wikiTestData),
+    wiki,
+    wikiStore,
     albums: new AlbumService(client, HIKARI, monitor),
     userData,
     alerts,
     monitor,
     journal,
   });
-  return { app, sessions, userData, alerts, mvp, hikariAuth, monitor, journal };
+  return { app, sessions, userData, alerts, mvp, hikariAuth, monitor, journal, wikiDir };
 }
 
 /** Prepara un login correcto en el mock de HikariRO. */
