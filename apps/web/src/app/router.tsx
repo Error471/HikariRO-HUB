@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { StatusScreen } from '@/components/ui/StatusScreen';
 import { LoginPage, safeRedirect } from '@/features/auth/LoginPage';
-import { sessionQuery } from '@/features/auth/session';
+import { sessionQuery, type SessionState } from '@/features/auth/session';
 import { errorMessage } from '@/lib/api-client';
 import { AppShell } from './layout/AppShell';
 import { PublicShell } from './layout/PublicShell';
@@ -80,8 +80,9 @@ const loginRoute = createRoute({
   path: '/login',
   validateSearch: loginSearchSchema,
   beforeLoad: async ({ context, search }) => {
-    const state = await context.queryClient.ensureQueryData(sessionQuery);
-    if (state.status === 'authenticated') throw redirect({ href: safeRedirect(search.redirect) });
+    // Sin conexión con HikariRO se muestra igualmente el formulario: al enviarlo avisa del fallo.
+    const state = await sessionIfReachable(context.queryClient);
+    if (state?.status === 'authenticated') throw redirect({ href: safeRedirect(search.redirect) });
   },
   component: function LoginRoute() {
     const search = loginRoute.useSearch();
@@ -121,25 +122,28 @@ const appRoute = createRoute({
   },
 });
 
-/** La wiki es local y no necesita cuenta: con sesión usa el shell completo, sin ella uno público. */
 // Cuando HikariRO no responde la comprobación de sesión falla (y tarda): se recuerda el fallo
-// 30 minutos para no repetirla, y esperarla, en cada página de la wiki que se abre.
+// 30 minutos para no repetirla, y esperarla, en cada página que se abre sin necesitar la sesión.
 const SESSION_RETRY_MS = 30 * 60_000;
 let sessionFailedAt = 0;
 
+/** Estado de la sesión, o null si no se pudo comprobar (HikariRO caído). Nunca lanza. */
+async function sessionIfReachable(queryClient: QueryClient): Promise<SessionState | null> {
+  const cached = queryClient.getQueryData(sessionQuery.queryKey);
+  if (cached) return cached;
+  if (Date.now() - sessionFailedAt < SESSION_RETRY_MS) return null;
+  return queryClient.ensureQueryData(sessionQuery).catch(() => {
+    sessionFailedAt = Date.now();
+    return null;
+  });
+}
+
+/** La wiki es local y no necesita cuenta: con sesión usa el shell completo, sin ella uno público. */
 const wikiLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'wiki-layout',
   beforeLoad: async ({ context }) => {
-    const cached = context.queryClient.getQueryData(sessionQuery.queryKey);
-    if (!cached && Date.now() - sessionFailedAt < SESSION_RETRY_MS) return { user: null };
-    // La wiki es local: si no se puede comprobar la sesión, sigue siendo legible.
-    const state =
-      cached ??
-      (await context.queryClient.ensureQueryData(sessionQuery).catch(() => {
-        sessionFailedAt = Date.now();
-        return null;
-      }));
+    const state = await sessionIfReachable(context.queryClient);
     return { user: state?.status === 'authenticated' ? state.session.user : null };
   },
   component: function WikiLayout() {
