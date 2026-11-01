@@ -51,7 +51,7 @@ function ModuleTile({ module }: { module: ModuleDefinition }) {
 export function DashboardPage({ username }: { username: string }) {
   return (
     <div className="flex flex-col gap-6 animate-rise">
-      <section className="hero-banner -mx-4 -mt-6 flex flex-col gap-4 px-4 pt-44 pb-6 sm:-mx-6 sm:px-6 md:flex-row md:items-end md:justify-between lg:-mx-10 lg:-mt-10 lg:px-10">
+      <section className="hero-banner -mx-4 -mt-6 flex flex-col gap-4 px-4 pt-52 pb-6 lg:pt-64 sm:-mx-6 sm:px-6 md:flex-row md:items-end md:justify-between lg:-mx-10 lg:-mt-10 lg:px-10">
         <div>
           <p className="kicker">{greeting()}</p>
           <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
