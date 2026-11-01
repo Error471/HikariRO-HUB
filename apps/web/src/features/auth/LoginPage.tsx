@@ -1,7 +1,15 @@
 import { loginRequestSchema } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
-import { AlertTriangle, Eye, EyeOff, Hourglass, LockKeyhole, ShieldCheck } from 'lucide-react';
+import {
+  AlertTriangle,
+  BookOpen,
+  Eye,
+  EyeOff,
+  Hourglass,
+  LockKeyhole,
+  ShieldCheck,
+} from 'lucide-react';
 import { useId, useState, type FormEvent } from 'react';
 import { Brand } from '@/components/ui/Brand';
 import { Button } from '@/components/ui/Button';
@@ -53,7 +61,9 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <section className="hero-banner hero-banner--top relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <Brand />
+        <div className="w-fit rounded-2xl bg-night-950/75 p-2 pr-5 backdrop-blur-md">
+          <Brand />
+        </div>
         <div className="relative max-w-lg animate-rise">
           <h1 className="font-display text-6xl leading-[1.1] font-semibold tracking-tight text-balance">
             Tu centro de control de <span className="text-gold-300">HikariRO</span>
@@ -178,14 +188,21 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
             Hikari Hub envía tu contraseña por HTTPS a HikariRO para iniciar sesión. Nunca la
             registra y solo la guarda, cifrada, si marcas la casilla.
           </p>
-          <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-faint">
-            <Link to="/wiki" className="text-mana-400 underline-offset-2 hover:underline">
-              Ver la wiki sin iniciar sesión
-            </Link>
-            <Link to="/privacidad" className="text-mana-400 underline-offset-2 hover:underline">
+          <Link
+            to="/wiki"
+            className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-ink/12 px-6 text-xs font-medium uppercase tracking-[0.08em] text-ink transition hover:border-ink"
+          >
+            <BookOpen aria-hidden="true" className="size-4" />
+            Ver la wiki sin iniciar sesión
+          </Link>
+          <p className="mt-6 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-ink/12 pt-5 text-xs text-ink-faint">
+            <Link
+              to="/privacidad"
+              className="whitespace-nowrap text-mana-400 underline-offset-2 hover:underline"
+            >
               Privacidad y cómo funciona
             </Link>
-            <span>
+            <span className="whitespace-nowrap">
               ¿Sin cuenta?{' '}
               <a
                 href="https://hikariro.com/?module=account&action=create"
