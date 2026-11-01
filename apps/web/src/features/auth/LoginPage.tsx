@@ -61,9 +61,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
       <section className="hero-banner hero-banner--top relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="w-fit rounded-2xl bg-night-950/75 p-2 pr-5 backdrop-blur-md">
-          <Brand />
-        </div>
+        <Brand />
         <div className="relative max-w-lg animate-rise">
           <h1 className="font-display text-6xl leading-[1.1] font-semibold tracking-tight text-balance">
             Tu centro de control de <span className="text-gold-300">HikariRO</span>
