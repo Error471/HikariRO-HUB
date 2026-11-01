@@ -122,12 +122,24 @@ const appRoute = createRoute({
 });
 
 /** La wiki es local y no necesita cuenta: con sesión usa el shell completo, sin ella uno público. */
+// Cuando HikariRO no responde la comprobación de sesión falla (y tarda): se recuerda el fallo
+// 30 minutos para no repetirla, y esperarla, en cada página de la wiki que se abre.
+const SESSION_RETRY_MS = 30 * 60_000;
+let sessionFailedAt = 0;
+
 const wikiLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'wiki-layout',
   beforeLoad: async ({ context }) => {
-    // Si HikariRO no responde no se puede comprobar la sesión, pero la wiki sigue siendo legible.
-    const state = await context.queryClient.ensureQueryData(sessionQuery).catch(() => null);
+    const cached = context.queryClient.getQueryData(sessionQuery.queryKey);
+    if (!cached && Date.now() - sessionFailedAt < SESSION_RETRY_MS) return { user: null };
+    // La wiki es local: si no se puede comprobar la sesión, sigue siendo legible.
+    const state =
+      cached ??
+      (await context.queryClient.ensureQueryData(sessionQuery).catch(() => {
+        sessionFailedAt = Date.now();
+        return null;
+      }));
     return { user: state?.status === 'authenticated' ? state.session.user : null };
   },
   component: function WikiLayout() {

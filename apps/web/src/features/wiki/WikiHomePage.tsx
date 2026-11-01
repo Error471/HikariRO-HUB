@@ -1,6 +1,5 @@
-import { WIKI_MAIN_PAGE } from '@hikari-hub/shared';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpRight, ChevronRight, Compass, FileText } from 'lucide-react';
+import { ArrowUpRight, FileText } from 'lucide-react';
 import { modules } from '@/app/navigation';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -51,34 +50,13 @@ export function WikiHomePage() {
             href={modules.wiki.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ink/12 px-5 text-xs uppercase tracking-[0.08em] text-ink-muted transition hover:border-ink hover:text-ink"
           >
             Wiki original <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
         }
       />
       <WikiSearchBox />
-
-      <ArticleLink
-        title={WIKI_MAIN_PAGE}
-        className="panel group flex items-center gap-4 rounded-card p-5 transition"
-      >
-        <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-gold-400/12 text-gold-300">
-          <Compass aria-hidden="true" className="size-6" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block font-display text-2xl font-semibold tracking-tight group-hover:text-gold-200">
-            Página principal
-          </span>
-          <span className="block text-sm text-ink-muted">
-            Empieza tu aventura: sistemas exclusivos, NPC y utilidades, e información del servidor.
-          </span>
-        </span>
-        <ChevronRight
-          aria-hidden="true"
-          className="size-5 text-gold-300 transition group-hover:translate-x-0.5"
-        />
-      </ArticleLink>
 
       {categories.isPending ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
