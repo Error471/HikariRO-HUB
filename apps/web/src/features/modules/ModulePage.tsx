@@ -31,7 +31,7 @@ export function ModulePage({ module }: { module: ModuleDefinition }) {
             className="absolute -right-2 -bottom-2 size-6 rounded-full bg-night-850 p-1 text-mana-400"
           />
         </span>
-        <h2 className="mt-5 font-display text-xl font-semibold">En construcción</h2>
+        <h2 className="mt-5 font-display text-2xl font-semibold">En construcción</h2>
         <p className="mt-2 max-w-md text-sm text-ink-muted">
           Este módulo se integrará en la fase {module.phase} del proyecto. Mientras tanto puedes
           consultarlo en la web de HikariRO.

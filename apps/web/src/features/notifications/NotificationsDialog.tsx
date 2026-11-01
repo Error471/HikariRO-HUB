@@ -47,7 +47,7 @@ function Section({
 }) {
   return (
     <section className="flex flex-col gap-3 border-t border-white/6 pt-5 first:border-t-0 first:pt-0">
-      <h3 className="flex items-center justify-between gap-3 font-display text-base font-semibold">
+      <h3 className="flex items-center justify-between gap-3 font-display text-xl font-semibold">
         <span className="flex items-center gap-2">
           <Icon aria-hidden="true" className="size-4.5 text-gold-300" />
           {title}
@@ -414,7 +414,7 @@ export function NotificationsDialog({ label = 'Avisos' }: { label?: string }) {
         <Dialog.Content className="panel fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-2rem)] w-[min(34rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 flex-col gap-5 overflow-y-auto rounded-card p-6 shadow-2xl">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <Dialog.Title className="font-display text-xl font-semibold">
+              <Dialog.Title className="font-display text-2xl font-semibold">
                 Avisos de MVP
               </Dialog.Title>
               <Dialog.Description className="mt-1 text-sm text-ink-muted">

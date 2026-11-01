@@ -169,8 +169,8 @@ function linesWithBreaks(lines: string[], key: string): ReactNode {
 }
 
 const headingClass = {
-  1: 'font-display text-xl font-semibold text-ink',
-  2: 'font-display text-lg font-semibold text-ink',
+  1: 'font-display text-2xl font-semibold text-ink',
+  2: 'font-display text-2xl font-semibold text-ink',
   3: 'font-semibold text-ink',
 } as const;
 

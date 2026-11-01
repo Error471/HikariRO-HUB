@@ -1,89 +1,111 @@
 import type { FastifyInstance } from 'fastify';
 import type { MockAgent } from 'undici';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { classifyLink, rewriteWikiHtml, sanitizeWikiHtml } from '../src/modules/wiki/wiki-html.js';
-import { parseSnippet } from '../src/modules/wiki/wiki-snippet.js';
-import { createMockHikari, createTestApp, fixture, HIKARI, loginAs } from './helpers.js';
-
-const options = { origin: HIKARI, indexPath: '/wiki/index.php' };
-const render = (html: string) => sanitizeWikiHtml(rewriteWikiHtml(html, options));
-const rawHtml = (JSON.parse(fixture('wiki-parse.json')) as { parse: { text: string } }).parse.text;
-
-describe('classifyLink', () => {
-  it('distingue artículos, categorías y archivos', () => {
-    expect(classifyLink('/wiki/index.php?title=VIP_System#Ventajas', options)).toEqual({
-      kind: 'article',
-      title: 'VIP System',
-      hash: '#Ventajas',
-    });
-    expect(classifyLink('/wiki/index.php?title=Categor%C3%ADa:Gu%C3%ADas', options)).toEqual({
-      kind: 'category',
-      name: 'Guías',
-    });
-    expect(classifyLink('/wiki/index.php?title=Archivo:Fishing.png', options)).toEqual({
-      kind: 'external',
-      href: `${HIKARI}/wiki/index.php?title=Archivo:Fishing.png`,
-    });
-    expect(classifyLink('#Ventajas', options)).toBeNull();
-    expect(classifyLink('javascript:alert(1)', options)).toEqual({ kind: 'invalid' });
-  });
-});
+import bundled from '../src/modules/wiki/data/wiki-pages.json' with { type: 'json' };
+import { sanitizeWikiHtml } from '../src/modules/wiki/wiki-html.js';
+import { WikiService } from '../src/modules/wiki/wiki.service.js';
+import { createMockHikari, createTestApp, HIKARI, loginAs } from './helpers.js';
+import { wikiTestData } from './wiki-data.js';
 
 describe('HTML de la wiki', () => {
-  const html = render(rawHtml);
+  const html = sanitizeWikiHtml(
+    wikiTestData.pages.find((page) => page.title === 'Sistema de pesca')?.html ?? '',
+  );
 
-  it('reescribe los enlaces internos a rutas de la app', () => {
-    expect(html).toMatch(/<a href="\/wiki\/Sistema_de_mineria"[^>]*data-wiki="article"/);
-    expect(html).toContain('href="/wiki/VIP_System#Ventajas"');
-    expect(html).toMatch(/<a href="\/wiki\/categoria\/Gu%C3%ADas"[^>]*data-wiki="category"/);
+  it('conserva enlaces internos y abre los externos de forma segura', () => {
+    expect(html).toContain('href="/wiki/Sistema_de_miner%C3%ADa#Pico"');
+    expect(html).toContain('data-wiki="article"');
+    const external = /<a[^>]*example\.test[^>]*>/.exec(html)?.[0] ?? '';
+    expect(external).toContain('rel="noopener noreferrer nofollow"');
   });
 
-  it('abre los enlaces externos en otra pestaña de forma segura', () => {
-    const link = /<a[^>]*id=50063[^>]*>/.exec(html)?.[0] ?? '';
-    expect(link).toContain('target="_blank"');
-    expect(link).toContain('rel="noopener noreferrer nofollow"');
+  it('elimina scripts, manejadores de eventos y elementos peligrosos', () => {
+    expect(html).not.toMatch(/<script|onerror|onload|alert\(1\)|<use/);
   });
 
-  it('convierte los enlaces rotos en texto', () => {
-    expect(html).toContain('<span class="mw-redlink">rota</span>');
-    expect(html).not.toContain('redlink=1');
-  });
-
-  it('usa URLs absolutas en las imágenes', () => {
-    expect(html).toContain(`src="${HIKARI}/wiki/images/thumb/1/19/Fishing.png/250px-Fishing.png"`);
-    expect(html).toContain(
-      `srcset="${HIKARI}/wiki/images/thumb/1/19/Fishing.png/375px-Fishing.png 1.5x"`,
-    );
-    expect(html).toContain('loading="lazy"');
-  });
-
-  it('elimina scripts, manejadores de eventos y URLs peligrosas', () => {
-    expect(html).not.toMatch(/<script|onerror|javascript:|alert\(1\)<\/script>/);
-    expect(html).toContain('<span>x</span>');
-  });
-
-  it('conserva los estilos del contenido salvo los peligrosos', () => {
+  it('conserva los iconos SVG y los estilos seguros', () => {
+    expect(html).toMatch(/<svg viewbox="0 0 24 24"><path d="M0 0h24">/);
     expect(html).toContain('background:linear-gradient(135deg,#123d52 0%,#28a2a0 100%)');
-    expect(html).not.toContain('position:fixed');
-    expect(html).not.toContain('evil.test');
     expect(html).toContain('color:#174f68');
+    expect(html).not.toContain('position:fixed');
   });
 
-  it('solo permite clases de MediaWiki y HikariRO', () => {
+  it('solo permite clases de la wiki', () => {
     expect(html).toContain('class="hro2-card wikitable"');
+    expect(html).toContain('class="wk-notice"');
     expect(html).not.toMatch(/class="[^"]*\b(fixed|hidden)\b/);
   });
 });
 
-describe('parseSnippet', () => {
-  it('limpia el wikitexto y marca las coincidencias', () => {
-    const raw =
-      "&lt;div style=&quot;font-size:32px&quot;&gt;Sistema de <span class='searchmatch'>pesca</span> de HikariRO&lt;/div&gt;\n…se equipa en la '''mano derecha''' y [[Pesca|pesca]].";
-    expect(parseSnippet(raw)).toEqual([
-      { text: 'Sistema de ', match: false },
-      { text: 'pesca', match: true },
-      { text: ' de HikariRO …se equipa en la mano derecha y pesca.', match: false },
-    ]);
+describe('WikiService (copia de prueba)', () => {
+  const wiki = new WikiService(HIKARI, wikiTestData);
+
+  it('encuentra páginas sin distinguir mayúsculas, tildes ni guiones bajos', async () => {
+    expect((await wiki.page('sistema_de_mineria')).title).toBe('Sistema de minería');
+    expect((await wiki.page('Pagina principal')).title).toBe('Página principal');
+  });
+
+  it('devuelve categoría, secciones, aviso y enlace de búsqueda en la wiki original', async () => {
+    const page = await wiki.page('Sistema de pesca');
+    expect(page).toMatchObject({
+      redirectedFrom: null,
+      revisionId: null,
+      categories: ['Zonas'],
+      sections: [{ level: 2, title: 'Primeros pasos', anchor: 'Primeros_pasos' }],
+      notice: { kind: 'off', label: 'Sistema antiguo' },
+      sourceUrl: `${HIKARI}/wiki/index.php?search=Sistema%20de%20pesca`,
+    });
+  });
+
+  it('busca por título y por contenido, ignorando tildes, y marca las coincidencias', async () => {
+    const result = await wiki.search('pesca');
+    expect(result.total).toBe(1);
+    expect(result.results[0]?.title).toBe('Sistema de pesca');
+    expect(
+      result.results[0]?.snippet.some((part) => part.match && part.text.toLowerCase() === 'pesca'),
+    ).toBe(true);
+
+    expect((await wiki.search('Sistema')).titles).toEqual(['Sistema de minería', 'Sistema de pesca']);
+    expect((await wiki.search('cana')).results[0]?.title).toBe('Sistema de pesca');
+    expect((await wiki.search('zzzz')).results).toEqual([]);
+  });
+
+  it('lista categorías y sus páginas', async () => {
+    expect(await wiki.allCategories()).toEqual({
+      categories: [
+        { name: 'Zonas', pages: 2 },
+        { name: 'Eventos', pages: 1 },
+      ],
+    });
+    expect(await wiki.category('zonas')).toEqual({
+      name: 'Zonas',
+      pages: ['Sistema de pesca', 'Sistema de minería'],
+      subcategories: [],
+    });
+    await expect(wiki.category('nada')).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+});
+
+describe('copia local incluida en la app', () => {
+  const wiki = new WikiService(HIKARI);
+
+  it('tiene la portada y sus enlaces internos apuntan a páginas que existen', async () => {
+    const home = await wiki.page('Página principal');
+    expect(home.html).toContain('hro2-hero');
+    const titles = (await wiki.index()).pages.map((title) => title.toLowerCase());
+    for (const [, path] of home.html.matchAll(/href="\/wiki\/([^"#]+)/g)) {
+      const title = decodeURIComponent(path ?? '').replace(/_/g, ' ').toLowerCase();
+      expect(titles, `enlace roto: ${title}`).toContain(title);
+    }
+  });
+
+  it('solo usa imágenes y enlaces locales', async () => {
+    for (const title of (await wiki.index()).pages) {
+      const { html } = await wiki.page(title);
+      expect(html, title).not.toMatch(/<img [^>]*src="(?!\/wiki-img\/)/);
+      expect(html, title).not.toMatch(/href="[^"#]*\.html/);
+    }
+    expect(bundled.pages.length).toBeGreaterThan(20);
   });
 });
 
@@ -104,124 +126,34 @@ describe('rutas /api/wiki', () => {
     await agent.close();
   });
 
-  const get = (url: string) => app.inject({ method: 'GET', url, headers: { cookie } });
-  const json = { headers: { 'content-type': 'application/json; charset=utf-8' } };
+  const get = (url: string, headers: Record<string, string> = { cookie }) =>
+    app.inject({ method: 'GET', url, headers });
 
-  it('devuelve una página saneada con secciones y categorías', async () => {
-    pool
-      .intercept({
-        path: (path) => path.includes('action=parse') && path.includes('page=Pesca&'),
-        method: 'GET',
-      })
-      .reply(200, fixture('wiki-parse.json'), json);
+  it('exige sesión', async () => {
+    expect((await get('/api/wiki/index', {})).statusCode).toBe(401);
+  });
 
-    const response = await get('/api/wiki/page?title=Pesca');
+  it('devuelve una página saneada', async () => {
+    const response = await get('/api/wiki/page?title=Sistema_de_pesca');
     expect(response.statusCode).toBe(200);
-    const page = response.json();
-    expect(page).toMatchObject({
-      title: 'Sistema de pesca',
-      redirectedFrom: 'Pesca',
-      revisionId: 2100,
-      sections: [{ level: 2, title: 'Primeros pasos', anchor: 'Primeros_pasos' }],
-      categories: ['Guías'],
-      sourceUrl: `${HIKARI}/wiki/index.php?title=Sistema_de_pesca`,
-    });
-    expect(page.html).not.toContain('<script');
+    expect(response.json()).toMatchObject({ title: 'Sistema de pesca', categories: ['Zonas'] });
+    expect(response.json().html).not.toContain('<script');
   });
 
   it('responde 404 si la página no existe', async () => {
-    pool
-      .intercept({ path: (path) => path.includes('action=parse'), method: 'GET' })
-      .reply(200, JSON.stringify({ error: { code: 'missingtitle', info: 'x' } }), json);
-
     const response = await get('/api/wiki/page?title=No_existe');
     expect(response.statusCode).toBe(404);
     expect(response.json().error.message).toBe('Esta página no existe en la wiki.');
   });
 
   it('rechaza títulos inválidos', async () => {
-    const response = await get('/api/wiki/page?title=%3Cscript%3E');
-    expect(response.statusCode).toBe(422);
+    expect((await get('/api/wiki/page?title=%3Cscript%3E')).statusCode).toBe(422);
   });
 
-  it('busca por título y por contenido', async () => {
-    pool.intercept({ path: (path) => path.includes('list=search'), method: 'GET' }).reply(
-      200,
-      JSON.stringify({
-        query: {
-          searchinfo: { totalhits: 1 },
-          search: [
-            {
-              title: 'Sistema de pesca',
-              snippet: "Sistema de <span class='searchmatch'>pesca</span>",
-              timestamp: '2026-09-12T13:31:14Z',
-              wordcount: 2717,
-            },
-          ],
-          prefixsearch: [{ ns: 0, title: 'Pesca' }],
-        },
-      }),
-      json,
-    );
-
-    const response = await get('/api/wiki/search?q=pesca');
-    expect(response.json()).toEqual({
-      query: 'pesca',
-      titles: ['Pesca'],
-      total: 1,
-      results: [
-        {
-          title: 'Sistema de pesca',
-          snippet: [
-            { text: 'Sistema de ', match: false },
-            { text: 'pesca', match: true },
-          ],
-          updatedAt: '2026-09-12T13:31:14Z',
-          words: 2717,
-        },
-      ],
-    });
-  });
-
-  it('oculta las categorías de mantenimiento', async () => {
-    pool.intercept({ path: (path) => path.includes('list=allcategories'), method: 'GET' }).reply(
-      200,
-      JSON.stringify({
-        query: {
-          allcategories: [
-            { category: 'Guías', pages: 21 },
-            { category: 'Páginas con enlaces rotos a archivos', pages: 2 },
-            { category: 'Plantillas', pages: 3 },
-            { category: 'Vacía', pages: 0 },
-          ],
-        },
-      }),
-      json,
-    );
-
-    const response = await get('/api/wiki/categories');
-    expect(response.json()).toEqual({ categories: [{ name: 'Guías', pages: 21 }] });
-  });
-
-  it('separa páginas y subcategorías', async () => {
-    pool.intercept({ path: (path) => path.includes('list=categorymembers'), method: 'GET' }).reply(
-      200,
-      JSON.stringify({
-        query: {
-          categorymembers: [
-            { ns: 0, title: 'Sistema de pesca' },
-            { ns: 14, title: 'Categoría:Pesca avanzada' },
-          ],
-        },
-      }),
-      json,
-    );
-
-    const response = await get('/api/wiki/categories/Gu%C3%ADas');
-    expect(response.json()).toEqual({
-      name: 'Guías',
-      pages: ['Sistema de pesca'],
-      subcategories: ['Pesca avanzada'],
-    });
+  it('busca, lista categorías y devuelve el índice', async () => {
+    expect((await get('/api/wiki/search?q=halloween')).json().results[0].title).toBe('Halloween');
+    expect((await get('/api/wiki/categories')).json().categories).toHaveLength(2);
+    expect((await get('/api/wiki/categories/Eventos')).json().pages).toEqual(['Halloween']);
+    expect((await get('/api/wiki/index')).json().pages).toHaveLength(4);
   });
 });

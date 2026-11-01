@@ -31,16 +31,16 @@ export function FilterTabs<T extends string>({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm transition',
+              'inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border px-5 text-xs uppercase tracking-[0.1em] transition',
               active
-                ? 'border-gold-400/50 bg-gold-400/12 text-gold-200'
-                : 'border-white/8 text-ink-muted hover:border-white/15 hover:text-ink',
+                ? 'border-ink bg-ink text-night-950'
+                : 'border-ink/12 text-ink-muted hover:border-ink hover:text-ink',
             )}
           >
             {option.label}
             {option.count !== undefined && (
               <span
-                className={cn('tabular-nums text-xs', active ? 'text-gold-300' : 'text-ink-faint')}
+                className={cn('tabular-nums text-xs', active ? 'text-night-700' : 'text-ink-faint')}
               >
                 {option.count}
               </span>

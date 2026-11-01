@@ -17,6 +17,7 @@ import { WikiService } from '../src/modules/wiki/wiki.service.js';
 import { AlertService } from '../src/modules/alerts/alerts.service.js';
 import type { Notifier } from '../src/modules/alerts/notifier.js';
 import { TelegramClient } from '../src/modules/alerts/telegram-client.js';
+import { wikiTestData } from './wiki-data.js';
 import { SessionService } from '../src/session/session-service.js';
 import { MemorySessionStore } from '../src/session/session-store.js';
 import { MemoryUserDataStore } from '../src/user/user-data-store.js';
@@ -110,7 +111,7 @@ export async function createTestApp(
     mvp,
     news: new NewsService(newsClient, '/discord/feed.php', monitor),
     markets: new MarketService(client, HIKARI, { monitor }),
-    wiki: new WikiService(client, HIKARI, monitor),
+    wiki: new WikiService(HIKARI, wikiTestData),
     albums: new AlbumService(client, HIKARI, monitor),
     userData,
     alerts,

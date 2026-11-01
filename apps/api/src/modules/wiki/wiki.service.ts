@@ -1,247 +1,193 @@
-import type {
-  WikiCategoriesResponse,
-  WikiCategoryResponse,
-  WikiIndexResponse,
-  WikiPage,
-  WikiSearchResponse,
+import {
+  wikiNoticeSchema,
+  type WikiCategoriesResponse,
+  type WikiCategoryResponse,
+  type WikiIndexResponse,
+  type WikiPage,
+  type WikiSearchResponse,
 } from '@hikari-hub/shared';
 import { z } from 'zod';
-import type { HikariClient } from '../../hikari/hikari-client.js';
-import { parseUpstreamJson } from '../../hikari/upstream-json.js';
-import { untracked, type UpstreamTracker } from '../../hikari/upstream-monitor.js';
 import { AppError } from '../../lib/app-error.js';
-import { TtlCache } from '../../lib/ttl-cache.js';
-import { rewriteWikiHtml, sanitizeWikiHtml, toPlainText } from './wiki-html.js';
-import { parseSnippet } from './wiki-snippet.js';
+import bundled from './data/wiki-pages.json' with { type: 'json' };
+import { sanitizeWikiHtml } from './wiki-html.js';
 
-const API_PATH = '/wiki/api.php';
-const INDEX_PATH = '/wiki/index.php';
-const PAGE_TTL_MS = 10 * 60_000;
-const LIST_TTL_MS = 30 * 60_000;
-const SEARCH_TTL_MS = 2 * 60_000;
-
-/** Categorías de mantenimiento que MediaWiki crea automáticamente. */
-const MAINTENANCE_CATEGORY = /^(Páginas con |Plantillas)/;
-
-const apiError = z.object({ error: z.object({ code: z.string() }) });
-
-const parseSchema = z.object({
-  parse: z.object({
-    title: z.string(),
-    revid: z.number().optional(),
-    text: z.string(),
-    redirects: z.array(z.object({ from: z.string(), to: z.string() })).optional(),
-    sections: z.array(z.object({ level: z.coerce.number(), line: z.string(), anchor: z.string() })),
-    categories: z.array(z.object({ category: z.string(), hidden: z.boolean().optional() })),
-  }),
+const wikiDataSchema = z.object({
+  groups: z.array(z.object({ name: z.string(), pages: z.array(z.string()) })),
+  pages: z.array(
+    z.object({
+      title: z.string(),
+      group: z.string().nullable(),
+      html: z.string(),
+      sections: z.array(z.object({ level: z.number(), title: z.string(), anchor: z.string() })),
+      notice: wikiNoticeSchema.nullable(),
+      text: z.string(),
+    }),
+  ),
 });
 
-const searchSchema = z.object({
-  query: z.object({
-    searchinfo: z.object({ totalhits: z.number() }).optional(),
-    search: z.array(
-      z.object({
-        title: z.string(),
-        snippet: z.string().optional(),
-        timestamp: z.string().optional(),
-        wordcount: z.number().optional(),
-      }),
-    ),
-    prefixsearch: z.array(z.object({ title: z.string() })).optional(),
-  }),
-});
+export type WikiData = z.infer<typeof wikiDataSchema>;
 
-const categoriesSchema = z.object({
-  query: z.object({
-    allcategories: z.array(
-      z.object({
-        category: z.string(),
-        pages: z.number().optional(),
-        hidden: z.boolean().optional(),
-      }),
-    ),
-  }),
-});
+/** Minúsculas, sin tildes y con "_" como espacio: "Guía_de_oficios" == "guia de oficios". */
+function normalize(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[_\s]+/g, ' ')
+    .trim();
+}
 
-const membersSchema = z.object({
-  query: z.object({
-    categorymembers: z.array(z.object({ title: z.string(), ns: z.number() })),
-  }),
-});
+const SNIPPET_RADIUS = 90;
+const MAX_RESULTS = 20;
+const MAX_SUGGESTIONS = 8;
 
-const allPagesSchema = z.object({
-  query: z.object({ allpages: z.array(z.object({ title: z.string() })) }),
-});
+interface Entry {
+  title: string;
+  key: string;
+  group: string | null;
+  html: string;
+  sections: WikiData['pages'][number]['sections'];
+  notice: WikiData['pages'][number]['notice'];
+  text: string;
+  textKey: string;
+}
 
-const CATEGORY_NAMESPACE = 14;
-
-/** Cliente de la API de MediaWiki 1.39 de HikariRO (solo lectura). */
+/**
+ * La wiki de HikariRO, servida desde la copia local incluida en la app (`data/wiki-pages.json`,
+ * generada con `pnpm --filter @hikari-hub/api wiki:import`). No hace peticiones a HikariRO.
+ */
 export class WikiService {
-  private readonly pages = new TtlCache<WikiPage>(PAGE_TTL_MS, 200);
-  private readonly categoryList = new TtlCache<WikiCategoriesResponse>(LIST_TTL_MS, 1);
-  private readonly pageIndex = new TtlCache<WikiIndexResponse>(LIST_TTL_MS, 1);
-  private readonly categories = new TtlCache<WikiCategoryResponse>(LIST_TTL_MS, 100);
-  private readonly searches = new TtlCache<WikiSearchResponse>(SEARCH_TTL_MS, 200);
+  private readonly entries: Entry[];
+  private readonly byKey = new Map<string, Entry>();
+  private readonly groups: WikiData['groups'];
 
   constructor(
-    private readonly client: HikariClient,
     private readonly origin: string,
-    private readonly monitor: UpstreamTracker = untracked,
-  ) {}
-
-  page(title: string): Promise<WikiPage> {
-    return this.pages.get(title, async () => {
-      const data = await this.call(
-        {
-          action: 'parse',
-          page: title,
-          prop: 'text|sections|categories|revid',
-          redirects: '1',
-          disableeditsection: '1',
-          disabletoc: '1',
-        },
-        parseSchema,
-      );
-      const { parse } = data;
-      const html = sanitizeWikiHtml(
-        rewriteWikiHtml(parse.text, { origin: this.origin, indexPath: INDEX_PATH }),
-      );
-      return {
-        title: parse.title,
-        redirectedFrom: parse.redirects?.[0]?.from ?? null,
-        revisionId: parse.revid ?? null,
-        html,
-        sections: parse.sections
-          .filter((section) => section.level <= 3)
-          .map((section) => ({
-            level: section.level,
-            title: toPlainText(section.line),
-            anchor: section.anchor,
-          })),
-        categories: parse.categories
-          .filter((category) => !category.hidden)
-          .map((category) => category.category.replace(/_/g, ' '))
-          .filter((name) => !MAINTENANCE_CATEGORY.test(name)),
-        sourceUrl: `${this.origin}${INDEX_PATH}?title=${encodeURIComponent(parse.title.replace(/ /g, '_'))}`,
-      };
-    });
+    data: unknown = bundled,
+  ) {
+    const parsed = wikiDataSchema.parse(data);
+    this.groups = parsed.groups;
+    this.entries = parsed.pages.map((page) => ({
+      ...page,
+      key: normalize(page.title),
+      html: sanitizeWikiHtml(page.html),
+      textKey: normalize(page.text),
+    }));
+    for (const entry of this.entries) this.byKey.set(entry.key, entry);
   }
 
-  search(query: string): Promise<WikiSearchResponse> {
-    return this.searches.get(query.toLowerCase(), async () => {
-      const data = await this.call(
-        {
-          action: 'query',
-          list: 'search|prefixsearch',
-          srsearch: query,
-          srlimit: '20',
-          srnamespace: '0',
-          srprop: 'snippet|timestamp|wordcount',
-          pssearch: query,
-          pslimit: '8',
-          psnamespace: '0',
-        },
-        searchSchema,
-      );
-      return {
-        query,
-        titles: (data.query.prefixsearch ?? []).map((page) => page.title),
-        results: data.query.search.map((result) => ({
-          title: result.title,
-          snippet: parseSnippet(result.snippet ?? ''),
-          updatedAt: result.timestamp ?? null,
-          words: result.wordcount ?? null,
-        })),
-        total: data.query.searchinfo?.totalhits ?? data.query.search.length,
-      };
-    });
+  async page(title: string): Promise<WikiPage> {
+    const entry = this.byKey.get(normalize(title));
+    if (!entry) throw new AppError('NOT_FOUND', { publicMessage: 'Esta página no existe en la wiki.' });
+    return {
+      title: entry.title,
+      redirectedFrom: null,
+      revisionId: null,
+      html: entry.html,
+      sections: entry.sections,
+      categories: entry.group ? [entry.group] : [],
+      notice: entry.notice,
+      sourceUrl: `${this.origin}/wiki/index.php?search=${encodeURIComponent(entry.title)}`,
+    };
   }
 
-  allCategories(): Promise<WikiCategoriesResponse> {
-    return this.categoryList.get('categories', async () => {
-      const data = await this.call(
-        {
-          action: 'query',
-          list: 'allcategories',
-          aclimit: '200',
-          acprop: 'size|hidden',
-          acmin: '1',
-        },
-        categoriesSchema,
-      );
-      return {
-        categories: data.query.allcategories
-          .filter((category) => !category.hidden && !MAINTENANCE_CATEGORY.test(category.category))
-          .map((category) => ({ name: category.category, pages: category.pages ?? 0 }))
-          .filter((category) => category.pages > 0),
-      };
-    });
+  async search(query: string): Promise<WikiSearchResponse> {
+    const terms = normalize(query).split(' ').filter(Boolean);
+    const phrase = terms.join(' ');
+    const scored = this.entries
+      .map((entry) => {
+        let score = 0;
+        if (entry.key === phrase) score += 200;
+        else if (entry.key.startsWith(phrase)) score += 120;
+        else if (entry.key.includes(phrase)) score += 80;
+        if (terms.every((term) => entry.key.includes(term))) score += 40;
+        const body = terms.reduce((sum, term) => sum + countOccurrences(entry.textKey, term), 0);
+        if (terms.every((term) => entry.textKey.includes(term))) score += Math.min(body, 30);
+        return { entry, score };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title, 'es'));
+
+    return {
+      query,
+      titles: this.entries
+        .filter((entry) => entry.key.startsWith(phrase))
+        .slice(0, MAX_SUGGESTIONS)
+        .map((entry) => entry.title),
+      results: scored.slice(0, MAX_RESULTS).map(({ entry }) => ({
+        title: entry.title,
+        snippet: snippetFor(entry.text, terms),
+        updatedAt: null,
+        words: entry.text ? entry.text.split(' ').length : null,
+      })),
+      total: scored.length,
+    };
   }
 
-  category(name: string): Promise<WikiCategoryResponse> {
-    return this.categories.get(name, async () => {
-      const data = await this.call(
-        {
-          action: 'query',
-          list: 'categorymembers',
-          cmtitle: `Categoría:${name}`,
-          cmlimit: '500',
-          cmnamespace: `0|${CATEGORY_NAMESPACE}`,
-          cmprop: 'title',
-          cmsort: 'sortkey',
-        },
-        membersSchema,
-      );
-      const members = data.query.categorymembers;
-      return {
-        name,
-        pages: members.filter((member) => member.ns === 0).map((member) => member.title),
-        subcategories: members
-          .filter((member) => member.ns === CATEGORY_NAMESPACE)
-          .map((member) => member.title.replace(/^[^:]+:/, '')),
-      };
-    });
+  async allCategories(): Promise<WikiCategoriesResponse> {
+    return {
+      categories: this.groups.map((group) => ({ name: group.name, pages: group.pages.length })),
+    };
   }
 
-  index(): Promise<WikiIndexResponse> {
-    return this.pageIndex.get('index', async () => {
-      const data = await this.call(
-        {
-          action: 'query',
-          list: 'allpages',
-          apnamespace: '0',
-          aplimit: '500',
-          apfilterredir: 'nonredirects',
-        },
-        allPagesSchema,
-      );
-      return { pages: data.query.allpages.map((page) => page.title) };
-    });
+  async category(name: string): Promise<WikiCategoryResponse> {
+    const group = this.groups.find((item) => normalize(item.name) === normalize(name));
+    if (!group) throw new AppError('NOT_FOUND', { publicMessage: 'Esta categoría no existe.' });
+    return { name: group.name, pages: group.pages, subcategories: [] };
   }
 
-  private call<TSchema extends z.ZodType>(
-    params: Record<string, string>,
-    schema: TSchema,
-  ): Promise<z.infer<TSchema>> {
-    return this.monitor.track('wiki', () => this.request(params, schema));
+  async index(): Promise<WikiIndexResponse> {
+    return { pages: this.entries.map((entry) => entry.title) };
   }
+}
 
-  private async request<TSchema extends z.ZodType>(
-    params: Record<string, string>,
-    schema: TSchema,
-  ): Promise<z.infer<TSchema>> {
-    const query = new URLSearchParams({ ...params, format: 'json', formatversion: '2' });
-    const response = await this.client.get(`${API_PATH}?${query.toString()}`);
-    const data = parseUpstreamJson(response, z.unknown());
-    const error = apiError.safeParse(data);
-    if (error.success) {
-      if (['missingtitle', 'invalidtitle'].includes(error.data.error.code)) {
-        throw new AppError('NOT_FOUND', { publicMessage: 'Esta página no existe en la wiki.' });
-      }
-      throw new AppError('UPSTREAM_CHANGED');
+function countOccurrences(haystack: string, needle: string): number {
+  if (!needle) return 0;
+  let count = 0;
+  for (let at = haystack.indexOf(needle); at !== -1; at = haystack.indexOf(needle, at + needle.length)) {
+    count += 1;
+  }
+  return count;
+}
+
+/**
+ * Fragmento del texto alrededor de la primera coincidencia, con los términos marcados.
+ * La búsqueda ignora tildes: se localiza en el texto normalizado (misma longitud que el original
+ * al descomponer solo letras acentuadas) y se marca sobre el texto original.
+ */
+function snippetFor(text: string, terms: string[]): WikiSearchResponse['results'][number]['snippet'] {
+  if (!text) return [];
+  const flat = text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+  // Si la normalización cambió la longitud, no se puede alinear: se devuelve el inicio sin marcas.
+  if (flat.length !== text.length) return [{ text: text.slice(0, SNIPPET_RADIUS * 2), match: false }];
+
+  const hits = terms.map((term) => flat.indexOf(term)).filter((at) => at !== -1);
+  const first = hits.length ? Math.min(...hits) : 0;
+  const start = Math.max(0, first - SNIPPET_RADIUS);
+  const end = Math.min(text.length, first + SNIPPET_RADIUS);
+  const pattern = terms.length
+    ? new RegExp(`(${terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'g')
+    : null;
+
+  const parts: WikiSearchResponse['results'][number]['snippet'] = [];
+  const slice = flat.slice(start, end);
+  const original = text.slice(start, end);
+  let cursor = 0;
+  if (pattern) {
+    for (const match of slice.matchAll(pattern)) {
+      const at = match.index ?? 0;
+      if (at > cursor) parts.push({ text: original.slice(cursor, at), match: false });
+      parts.push({ text: original.slice(at, at + match[0].length), match: true });
+      cursor = at + match[0].length;
     }
-    const parsed = schema.safeParse(data);
-    if (!parsed.success) throw new AppError('UPSTREAM_CHANGED', { cause: parsed.error });
-    return parsed.data;
   }
+  if (cursor < original.length) parts.push({ text: original.slice(cursor), match: false });
+  const head = parts[0];
+  if (start > 0 && head) parts[0] = { ...head, text: `…${head.text}` };
+  const last = parts[parts.length - 1];
+  if (end < text.length && last) parts[parts.length - 1] = { ...last, text: `${last.text}…` };
+  return parts;
 }

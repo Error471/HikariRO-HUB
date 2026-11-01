@@ -88,7 +88,7 @@ export function ShopDetailPage({ type, shopId }: { type: MarketType; shopId: num
 
       <section className="panel rounded-card p-5 sm:p-6">
         <p className="text-sm font-medium text-ink-faint">{meta.shopLabel}</p>
-        <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+        <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
           {shop.title || 'Tienda sin título'}
         </h1>
         <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-muted">

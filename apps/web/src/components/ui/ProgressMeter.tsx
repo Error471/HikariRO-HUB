@@ -17,7 +17,7 @@ export function ProgressMeter({ label, obtained, total, unit, className }: Progr
     <div className={cn('flex flex-col gap-2', className)}>
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm text-ink-muted">{label}</span>
-        <span className="font-display text-lg font-semibold tabular-nums text-gold-200">
+        <span className="font-display text-2xl font-semibold tabular-nums text-gold-200">
           {percentFormat.format(percent)}%
         </span>
       </div>

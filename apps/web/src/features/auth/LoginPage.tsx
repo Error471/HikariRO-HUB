@@ -52,10 +52,10 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-      <section className="relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <section className="hero-banner relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
         <Brand />
         <div className="relative max-w-lg animate-rise">
-          <h1 className="font-display text-5xl leading-[1.1] font-semibold tracking-tight text-balance">
+          <h1 className="font-display text-6xl leading-[1.1] font-semibold tracking-tight text-balance">
             Tu centro de control de <span className="text-gold-300">HikariRO</span>
           </h1>
           <p className="mt-5 text-lg text-ink-muted">
@@ -71,7 +71,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
           <div className="mb-8 lg:hidden">
             <Brand />
           </div>
-          <h2 className="font-display text-2xl font-semibold">Iniciar sesión</h2>
+          <h2 className="font-display text-3xl font-semibold">Iniciar sesión</h2>
           <p className="mt-2 text-sm text-ink-muted">
             Usa las credenciales de tu cuenta de HikariRO.
           </p>

@@ -46,7 +46,7 @@ export function NewsDetailPage({ postId }: { postId: string }) {
               <time dateTime={post.publishedAt}>{formatLongDate(post.publishedAt)}</time>
               <span>· {post.author}</span>
             </div>
-            <h1 className="mt-4 font-display text-2xl leading-tight font-semibold tracking-tight text-balance sm:text-3xl">
+            <h1 className="mt-4 font-display text-3xl leading-tight font-semibold tracking-tight text-balance sm:text-4xl">
               {post.title}
             </h1>
           </header>

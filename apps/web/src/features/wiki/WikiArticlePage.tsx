@@ -8,6 +8,7 @@ import { ApiError } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
 import { WikiBreadcrumbs } from './WikiBreadcrumbs';
 import { WikiContent } from './WikiContent';
+import { WikiNoticeBox } from './WikiNotice';
 import { CategoryLink } from './WikiLinks';
 import { wikiPageQuery } from './wiki-query';
 
@@ -86,7 +87,7 @@ export function WikiArticlePage({ title }: { title: string }) {
       />
 
       <header className="flex flex-col gap-3">
-        <h1 className="font-display text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+        <h1 className="font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
           {page.title}
         </h1>
         {page.redirectedFrom && (
@@ -112,27 +113,28 @@ export function WikiArticlePage({ title }: { title: string }) {
         )}
       </header>
 
-      <details className="rounded-card border border-white/8 bg-night-850/70 p-4 xl:hidden">
-        <summary className="cursor-pointer text-sm font-medium text-ink-muted">
-          Índice del artículo
-        </summary>
-        <TableOfContents page={page} className="mt-3" />
-      </details>
+      {page.sections.length >= 2 && (
+        <details className="rounded-card border border-white/8 bg-night-850/70 p-4 xl:hidden">
+          <summary className="cursor-pointer text-sm font-medium text-ink-muted">
+            Índice del artículo
+          </summary>
+          <TableOfContents page={page} className="mt-3" />
+        </details>
+      )}
 
       <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_15rem]">
-        <article className="min-w-0">
+        <article className="flex min-w-0 flex-col gap-4">
+          {page.notice && <WikiNoticeBox notice={page.notice} />}
           <WikiContent html={page.html} />
-          <footer className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
-            <span>
-              Contenido de la HikariRO Wiki{page.revisionId ? ` · revisión ${page.revisionId}` : ''}
-            </span>
+          <footer className="flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
+            <span>Copia local de la HikariRO Wiki, disponible sin conexión</span>
             <a
               href={page.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 hover:text-ink"
             >
-              Ver en la wiki original <ArrowUpRight aria-hidden="true" className="size-3.5" />
+              Buscar en la wiki original <ArrowUpRight aria-hidden="true" className="size-3.5" />
             </a>
           </footer>
         </article>

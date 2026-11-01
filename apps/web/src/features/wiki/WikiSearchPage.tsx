@@ -20,7 +20,7 @@ export function WikiSearchPage({ query }: { query: string }) {
   return (
     <div className="flex flex-col gap-6 animate-rise">
       <WikiBreadcrumbs items={['Buscar']} />
-      <h1 className="font-display text-3xl font-semibold tracking-tight">Buscar en la wiki</h1>
+      <h1 className="font-display text-4xl font-semibold tracking-tight">Buscar en la wiki</h1>
       <WikiSearchBox initialQuery={trimmed} autoFocus />
 
       {!ready ? (

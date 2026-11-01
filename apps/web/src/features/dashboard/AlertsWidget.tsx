@@ -41,7 +41,7 @@ export function AlertsWidget() {
       <header className="flex items-center justify-between gap-3">
         <h2
           id="widget-alerts"
-          className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
+          className="flex items-center gap-2 font-display text-2xl font-semibold tracking-tight"
         >
           {active ? (
             <BellRing aria-hidden="true" className="size-5 text-gold-300" />

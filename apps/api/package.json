@@ -7,7 +7,8 @@
     "dev": "tsx watch --env-file-if-exists=../../.env src/server.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "mock:hikari": "tsx scripts/mock-hikari.ts"
+    "mock:hikari": "tsx scripts/mock-hikari.ts",
+    "wiki:import": "tsx scripts/build-wiki-data.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

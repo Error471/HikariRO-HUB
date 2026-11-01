@@ -145,7 +145,7 @@ export function MvpCard({
       <header className="flex items-start gap-4">
         <MvpPortrait src={mvp.imageUrl} name={mvp.name} />
         <div className="min-w-0 flex-1">
-          <h2 className="flex items-center gap-1.5 font-display text-lg font-semibold tracking-tight">
+          <h2 className="flex items-center gap-1.5 font-display text-2xl font-semibold tracking-tight">
             <a
               href={mvp.detailUrl}
               target="_blank"

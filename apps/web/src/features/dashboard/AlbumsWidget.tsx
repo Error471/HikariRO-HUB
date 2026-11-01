@@ -65,7 +65,7 @@ export function AlbumsWidget() {
       aria-labelledby="widget-albums"
       className="flex flex-col gap-2 rounded-card border border-white/7 bg-night-850/80 p-5"
     >
-      <h2 id="widget-albums" className="mb-1 font-display text-lg font-semibold tracking-tight">
+      <h2 id="widget-albums" className="mb-1 font-display text-2xl font-semibold tracking-tight">
         Tus álbumes
       </h2>
       <AlbumProgress

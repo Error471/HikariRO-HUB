@@ -20,11 +20,11 @@ describe('UpstreamMonitor', () => {
       monitor.track('news', () => Promise.reject(new AppError('UPSTREAM_CHANGED'))),
     ).rejects.toThrow();
     await expect(
-      monitor.track('wiki', () => Promise.reject(new AppError('UPSTREAM_UNAVAILABLE'))),
+      monitor.track('fishing', () => Promise.reject(new AppError('UPSTREAM_UNAVAILABLE'))),
     ).rejects.toThrow();
 
     const states = Object.fromEntries(monitor.snapshot().map((m) => [m.module, m.state]));
-    expect(states).toMatchObject({ mvp: 'ok', news: 'changed', wiki: 'unavailable' });
+    expect(states).toMatchObject({ mvp: 'ok', news: 'changed', fishing: 'unavailable' });
   });
 
   it('no cambia el estado por errores que no son de HikariRO', async () => {

@@ -27,7 +27,7 @@ Hikari Hub (Electron)
 ├── API Fastify en 127.0.0.1 ── sesiones, favoritos y avisos en %APPDATA%\Hikari Hub\data
 │      │                        (cookie de HikariRO cifrada con AES-256-GCM; clave protegida por Windows)
 │      ▼
-│   HikariRO (FluxCP · JSON internos · MediaWiki), desde la IP de casa del jugador
+│   HikariRO (FluxCP · JSON internos), desde la IP de casa del jugador
 │
 ├── Vigilante de MVPs ── notificaciones de Windows
 ├── Icono junto al reloj (abrir, abrir al iniciar Windows, actualizaciones, salir)
@@ -90,7 +90,7 @@ docs/                   análisis técnico y sistema visual
 - **Telegram**: en «Avisos» se pega el token de un bot creado con @BotFather (se comprueba con `getMe` y se guarda cifrado con AES-256-GCM; nunca vuelve a la web), se pulsa Iniciar en el chat con el bot y «Detectar chat» lo vincula (`getUpdates`); también se puede escribir el ID de un grupo o canal. Los mensajes son texto plano, sin formato.
 - **Privacidad**: página `/privacidad` (enlazada desde el login) con qué se guarda, qué no y cómo borrarlo. Botón **Borrar mis datos** en el panel de usuario.
 - **Mercados**: HikariRO no tiene API de mercados y su búsqueda de items no es fiable, así que la API lee el listado y el detalle de cada tienda (máx. 3 peticiones simultáneas) y guarda una instantánea de 60 s. Si HikariRO falla, se sirve la última instantánea durante 10 min.
-- **Wiki**: usa la API oficial de MediaWiki (no scraping). El HTML de cada artículo se sanea con una lista blanca de etiquetas, atributos, clases y propiedades CSS. Los enlaces internos se convierten en rutas de la app y los externos se abren en el navegador del sistema.
+- **Wiki**: va incluida en la app (copia local de la wiki de HikariRO) y funciona sin conexión; la API la sirve desde `apps/api/src/modules/wiki/data/wiki-pages.json` y las imágenes salen de `apps/web/public/wiki-img/`. El HTML de cada artículo se sanea con una lista blanca de etiquetas, atributos, clases y propiedades CSS. Los enlaces internos son rutas de la app y los externos se abren en el navegador del sistema. Para actualizarla desde la copia local (`HikariRO_Web/Wiki`): `pnpm --filter @hikari-hub/api wiki:import [carpeta]` (por defecto `../../HikariRO_Web`) y volver a compilar.
 - **Álbumes**: páginas de FluxCP que solo existen con sesión; la API usa la cookie del usuario y lee el HTML. En **Cartas** reenvía a HikariRO filtros, búsqueda y paginación y guarda cada combinación 5 min. HikariRO no da cantidades ni fecha de obtención, así que no se muestran.
 - **Noticias**: vienen del Discord oficial. El titular es la primera línea del post y el markdown se convierte en componentes React (nunca en HTML).
 
@@ -100,7 +100,7 @@ docs/                   análisis técnico y sistema visual
 - **Ventana de Electron**: `contextIsolation`, `sandbox`, sin Node en la web, sin menú; los permisos del navegador (cámara, micrófono, ubicación…) se deniegan; los enlaces externos se abren en el navegador del sistema y solo si son `http(s)`; la ventana no puede navegar fuera de la app.
 - **Sesiones**: cookie `hh_sid` `HttpOnly`, `SameSite=Strict`, firmada y opaca. La cookie de HikariRO se guarda cifrada (AES-256-GCM) y nunca llega a la web. Las claves se generan en cada instalación y se guardan cifradas por Windows (DPAPI, `safeStorage`).
 - **CSRF**: comprobación de `Origin` en todos los métodos no seguros + token sincronizado (`x-csrf-token`) en rutas autenticadas.
-- **XSS**: React escapa por defecto; CSP estricta (`script-src 'self'`). El único HTML externo (artículos de la wiki) se sanea con lista blanca; las noticias se renderizan como componentes React.
+- **XSS**: React escapa por defecto; CSP estricta (`script-src 'self'`). El HTML de los artículos de la wiki (aunque ahora sea local) se sanea con lista blanca; las noticias se renderizan como componentes React.
 - **Credenciales**: la contraseña nunca se registra. Con _Mantener la sesión iniciada_ (solo en la app, opcional) se guarda cifrada con AES-256-GCM y una clave protegida por Windows, únicamente en ese PC; se borra al cerrar sesión o al borrar los datos. Si deja de ser válida, la sesión se cierra como siempre.
 - **Rate limiting**: límite global en `/api` y bloqueo por usuario tras `LOGIN_MAX_ATTEMPTS` fallos, para no provocar bloqueos en HikariRO.
 - **Validación** con Zod en todas las entradas y salidas; límite de cuerpo de 16 KB.

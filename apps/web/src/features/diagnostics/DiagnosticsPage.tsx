@@ -107,7 +107,7 @@ export function DiagnosticsPage() {
       ) : (
         <>
           <section aria-labelledby="diag-modules" className="flex flex-col gap-3">
-            <h2 id="diag-modules" className="font-display text-lg font-semibold">
+            <h2 id="diag-modules" className="font-display text-2xl font-semibold">
               Estado de HikariRO
             </h2>
             <ul className="grid gap-3 md:grid-cols-2">
@@ -119,7 +119,7 @@ export function DiagnosticsPage() {
 
           <section aria-labelledby="diag-log" className="flex flex-col gap-3">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 id="diag-log" className="font-display text-lg font-semibold">
+              <h2 id="diag-log" className="font-display text-2xl font-semibold">
                 Registro de errores
               </h2>
               {data.entries.length > 0 && (

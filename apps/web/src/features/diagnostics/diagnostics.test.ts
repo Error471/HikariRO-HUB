@@ -9,7 +9,7 @@ const data: DiagnosticsResponse = {
   modules: [
     { module: 'mvp', state: 'ok', checkedAt: '2026-10-05T09:00:00.000Z', since: null },
     { module: 'markets', state: 'changed', checkedAt: '2026-10-05T09:01:00.000Z', since: null },
-    { module: 'wiki', state: 'unknown', checkedAt: null, since: null },
+    { module: 'fishing', state: 'unknown', checkedAt: null, since: null },
   ],
   entries: [{ time: '2026-10-05T09:01:00.000Z', level: 'warn', message: 'upstream error' }],
 };
@@ -24,7 +24,7 @@ describe('diagnóstico', () => {
     const text = diagnosticsText(data, 'Test');
     expect(text).toContain('Hikari Hub 1.2.3');
     expect(text).toContain('- Mercados: HikariRO ha cambiado');
-    expect(text).toContain('- Wiki: Sin comprobar');
+    expect(text).toContain('- Álbum de pesca: Sin comprobar');
     expect(text).toContain('AVISO upstream error');
   });
 });

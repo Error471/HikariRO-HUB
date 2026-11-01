@@ -68,7 +68,7 @@ export function createDependencies(env: Env, options: ContainerOptions = {}): Ap
     mvp: new MvpService(client, origin, monitor),
     news: new NewsService(feedClient, feedUrl.pathname + feedUrl.search, monitor),
     markets: new MarketService(client, origin, { monitor }),
-    wiki: new WikiService(client, origin, monitor),
+    wiki: new WikiService(origin),
     albums: new AlbumService(client, origin, monitor),
     userData,
     alerts: new AlertService(

@@ -17,7 +17,7 @@ export function WikiCategoryPage({ name }: { name: string }) {
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-gold-400/80">
           Categoría
         </p>
-        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">{name}</h1>
+        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">{name}</h1>
       </header>
 
       {isPending ? (

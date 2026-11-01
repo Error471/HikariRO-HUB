@@ -132,7 +132,7 @@ export function MvpWidget() {
         <div>
           <h2
             id="widget-mvp"
-            className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
+            className="flex items-center gap-2 font-display text-2xl font-semibold tracking-tight"
           >
             <Hourglass aria-hidden="true" className="size-5 text-gold-300" />
             {personal ? 'Tus MVPs' : 'Próximos MVPs'}

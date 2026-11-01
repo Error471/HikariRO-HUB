@@ -31,7 +31,7 @@ export function ErrorState({ error, onRetry, fallbackUrl }: ErrorStateProps) {
         className={cn('size-8', changed ? 'text-gold-300' : 'text-ember-400')}
       />
       {changed && (
-        <p className="mt-4 font-display text-lg font-semibold text-ink">
+        <p className="mt-4 font-display text-2xl font-semibold text-ink">
           HikariRO ha cambiado su web
         </p>
       )}

@@ -1,129 +1,4 @@
-import { wikiCategoryPath, wikiPath } from '@hikari-hub/shared';
-import * as cheerio from 'cheerio';
 import sanitizeHtml from 'sanitize-html';
-
-/** Prefijos de espacio de nombres de la wiki (español e inglés, observados en siteinfo). */
-const CATEGORY_PREFIXES = ['Categoría:', 'Category:'];
-const NON_ARTICLE_PREFIXES = [
-  'Archivo:',
-  'File:',
-  'Especial:',
-  'Special:',
-  'Plantilla:',
-  'Template:',
-  'Usuario:',
-  'User:',
-  'MediaWiki:',
-  'Ayuda:',
-  'Help:',
-  'Medio:',
-  'Media:',
-  'HikariRO Wiki:',
-  'Project:',
-];
-
-export interface RewriteOptions {
-  /** Origen de HikariRO, p. ej. https://hikariro.com */
-  origin: string;
-  /** Ruta del index.php de la wiki, p. ej. /wiki/index.php */
-  indexPath: string;
-}
-
-type LinkTarget =
-  | { kind: 'invalid' }
-  | { kind: 'article'; title: string; hash: string }
-  | { kind: 'category'; name: string }
-  | { kind: 'external'; href: string };
-
-/** Clasifica un enlace del HTML de MediaWiki. */
-export function classifyLink(href: string, options: RewriteOptions): LinkTarget | null {
-  if (href.startsWith('#')) return null;
-  let url: URL;
-  try {
-    url = new URL(href, options.origin);
-  } catch {
-    return { kind: 'invalid' };
-  }
-  if (!['http:', 'https:', 'mailto:'].includes(url.protocol)) return { kind: 'invalid' };
-  const isWiki = url.origin === options.origin && url.pathname === options.indexPath;
-  const title = isWiki ? url.searchParams.get('title') : null;
-  const hasOnlyTitle = isWiki && [...url.searchParams.keys()].every((key) => key === 'title');
-
-  if (!title || !hasOnlyTitle) return { kind: 'external', href: url.href };
-
-  const readable = title.replace(/_/g, ' ');
-  const category = CATEGORY_PREFIXES.find((prefix) => readable.startsWith(prefix));
-  if (category) return { kind: 'category', name: readable.slice(category.length) };
-  if (NON_ARTICLE_PREFIXES.some((prefix) => readable.startsWith(prefix))) {
-    return { kind: 'external', href: url.href };
-  }
-  return { kind: 'article', title: readable, hash: url.hash };
-}
-
-function absolutize(src: string, origin: string): string | null {
-  try {
-    const url = new URL(src, origin);
-    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Reescribe el HTML de MediaWiki para la app: artículos y categorías → rutas internas,
- * el resto → enlaces externos; imágenes con URL absoluta; enlaces rotos → texto.
- * El contenido no se modifica.
- */
-export function rewriteWikiHtml(html: string, options: RewriteOptions): string {
-  const $ = cheerio.load(html, null, false);
-
-  $('a.new').each((_, element) => {
-    $(element).replaceWith($('<span class="mw-redlink"></span>').text($(element).text()));
-  });
-
-  $('a[href]').each((_, element) => {
-    const link = $(element);
-    const target = classifyLink(link.attr('href') ?? '', options);
-    if (!target) return;
-    if (target.kind === 'invalid') {
-      link.replaceWith($('<span></span>').text(link.text()));
-    } else if (target.kind === 'article') {
-      link.attr('href', wikiPath(target.title) + target.hash).attr('data-wiki', 'article');
-    } else if (target.kind === 'category') {
-      link.attr('href', wikiCategoryPath(target.name)).attr('data-wiki', 'category');
-    } else {
-      link
-        .attr('href', target.href)
-        .attr('target', '_blank')
-        .attr('rel', 'noopener noreferrer nofollow');
-    }
-  });
-
-  $('img').each((_, element) => {
-    const image = $(element);
-    const src = absolutize(image.attr('src') ?? '', options.origin);
-    if (!src) {
-      image.remove();
-      return;
-    }
-    image.attr('src', src).attr('loading', 'lazy').attr('decoding', 'async');
-    const srcset = image.attr('srcset');
-    if (srcset) {
-      const rewritten = srcset
-        .split(',')
-        .map((candidate) => {
-          const [url = '', descriptor = ''] = candidate.trim().split(/\s+/);
-          const absolute = absolutize(url, options.origin);
-          return absolute ? `${absolute} ${descriptor}`.trim() : null;
-        })
-        .filter(Boolean)
-        .join(', ');
-      image.attr('srcset', rewritten);
-    }
-  });
-
-  return $.html();
-}
 
 /** Solo valores CSS sin url(), expression() ni javascript:. */
 const SAFE_CSS = /^(?!.*(?:url\s*\(|expression\s*\(|javascript:|@import|\\))[-#%.,()/\w\s"'!+*]*$/i;
@@ -196,10 +71,12 @@ const allowedStyles = Object.fromEntries(
 );
 
 /**
- * Lista blanca de clases: solo las de MediaWiki y HikariRO, para que el contenido
+ * Lista blanca de clases: solo las de MediaWiki, la wiki de HikariRO y la copia local (`wk-*`), para que el contenido
  * no pueda activar utilidades de la app (p. ej. `fixed` o `hidden` de Tailwind).
  */
 const allowedClasses = [
+  'wk-*',
+  'tw',
   'mw-*',
   'hro-*',
   'hro2-*',
@@ -216,6 +93,9 @@ const allowedClasses = [
   'thumbcaption',
   'tright',
   'tleft',
+  'tnone',
+  'magnify',
+  'collapsible',
   'external',
   'text',
   'gallery',
@@ -285,6 +165,16 @@ export function sanitizeWikiHtml(html: string): string {
       'mark',
       'details',
       'summary',
+      // Iconos en línea de la portada (sin <use>, <image> ni scripts).
+      'svg',
+      'g',
+      'path',
+      'circle',
+      'ellipse',
+      'rect',
+      'line',
+      'polygon',
+      'polyline',
     ],
     allowedAttributes: {
       '*': ['class', 'id', 'style', 'title', 'lang', 'dir'],
@@ -294,6 +184,16 @@ export function sanitizeWikiHtml(html: string): string {
       th: ['colspan', 'rowspan', 'scope', 'align', 'valign'],
       col: ['span'],
       ol: ['start', 'type'],
+      // El analizador pasa los atributos a minúsculas; el navegador restaura `viewBox` al leer HTML.
+      svg: ['viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'aria-hidden'],
+      g: ['fill', 'stroke', 'stroke-width'],
+      path: ['d'],
+      circle: ['cx', 'cy', 'r'],
+      ellipse: ['cx', 'cy', 'rx', 'ry'],
+      rect: ['x', 'y', 'width', 'height', 'rx'],
+      line: ['x1', 'y1', 'x2', 'y2'],
+      polygon: ['points'],
+      polyline: ['points'],
     },
     allowedClasses: { '*': allowedClasses },
     allowedStyles: { '*': allowedStyles },
@@ -307,9 +207,4 @@ export function sanitizeWikiHtml(html: string): string {
       },
     },
   });
-}
-
-/** Elimina las etiquetas HTML de un fragmento (p. ej. displaytitle o títulos de sección). */
-export function toPlainText(html: string): string {
-  return cheerio.load(`<div>${html}</div>`, null, false)('div').text().replace(/\s+/g, ' ').trim();
 }

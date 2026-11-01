@@ -36,7 +36,7 @@ export function DeleteDataDialog() {
           <span className="grid size-12 place-items-center rounded-full bg-ember-400/12 text-ember-400">
             <Trash2 aria-hidden="true" className="size-6" />
           </span>
-          <Dialog.Title className="font-display text-xl font-semibold">
+          <Dialog.Title className="font-display text-2xl font-semibold">
             ¿Borrar tus datos?
           </Dialog.Title>
           <Dialog.Description asChild>

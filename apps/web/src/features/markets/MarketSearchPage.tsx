@@ -20,7 +20,7 @@ function ResultSection({ type, offers }: { type: MarketType; offers: MarketOffer
     <section aria-labelledby={`results-${type}`} className="flex flex-col gap-3">
       <h2
         id={`results-${type}`}
-        className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight"
+        className="flex items-center gap-2 font-display text-2xl font-semibold tracking-tight"
       >
         <Icon aria-hidden="true" className="size-5 text-gold-300" />
         {meta.label}

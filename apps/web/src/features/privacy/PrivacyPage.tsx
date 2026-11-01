@@ -52,7 +52,7 @@ const notStored = [
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-display text-xl font-semibold text-gold-200">{title}</h2>
+      <h2 className="font-display text-2xl font-semibold text-gold-200">{title}</h2>
       <div className="flex flex-col gap-3 text-sm leading-relaxed text-ink-muted">{children}</div>
     </section>
   );
@@ -78,7 +78,7 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
 
       <div className="flex flex-col gap-3 animate-rise">
         <p className="text-sm font-medium text-ink-faint">Privacidad</p>
-        <h1 className="font-display text-3xl font-semibold text-balance sm:text-4xl">
+        <h1 className="font-display text-4xl font-semibold text-balance sm:text-5xl">
           Privacidad y cómo funciona
         </h1>
         <p className="text-ink-muted">

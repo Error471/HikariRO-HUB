@@ -58,7 +58,7 @@ export function FishTile({ fish }: { fish: Fish }) {
     return (
       <article className="flex flex-col items-center gap-2 rounded-card border border-dashed border-white/8 bg-night-850/40 p-4 text-center">
         <FishImage src={fish.imageUrl} discovered={false} />
-        <h3 className="font-display text-lg text-ink-faint">???</h3>
+        <h3 className="font-display text-2xl text-ink-faint">???</h3>
         <Stars value={0} />
         <p className="text-xs text-ink-faint">Sin descubrir</p>
       </article>

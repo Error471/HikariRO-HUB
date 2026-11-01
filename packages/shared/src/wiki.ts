@@ -20,6 +20,14 @@ export const wikiSectionSchema = z.object({
   anchor: z.string(),
 });
 
+/** Aviso editorial de una página (desactualizada, en construcción, sistema antiguo…). */
+export const wikiNoticeSchema = z.object({
+  kind: z.enum(['warn', 'build', 'off', 'old']),
+  label: z.string(),
+  text: z.string(),
+});
+export type WikiNotice = z.infer<typeof wikiNoticeSchema>;
+
 export const wikiPageSchema = z.object({
   title: z.string(),
   /** Título al que se llegó si la página era una redirección. */
@@ -29,6 +37,8 @@ export const wikiPageSchema = z.object({
   html: z.string(),
   sections: z.array(wikiSectionSchema),
   categories: z.array(z.string()),
+  notice: wikiNoticeSchema.nullable(),
+  /** Búsqueda de la página en la wiki original (la app trabaja con una copia local). */
   sourceUrl: z.string(),
 });
 export type WikiPage = z.infer<typeof wikiPageSchema>;

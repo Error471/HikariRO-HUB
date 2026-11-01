@@ -6,7 +6,6 @@ export const upstreamModules = [
   'mvp',
   'markets',
   'news',
-  'wiki',
   'cards',
   'fishing',
 ] as const;
@@ -18,7 +17,6 @@ export const upstreamModuleLabels: Record<UpstreamModule, string> = {
   mvp: 'MVP Timer',
   markets: 'Mercados',
   news: 'Noticias',
-  wiki: 'Wiki',
   cards: 'Álbum de cartas',
   fishing: 'Álbum de pesca',
 };
