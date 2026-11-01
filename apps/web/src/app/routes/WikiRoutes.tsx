@@ -5,9 +5,9 @@ import { WikiHomePage } from '@/features/wiki/WikiHomePage';
 import { WikiSearchPage } from '@/features/wiki/WikiSearchPage';
 import { titleFromPath } from '@/features/wiki/wiki-query';
 
-const searchApi = getRouteApi('/app/wiki/buscar');
-const categoryApi = getRouteApi('/app/wiki/categoria/$name');
-const articleApi = getRouteApi('/app/wiki/$');
+const searchApi = getRouteApi('/wiki-layout/wiki/buscar');
+const categoryApi = getRouteApi('/wiki-layout/wiki/categoria/$name');
+const articleApi = getRouteApi('/wiki-layout/wiki/$');
 
 export function WikiHomeRoute() {
   return <WikiHomePage />;

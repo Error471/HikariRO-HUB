@@ -129,8 +129,9 @@ describe('rutas /api/wiki', () => {
   const get = (url: string, headers: Record<string, string> = { cookie }) =>
     app.inject({ method: 'GET', url, headers });
 
-  it('exige sesión', async () => {
-    expect((await get('/api/wiki/index', {})).statusCode).toBe(401);
+  it('se puede leer sin iniciar sesión', async () => {
+    expect((await get('/api/wiki/index', {})).statusCode).toBe(200);
+    expect((await get('/api/wiki/page?title=Sistema_de_pesca', {})).statusCode).toBe(200);
   });
 
   it('devuelve una página saneada', async () => {

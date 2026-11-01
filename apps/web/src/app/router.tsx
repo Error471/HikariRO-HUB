@@ -18,6 +18,7 @@ import { LoginPage, safeRedirect } from '@/features/auth/LoginPage';
 import { sessionQuery } from '@/features/auth/session';
 import { errorMessage } from '@/lib/api-client';
 import { AppShell } from './layout/AppShell';
+import { PublicShell } from './layout/PublicShell';
 import { modules } from './navigation';
 
 export interface RouterContext {
@@ -113,6 +114,20 @@ const appRoute = createRoute({
   },
 });
 
+/** La wiki es local y no necesita cuenta: con sesión usa el shell completo, sin ella uno público. */
+const wikiLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'wiki-layout',
+  beforeLoad: async ({ context }) => {
+    const state = await context.queryClient.ensureQueryData(sessionQuery);
+    return { user: state.status === 'authenticated' ? state.session.user : null };
+  },
+  component: function WikiLayout() {
+    const { user } = wikiLayoutRoute.useRouteContext();
+    return user ? <AppShell username={user.username} /> : <PublicShell />;
+  },
+});
+
 const dashboardRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/',
@@ -195,14 +210,14 @@ const marketSearchRoute = createRoute({
 });
 
 const wikiHomeRoute = createRoute({
-  getParentRoute: () => appRoute,
+  getParentRoute: () => wikiLayoutRoute,
   path: modules.wiki.path,
   component: lazyRouteComponent(() => import('./routes/WikiRoutes'), 'WikiHomeRoute'),
   pendingComponent: PageSkeleton,
 });
 
 const wikiSearchRoute = createRoute({
-  getParentRoute: () => appRoute,
+  getParentRoute: () => wikiLayoutRoute,
   path: '/wiki/buscar',
   validateSearch: z.object({ q: z.string().max(100).default('').catch('') }),
   component: lazyRouteComponent(() => import('./routes/WikiRoutes'), 'WikiSearchRoute'),
@@ -210,14 +225,14 @@ const wikiSearchRoute = createRoute({
 });
 
 const wikiCategoryRoute = createRoute({
-  getParentRoute: () => appRoute,
+  getParentRoute: () => wikiLayoutRoute,
   path: '/wiki/categoria/$name',
   component: lazyRouteComponent(() => import('./routes/WikiRoutes'), 'WikiCategoryRoute'),
   pendingComponent: PageSkeleton,
 });
 
 const wikiArticleRoute = createRoute({
-  getParentRoute: () => appRoute,
+  getParentRoute: () => wikiLayoutRoute,
   path: '/wiki/$',
   component: lazyRouteComponent(() => import('./routes/WikiRoutes'), 'WikiArticleRoute'),
   pendingComponent: PageSkeleton,
@@ -269,13 +284,15 @@ const routeTree = rootRoute.addChildren([
     marketSearchRoute,
     newsRoute,
     newsDetailRoute,
+    cardAlbumRoute,
+    fishingAlbumRoute,
+    diagnosticsRoute,
+  ]),
+  wikiLayoutRoute.addChildren([
     wikiHomeRoute,
     wikiSearchRoute,
     wikiCategoryRoute,
     wikiArticleRoute,
-    cardAlbumRoute,
-    fishingAlbumRoute,
-    diagnosticsRoute,
   ]),
 ]);
 

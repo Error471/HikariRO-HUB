@@ -140,7 +140,7 @@ export async function buildApp(deps: AppDependencies) {
     markets: deps.markets,
     requireSession,
   });
-  await app.register(wikiRoutes, { prefix: '/api/wiki', wiki: deps.wiki, requireSession });
+  await app.register(wikiRoutes, { prefix: '/api/wiki', wiki: deps.wiki });
   await app.register(albumRoutes, {
     prefix: '/api/albums',
     albums: deps.albums,
