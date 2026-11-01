@@ -144,6 +144,21 @@
     opacity: 0.85;
   }
 
+  /*
+   * Panel alto (login): la ilustración es apaisada, así que se muestra entera arriba con su
+   * proporción real y se funde hacia abajo, en vez de ampliarla y recortarla para cubrir todo.
+   */
+  .hero-banner--top::before {
+    inset: 0 0 auto 0;
+    aspect-ratio: 930 / 500;
+    background:
+      linear-gradient(180deg, rgb(12 10 13 / 0.7), rgb(12 10 13 / 0) 30%),
+      url('/wiki-img/hero-slide.webp') center / cover no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+    opacity: 0.95;
+  }
+
   /* Etiqueta pequeña en mayúsculas con runa, como los "kicker" de la web. */
   .kicker {
     display: flex;

@@ -52,7 +52,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
-      <section className="hero-banner relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
+      <section className="hero-banner hero-banner--top relative hidden overflow-hidden border-r border-white/6 bg-night-950 lg:flex lg:flex-col lg:justify-between lg:p-12">
         <Brand />
         <div className="relative max-w-lg animate-rise">
           <h1 className="font-display text-6xl leading-[1.1] font-semibold tracking-tight text-balance">
@@ -179,6 +179,9 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
             registra y solo la guarda, cifrada, si marcas la casilla.
           </p>
           <p className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-faint">
+            <Link to="/wiki" className="text-mana-400 underline-offset-2 hover:underline">
+              Ver la wiki sin iniciar sesión
+            </Link>
             <Link to="/privacidad" className="text-mana-400 underline-offset-2 hover:underline">
               Privacidad y cómo funciona
             </Link>
