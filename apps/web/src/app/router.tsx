@@ -47,7 +47,14 @@ const rootRoute = createRootRouteWithContext<RouterContext>()({
     <StatusScreen
       title="Algo ha fallado"
       description={errorMessage(error)}
-      action={<Button onClick={reset}>Reintentar</Button>}
+      action={
+        <div className="flex flex-col items-center gap-4">
+          <Button onClick={reset}>Reintentar</Button>
+          <a href="/wiki" className="text-sm text-gold-300 underline-offset-4 hover:underline">
+            Abrir la wiki sin conexión
+          </a>
+        </div>
+      }
     />
   ),
   notFoundComponent: () => (
@@ -119,8 +126,9 @@ const wikiLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'wiki-layout',
   beforeLoad: async ({ context }) => {
-    const state = await context.queryClient.ensureQueryData(sessionQuery);
-    return { user: state.status === 'authenticated' ? state.session.user : null };
+    // Si HikariRO no responde no se puede comprobar la sesión, pero la wiki sigue siendo legible.
+    const state = await context.queryClient.ensureQueryData(sessionQuery).catch(() => null);
+    return { user: state?.status === 'authenticated' ? state.session.user : null };
   },
   component: function WikiLayout() {
     const { user } = wikiLayoutRoute.useRouteContext();
