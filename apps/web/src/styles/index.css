@@ -141,19 +141,7 @@
           #0c0a0d 94%
         )
         0 0 / 100% 100% no-repeat,
-      /* Tamaño real como máximo (930 px): ampliarla en ventanas anchas la deja borrosa. */
-      url('/hero-slide.webp') right top / min(100%, 930px) auto no-repeat;
-    /* Si la ventana es más ancha que la imagen, el borde izquierdo se funde con el fondo. */
-    -webkit-mask-image: linear-gradient(
-      90deg,
-      transparent calc(100% - 930px),
-      #000 calc(100% - 930px + 14rem)
-    );
-    mask-image: linear-gradient(
-      90deg,
-      transparent calc(100% - 930px),
-      #000 calc(100% - 930px + 14rem)
-    );
+      url('/hero-slide.webp') center top / 100% auto no-repeat;
     opacity: 0.85;
   }
 
