@@ -1,11 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { DownloadCloud } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { apiRequest } from '@/lib/api-client';
 import { wikiStatusQuery } from './wiki-query';
+
+// Última versión de la wiki que ya se ha visto: si cambia, lo guardado en pantalla está desfasado.
+let seenVersion: string | null = null;
 
 /**
  * La wiki no viene dentro de la app: se descarga de GitHub la primera vez que se abre.
@@ -18,6 +21,18 @@ export function WikiGate({ children }: { children: ReactNode }) {
     mutationFn: () => apiRequest('/wiki/download', { method: 'POST' }),
     onSettled: () => queryClient.invalidateQueries({ queryKey: wikiStatusQuery.queryKey }),
   });
+
+  const version = status.data?.version ?? null;
+  useEffect(() => {
+    if (version === null) return;
+    // Una actualización en segundo plano trajo contenido nuevo: se descarta lo que había en memoria.
+    if (seenVersion !== null && seenVersion !== version) {
+      void queryClient.invalidateQueries({
+        predicate: (query) => query.queryKey[0] === 'wiki' && query.queryKey[1] !== 'status',
+      });
+    }
+    seenVersion = version;
+  }, [version, queryClient]);
 
   if (status.isPending) return <Skeleton className="h-64 rounded-card" />;
   if (status.error && !status.data) {

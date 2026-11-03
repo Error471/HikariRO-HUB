@@ -15,8 +15,12 @@ const WIKI_STALE_MS = 10 * 60_000;
 export const wikiStatusQuery = queryOptions({
   queryKey: ['wiki', 'status'],
   queryFn: ({ signal }) => apiRequest('/wiki/status', { schema: wikiStatusSchema, signal }),
-  refetchInterval: (query) => (query.state.data?.state === 'downloading' ? 1000 : false),
-  staleTime: (query) => (query.state.data?.state === 'ready' ? Infinity : 0),
+  // Mientras se descarga (o se actualiza en segundo plano) se pregunta cada poco; si no, es una consulta local barata.
+  refetchInterval: (query) => {
+    const data = query.state.data;
+    return data && (data.state === 'downloading' || data.syncing) ? 1500 : false;
+  },
+  staleTime: 15_000,
 });
 
 export const wikiPageQuery = (title: string) =>

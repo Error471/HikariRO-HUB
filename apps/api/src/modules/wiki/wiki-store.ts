@@ -85,6 +85,7 @@ export class WikiStore {
   private readonly retryDelayMs: number;
   private running: Promise<void> | null = null;
   private failure: string | null = null;
+  private version: string | null = null;
   private done = 0;
   private total = 0;
 
@@ -97,12 +98,19 @@ export class WikiStore {
   }
 
   status(): WikiStatus {
+    const extra = { version: this.version, syncing: this.running !== null };
     if (this.options.wiki.ready)
-      return { state: 'ready', done: this.done, total: this.total, message: null };
+      return { state: 'ready', done: this.done, total: this.total, message: null, ...extra };
     if (this.failure && !this.running) {
-      return { state: 'error', done: this.done, total: this.total, message: this.failure };
+      return {
+        state: 'error',
+        done: this.done,
+        total: this.total,
+        message: this.failure,
+        ...extra,
+      };
     }
-    return { state: 'downloading', done: this.done, total: this.total, message: null };
+    return { state: 'downloading', done: this.done, total: this.total, message: null, ...extra };
   }
 
   /** Carga lo guardado y comprueba en segundo plano si hay algo nuevo en GitHub. */
@@ -132,6 +140,7 @@ export class WikiStore {
     if (!existsSync(pages)) return;
     try {
       this.options.wiki.load(JSON.parse(readFileSync(pages, 'utf8')));
+      this.version = this.readLocalManifest()?.version ?? null;
     } catch (error) {
       // Archivo dañado: se vuelve a descargar entero.
       this.logger?.warn({ err: error }, 'La copia local de la wiki está dañada');
@@ -170,6 +179,7 @@ export class WikiStore {
       const pages = join(this.options.dir, 'pages.json');
       this.options.wiki.load(JSON.parse(readFileSync(pages, 'utf8')));
       writeFileSync(this.manifestFile, JSON.stringify(manifest));
+      this.version = manifest.version;
       this.removeStaleImages(manifest);
     } catch (error) {
       this.failure = 'Comprueba tu conexión a internet e inténtalo de nuevo.';

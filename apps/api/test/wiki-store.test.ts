@@ -80,7 +80,13 @@ describe('WikiStore', () => {
 
     await store.sync();
 
-    expect(store.status()).toMatchObject({ state: 'ready', done: 3, total: 3 });
+    expect(store.status()).toMatchObject({
+      state: 'ready',
+      done: 3,
+      total: 3,
+      version: 'v1',
+      syncing: false,
+    });
     expect((await wiki.page('Sistema de pesca')).title).toBe('Sistema de pesca');
     expect(readFileSync(join(dir, 'img', 'pez.png'), 'utf8')).toBe('pez');
     expect(store.imagePath('mapa.png')).toBe(join(dir, 'img', 'mapa.png'));
@@ -93,6 +99,7 @@ describe('WikiStore', () => {
     const { wiki, store } = create();
     store.start();
     expect(wiki.ready).toBe(true);
+    expect(store.status()).toMatchObject({ version: 'v1', syncing: true });
     await store.sync();
     expect(remote.requests).toEqual(['manifest.json']);
   });
@@ -108,6 +115,7 @@ describe('WikiStore', () => {
 
     expect(remote.requests.sort()).toEqual(['img/mapa.png', 'img/oro.png', 'manifest.json']);
     expect(readFileSync(join(dir, 'img', 'mapa.png'), 'utf8')).toBe('mapa nuevo');
+    expect(store.status().version).toBe('v2');
   });
 
   it('elimina las imágenes que ya no se usan', async () => {

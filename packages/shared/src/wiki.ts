@@ -83,6 +83,10 @@ export const wikiStatusSchema = z.object({
   total: z.number(),
   /** Motivo del último fallo (solo con `state: 'error'`). */
   message: z.string().nullable(),
+  /** Versión de la copia cargada; cambia cuando una actualización en segundo plano trae contenido nuevo. */
+  version: z.string().nullable(),
+  /** Hay una sincronización con GitHub en curso (la copia anterior sigue disponible). */
+  syncing: z.boolean(),
 });
 export type WikiStatus = z.infer<typeof wikiStatusSchema>;
 
