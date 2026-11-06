@@ -14,6 +14,20 @@ const loginPage = `<html><body><form action="/?module=account&amp;action=login&a
 <button type="submit" name="submit">Entrar</button></form></body></html>`;
 const accountPage = `<html><body><a href="/?module=account&amp;action=logout">Salir</a></body></html>`;
 
+/** Como la web real desde noviembre de 2026: páginas de MOCK_MVP_PAGE_SIZE filas (20 por defecto). */
+function paginate(data: ReturnType<typeof mvpData>, requested: number) {
+  const size = Number(process.env.MOCK_MVP_PAGE_SIZE ?? 20);
+  const pages = Math.max(1, Math.ceil(data.rows.length / size));
+  const page = Math.min(Math.max(1, requested || 1), pages);
+  return {
+    ...data,
+    rows: data.rows.slice((page - 1) * size, page * size),
+    total: data.rows.length,
+    page,
+    pages,
+  };
+}
+
 function mvpData() {
   const now = Math.floor(Date.now() / 1000);
   const row = (
@@ -159,7 +173,7 @@ createServer((req, res) => {
     }
     return void res
       .writeHead(200, { 'content-type': 'application/json' })
-      .end(JSON.stringify(mvpData()));
+      .end(JSON.stringify(paginate(mvpData(), Number(url.searchParams.get('page') ?? 1))));
   }
   if (action === 'account/view') {
     if (!sessions.has(sid)) {

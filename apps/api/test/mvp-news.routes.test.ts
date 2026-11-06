@@ -57,6 +57,46 @@ describe('GET /api/mvp', () => {
     expect(cached.statusCode).toBe(200);
   });
 
+  it('lee todas las páginas del MVP Timer (la web los pagina) y descarta repetidos', async () => {
+    const { cookie } = await loginAs(app, pool);
+    const row = (id: number, name: string, map: string) => ({
+      id,
+      name,
+      map,
+      killed_at: null,
+      min_at: null,
+      max_at: null,
+    });
+    const page = (n: number, rows: ReturnType<typeof row>[]) => ({
+      ok: true,
+      rows,
+      server_now: 1791040608,
+      total: 5,
+      page: n,
+      pages: 3,
+    });
+    const reply = (path: string, body: object) =>
+      pool
+        .intercept({ path, method: 'GET', headers: { cookie: 'fluxSessionData=auth456' } })
+        .reply(200, JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
+    reply('/?module=mvptimer&ajax=1', page(1, [row(1, 'Amon Ra', 'a'), row(2, 'Drake', 'b')]));
+    // Drake se repite: murió mientras se leían las páginas y cambió de página.
+    reply(
+      '/?module=mvptimer&ajax=1&page=2',
+      page(2, [row(2, 'Drake', 'b'), row(3, 'Pharaoh', 'c')]),
+    );
+    reply('/?module=mvptimer&ajax=1&page=3', page(3, [row(4, 'Baphomet', 'd')]));
+
+    const response = await app.inject({ method: 'GET', url: '/api/mvp', headers: { cookie } });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().mvps.map((mvp: { name: string }) => mvp.name)).toEqual([
+      'Amon Ra',
+      'Drake',
+      'Pharaoh',
+      'Baphomet',
+    ]);
+  });
+
   it('cierra la sesión de Hikari Hub si HikariRO redirige al login', async () => {
     const { cookie } = await loginAs(app, pool);
     mockMvp(302, '', { location: '/?module=account&action=login&return_url=%2F' });
