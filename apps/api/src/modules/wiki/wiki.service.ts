@@ -11,10 +11,18 @@ import { AppError } from '../../lib/app-error.js';
 import { sanitizeWikiHtml } from './wiki-html.js';
 
 const wikiDataSchema = z.object({
-  groups: z.array(z.object({ name: z.string(), pages: z.array(z.string()) })),
+  groups: z.array(
+    z.object({
+      name: z.string(),
+      parent: z.string().nullable().default(null),
+      pages: z.array(z.string()),
+    }),
+  ),
   pages: z.array(
     z.object({
       title: z.string(),
+      /** Identificador del artículo en la wiki online. */
+      slug: z.string().optional(),
       group: z.string().nullable(),
       html: z.string(),
       sections: z.array(z.object({ level: z.number(), title: z.string(), anchor: z.string() })),
@@ -42,6 +50,7 @@ const MAX_SUGGESTIONS = 8;
 
 interface Entry {
   title: string;
+  slug?: string | undefined;
   key: string;
   group: string | null;
   html: string;
@@ -102,9 +111,11 @@ export class WikiService {
       revisionId: null,
       html: entry.html,
       sections: entry.sections,
-      categories: entry.group ? [entry.group] : [],
+      categories: this.categoryChain(entry.group),
       notice: entry.notice,
-      sourceUrl: `${this.origin}/wiki/index.php?search=${encodeURIComponent(entry.title)}`,
+      sourceUrl: entry.slug
+        ? `${this.origin}/?module=wiki&action=view&lang=es&article=${encodeURIComponent(entry.slug)}`
+        : `${this.origin}/?module=wiki&lang=es`,
     };
   }
 
@@ -142,10 +153,27 @@ export class WikiService {
     };
   }
 
+  /** Categoría del artículo y las que la contienen, de la más cercana a la más alta. */
+  private categoryChain(name: string | null): string[] {
+    const chain: string[] = [];
+    for (
+      let group = this.groups.find((item) => item.name === name);
+      group && !chain.includes(group.name);
+      group = this.groups.find((item) => item.name === group?.parent)
+    ) {
+      chain.push(group.name);
+    }
+    return chain;
+  }
+
   async allCategories(): Promise<WikiCategoriesResponse> {
     this.ensureReady();
     return {
-      categories: this.groups.map((group) => ({ name: group.name, pages: group.pages.length })),
+      categories: this.groups.map((group) => ({
+        name: group.name,
+        pages: group.pages.length,
+        parent: group.parent,
+      })),
     };
   }
 
@@ -153,7 +181,14 @@ export class WikiService {
     this.ensureReady();
     const group = this.groups.find((item) => normalize(item.name) === normalize(name));
     if (!group) throw new AppError('NOT_FOUND', { publicMessage: 'Esta categoría no existe.' });
-    return { name: group.name, pages: group.pages, subcategories: [] };
+    return {
+      name: group.name,
+      pages: group.pages,
+      subcategories: this.groups
+        .filter((item) => item.parent === group.name)
+        .map((item) => item.name),
+      ancestors: this.categoryChain(group.parent).reverse(),
+    };
   }
 
   async index(): Promise<WikiIndexResponse> {

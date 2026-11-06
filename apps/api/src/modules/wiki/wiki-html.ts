@@ -71,11 +71,12 @@ const allowedStyles = Object.fromEntries(
 );
 
 /**
- * Lista blanca de clases: solo las de MediaWiki, la wiki de HikariRO y la copia local (`wk-*`), para que el contenido
+ * Lista blanca de clases: solo las de MediaWiki, la wiki de HikariRO y su módulo wiki (`wiki-*`), para que el contenido
  * no pueda activar utilidades de la app (p. ej. `fixed` o `hidden` de Tailwind).
  */
 const allowedClasses = [
   'wk-*',
+  'wiki-*',
   'tw',
   'mw-*',
   'hro-*',
@@ -185,7 +186,15 @@ export function sanitizeWikiHtml(html: string): string {
       col: ['span'],
       ol: ['start', 'type'],
       // El analizador pasa los atributos a minúsculas; el navegador restaura `viewBox` al leer HTML.
-      svg: ['viewbox', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'aria-hidden'],
+      svg: [
+        'viewbox',
+        'fill',
+        'stroke',
+        'stroke-width',
+        'stroke-linecap',
+        'stroke-linejoin',
+        'aria-hidden',
+      ],
       g: ['fill', 'stroke', 'stroke-width'],
       path: ['d'],
       circle: ['cx', 'cy', 'r'],

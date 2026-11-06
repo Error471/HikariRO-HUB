@@ -8,6 +8,41 @@ import { ArticleLink, CategoryLink } from './WikiLinks';
 import { WikiSearchBox } from './WikiSearchBox';
 import { wikiCategoriesQuery, wikiCategoryQuery } from './wiki-query';
 
+function ArticleList({ titles }: { titles: string[] }) {
+  return (
+    <ul className="flex flex-col">
+      {titles.map((title) => (
+        <li key={title}>
+          <ArticleLink
+            title={title}
+            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-muted transition hover:bg-white/5 hover:text-ink"
+          >
+            <FileText aria-hidden="true" className="size-4 shrink-0 text-ink-faint" />
+            <span className="truncate">{title}</span>
+          </ArticleLink>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Subcategoría dentro de la tarjeta de su categoría. */
+function SubcategoryBlock({ name }: { name: string }) {
+  const { data } = useQuery(wikiCategoryQuery(name));
+  if (!data) return <Skeleton className="h-12" />;
+  return (
+    <div className="mt-3 border-t border-ink/10 pt-3">
+      <h3 className="mb-1 flex items-center gap-2 px-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold-300/90">
+        <CategoryLink name={name} className="transition hover:text-gold-200">
+          {name}
+        </CategoryLink>
+        <span className="font-normal tabular-nums text-ink-faint">{data.pages.length}</span>
+      </h3>
+      <ArticleList titles={data.pages} />
+    </div>
+  );
+}
+
 function CategoryPanel({ name, pages }: { name: string; pages: number }) {
   const { data, isPending } = useQuery(wikiCategoryQuery(name));
   return (
@@ -19,19 +54,12 @@ function CategoryPanel({ name, pages }: { name: string; pages: number }) {
       {isPending ? (
         <Skeleton className="h-20" />
       ) : (
-        <ul className="flex flex-col">
-          {data?.pages.map((title) => (
-            <li key={title}>
-              <ArticleLink
-                title={title}
-                className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-ink-muted transition hover:bg-white/5 hover:text-ink"
-              >
-                <FileText aria-hidden="true" className="size-4 shrink-0 text-ink-faint" />
-                <span className="truncate">{title}</span>
-              </ArticleLink>
-            </li>
+        <>
+          <ArticleList titles={data?.pages ?? []} />
+          {data?.subcategories.map((subcategory) => (
+            <SubcategoryBlock key={subcategory} name={subcategory} />
           ))}
-        </ul>
+        </>
       )}
     </section>
   );
@@ -44,7 +72,7 @@ export function WikiHomePage() {
     <div className="flex flex-col gap-6 animate-rise">
       <PageHeader
         title="Wiki"
-        description="Guías, sistemas e instancias de HikariRO. Se descarga la primera vez y se guarda en tu PC: funciona sin conexión."
+        description="Los mismos artículos de la wiki online de HikariRO. Se guardan en tu PC: funciona sin conexión."
         actions={
           <a
             href={modules.wiki.sourceUrl}
@@ -52,7 +80,7 @@ export function WikiHomePage() {
             rel="noopener noreferrer"
             className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ink/12 px-5 text-xs uppercase tracking-[0.08em] text-ink-muted transition hover:border-ink hover:text-ink"
           >
-            Wiki original <ArrowUpRight aria-hidden="true" className="size-4" />
+            Wiki online <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
         }
       />
@@ -68,9 +96,20 @@ export function WikiHomePage() {
         <ErrorState error={categories.error} onRetry={() => void categories.refetch()} />
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {categories.data.categories.map((category) => (
-            <CategoryPanel key={category.name} name={category.name} pages={category.pages} />
-          ))}
+          {categories.data.categories
+            .filter((category) => category.parent === null)
+            .map((category) => (
+              <CategoryPanel
+                key={category.name}
+                name={category.name}
+                pages={
+                  category.pages +
+                  categories.data.categories
+                    .filter((child) => child.parent === category.name)
+                    .reduce((sum, child) => sum + child.pages, 0)
+                }
+              />
+            ))}
         </div>
       )}
     </div>

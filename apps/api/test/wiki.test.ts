@@ -43,18 +43,17 @@ describe('WikiService (copia de prueba)', () => {
 
   it('encuentra páginas sin distinguir mayúsculas, tildes ni guiones bajos', async () => {
     expect((await wiki.page('sistema_de_mineria')).title).toBe('Sistema de minería');
-    expect((await wiki.page('Pagina principal')).title).toBe('Página principal');
   });
 
-  it('devuelve categoría, secciones, aviso y enlace de búsqueda en la wiki original', async () => {
+  it('devuelve categorías (de la más cercana a la más alta), secciones, aviso y enlace a la wiki online', async () => {
     const page = await wiki.page('Sistema de pesca');
     expect(page).toMatchObject({
       redirectedFrom: null,
       revisionId: null,
-      categories: ['Zonas'],
+      categories: ['Zonas', 'Guías'],
       sections: [{ level: 2, title: 'Primeros pasos', anchor: 'Primeros_pasos' }],
       notice: { kind: 'off', label: 'Sistema antiguo' },
-      sourceUrl: `${HIKARI}/wiki/index.php?search=Sistema%20de%20pesca`,
+      sourceUrl: `${HIKARI}/?module=wiki&action=view&lang=es&article=sistema-de-pesca`,
     });
   });
 
@@ -77,46 +76,66 @@ describe('WikiService (copia de prueba)', () => {
   it('lista categorías y sus páginas', async () => {
     expect(await wiki.allCategories()).toEqual({
       categories: [
-        { name: 'Zonas', pages: 2 },
-        { name: 'Eventos', pages: 1 },
+        { name: 'Guías', pages: 0, parent: null },
+        { name: 'Zonas', pages: 2, parent: 'Guías' },
+        { name: 'Eventos', pages: 1, parent: null },
       ],
     });
     expect(await wiki.category('zonas')).toEqual({
       name: 'Zonas',
       pages: ['Sistema de pesca', 'Sistema de minería'],
       subcategories: [],
+      ancestors: ['Guías'],
     });
+    expect(await wiki.category('guias')).toMatchObject({ subcategories: ['Zonas'], ancestors: [] });
     await expect(wiki.category('nada')).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
 
-// La carpeta wiki/ del repositorio es lo que descargan las apps desde GitHub.
+// La carpeta wiki/ del repositorio es lo que descargan las apps desde GitHub (se genera con `pnpm wiki:sync`).
 const published = (name: string) =>
   readFileSync(new URL(`../../../wiki/${name}`, import.meta.url), 'utf8');
-const bundled = JSON.parse(published('pages.json')) as { pages: unknown[] };
+const bundled = JSON.parse(published('pages.json')) as {
+  groups: { name: string; parent: string | null; pages: string[] }[];
+  pages: { title: string; group: string | null }[];
+};
 
 describe('copia de la wiki publicada en GitHub', () => {
   const wiki = new WikiService(HIKARI, bundled);
 
-  it('tiene la portada y sus enlaces internos apuntan a páginas que existen', async () => {
-    const home = await wiki.page('Página principal');
-    expect(home.html).toContain('hro2-hero');
-    const titles = (await wiki.index()).pages.map((title) => title.toLowerCase());
-    for (const [, path] of home.html.matchAll(/href="\/wiki\/([^"#]+)/g)) {
-      const title = decodeURIComponent(path ?? '')
-        .replace(/_/g, ' ')
-        .toLowerCase();
-      expect(titles, `enlace roto: ${title}`).toContain(title);
+  it('tiene artículos y los enlaces internos apuntan a artículos que existen', async () => {
+    expect(bundled.pages.length).toBeGreaterThan(20);
+    const titles = new Set((await wiki.index()).pages.map((title) => title.toLowerCase()));
+    for (const title of (await wiki.index()).pages) {
+      const { html } = await wiki.page(title);
+      for (const [, path] of html.matchAll(/href="\/wiki\/([^"#]+)/g)) {
+        const target = decodeURIComponent(path ?? '')
+          .replace(/_/g, ' ')
+          .toLowerCase();
+        expect(titles.has(target), `enlace roto en «${title}»: ${target}`).toBe(true);
+      }
     }
   });
 
-  it('solo usa imágenes y enlaces locales', async () => {
+  it('las categorías y subcategorías son coherentes', () => {
+    const names = new Set(bundled.groups.map((group) => group.name));
+    expect(names.size).toBe(bundled.groups.length);
+    for (const group of bundled.groups) {
+      if (group.parent) expect(names.has(group.parent), `padre de ${group.name}`).toBe(true);
+    }
+    const titles = new Set(bundled.pages.map((page) => page.title));
+    for (const page of bundled.pages) expect(names.has(page.group ?? ''), page.title).toBe(true);
+    for (const group of bundled.groups) {
+      for (const title of group.pages)
+        expect(titles.has(title), `${group.name}: ${title}`).toBe(true);
+    }
+  });
+
+  it('solo usa imágenes locales', async () => {
     for (const title of (await wiki.index()).pages) {
       const { html } = await wiki.page(title);
       expect(html, title).not.toMatch(/<img [^>]*src="(?!\/wiki-img\/)/);
-      expect(html, title).not.toMatch(/href="[^"#]*\.html/);
     }
-    expect(bundled.pages.length).toBeGreaterThan(20);
   });
 
   it('el manifiesto lista todas las imágenes que usan las páginas', () => {
@@ -177,7 +196,10 @@ describe('rutas /api/wiki', () => {
   it('devuelve una página saneada', async () => {
     const response = await get('/api/wiki/page?title=Sistema_de_pesca');
     expect(response.statusCode).toBe(200);
-    expect(response.json()).toMatchObject({ title: 'Sistema de pesca', categories: ['Zonas'] });
+    expect(response.json()).toMatchObject({
+      title: 'Sistema de pesca',
+      categories: ['Zonas', 'Guías'],
+    });
     expect(response.json().html).not.toContain('<script');
   });
 
@@ -193,8 +215,8 @@ describe('rutas /api/wiki', () => {
 
   it('busca, lista categorías y devuelve el índice', async () => {
     expect((await get('/api/wiki/search?q=halloween')).json().results[0].title).toBe('Halloween');
-    expect((await get('/api/wiki/categories')).json().categories).toHaveLength(2);
+    expect((await get('/api/wiki/categories')).json().categories).toHaveLength(3);
     expect((await get('/api/wiki/categories/Eventos')).json().pages).toEqual(['Halloween']);
-    expect((await get('/api/wiki/index')).json().pages).toHaveLength(4);
+    expect((await get('/api/wiki/index')).json().pages).toHaveLength(3);
   });
 });

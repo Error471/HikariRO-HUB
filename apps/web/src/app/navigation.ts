@@ -99,7 +99,7 @@ export const modules = {
     path: '/wiki',
     icon: BookOpenText,
     description: 'Guías, instancias y sistemas del servidor con búsqueda y categorías.',
-    sourceUrl: `${HIKARI}/wiki/index.php?title=P%C3%A1gina_principal`,
+    sourceUrl: `${HIKARI}/?module=wiki&lang=es`,
     phase: 4,
     available: true,
   },

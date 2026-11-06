@@ -12,7 +12,14 @@ export function WikiCategoryPage({ name }: { name: string }) {
 
   return (
     <div className="flex flex-col gap-6 animate-rise">
-      <WikiBreadcrumbs items={['Categorías', name]} />
+      <WikiBreadcrumbs
+        items={[
+          ...(data?.ancestors ?? []).map((ancestor) => (
+            <CategoryLink key={ancestor} name={ancestor} className="hover:text-ink" />
+          )),
+          name,
+        ]}
+      />
       <header>
         <p className="mb-2 text-xs font-semibold uppercase tracking-[0.25em] text-gold-400/80">
           Categoría

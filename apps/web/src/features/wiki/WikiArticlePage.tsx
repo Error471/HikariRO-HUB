@@ -73,15 +73,16 @@ export function WikiArticlePage({ title }: { title: string }) {
     );
   }
 
-  const [mainCategory] = page.categories;
+  // `categories` va de la más cercana a la más alta: la ruta se lee al revés.
+  const path = [...page.categories].reverse();
 
   return (
     <div className="flex flex-col gap-6 animate-rise">
       <WikiBreadcrumbs
         items={[
-          ...(mainCategory
-            ? [<CategoryLink key="cat" name={mainCategory} className="hover:text-ink" />]
-            : []),
+          ...path.map((category) => (
+            <CategoryLink key={category} name={category} className="hover:text-ink" />
+          )),
           page.title,
         ]}
       />
@@ -127,14 +128,14 @@ export function WikiArticlePage({ title }: { title: string }) {
           {page.notice && <WikiNoticeBox notice={page.notice} />}
           <WikiContent html={page.html} />
           <footer className="flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
-            <span>Copia local de la HikariRO Wiki, disponible sin conexión</span>
+            <span>Copia local de la wiki de HikariRO, disponible sin conexión</span>
             <a
               href={page.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 hover:text-ink"
             >
-              Buscar en la wiki original <ArrowUpRight aria-hidden="true" className="size-3.5" />
+              Ver en la wiki online <ArrowUpRight aria-hidden="true" className="size-3.5" />
             </a>
           </footer>
         </article>

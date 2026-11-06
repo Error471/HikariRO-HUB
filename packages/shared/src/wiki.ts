@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-export const WIKI_MAIN_PAGE = 'Página principal';
-
 /** Título de página MediaWiki: sin caracteres prohibidos por MediaWiki. */
 export const wikiTitleSchema = z
   .string()
@@ -38,7 +36,7 @@ export const wikiPageSchema = z.object({
   sections: z.array(wikiSectionSchema),
   categories: z.array(z.string()),
   notice: wikiNoticeSchema.nullable(),
-  /** Búsqueda de la página en la wiki original (la app trabaja con una copia local). */
+  /** Enlace a la página en la wiki online (la app trabaja con una copia local). */
   sourceUrl: z.string(),
 });
 export type WikiPage = z.infer<typeof wikiPageSchema>;
@@ -61,7 +59,10 @@ export const wikiSearchResponseSchema = z.object({
 export type WikiSearchResponse = z.infer<typeof wikiSearchResponseSchema>;
 
 export const wikiCategoriesResponseSchema = z.object({
-  categories: z.array(z.object({ name: z.string(), pages: z.number() })),
+  /** `parent`: categoría que la contiene (null si es de primer nivel). `pages`: artículos propios. */
+  categories: z.array(
+    z.object({ name: z.string(), pages: z.number(), parent: z.string().nullable() }),
+  ),
 });
 export type WikiCategoriesResponse = z.infer<typeof wikiCategoriesResponseSchema>;
 
@@ -69,6 +70,8 @@ export const wikiCategoryResponseSchema = z.object({
   name: z.string(),
   pages: z.array(z.string()),
   subcategories: z.array(z.string()),
+  /** Categorías que la contienen, de la más alta a la más cercana. */
+  ancestors: z.array(z.string()),
 });
 export type WikiCategoryResponse = z.infer<typeof wikiCategoryResponseSchema>;
 

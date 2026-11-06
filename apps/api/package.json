@@ -8,7 +8,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "mock:hikari": "tsx scripts/mock-hikari.ts",
-    "wiki:import": "tsx scripts/build-wiki-data.ts"
+    "wiki:sync": "tsx scripts/sync-wiki.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

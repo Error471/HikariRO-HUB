@@ -478,6 +478,107 @@
   }
 
   /* Imagen junto a texto (p. ej. 4tas clases) */
+  /* Clases del módulo wiki de HikariRO (wiki-*): imágenes, tablas y bloques de sus artículos. */
+  .wiki-content :where(img.wiki-img-center) {
+    display: block;
+    margin: 1.25rem auto;
+  }
+  .wiki-content :where(img.wiki-img-left) {
+    float: left;
+    margin: 0.4rem 1.25rem 1rem 0;
+  }
+  .wiki-content :where(img.wiki-img-right) {
+    float: right;
+    margin: 0.4rem 0 1rem 1.25rem;
+  }
+  .wiki-content :where(img.wiki-img-block-left) {
+    display: block;
+    margin: 1rem auto 1rem 0;
+  }
+  .wiki-content :where(img.wiki-img-block-right) {
+    display: block;
+    margin: 1rem 0 1rem auto;
+  }
+  .wiki-content :where(img.wiki-img-rounded) {
+    border-radius: 1rem;
+  }
+  .wiki-content :where(img.wiki-img-gold) {
+    padding: 0.3rem;
+    border: 2px solid var(--color-gold-400);
+    border-radius: 0.5rem;
+  }
+  .wiki-content :where(img.wiki-img-shadow) {
+    border-radius: 0.5rem;
+    box-shadow: 0 12px 28px rgb(0 0 0 / 0.55);
+  }
+  .wiki-content :where(figure.wiki-captioned-image) {
+    display: table;
+    max-width: 100%;
+    margin: 1rem 0;
+    padding: 0.35rem;
+    border: 1px solid rgb(239 230 214 / 0.14);
+    border-radius: 0.5rem;
+  }
+  .wiki-content :where(figure.wiki-captioned-image figcaption) {
+    padding: 0.4rem 0.2rem 0;
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--color-ink-faint);
+  }
+  .wiki-content :where(table.wiki-table-striped tr:nth-child(even)) {
+    background: rgb(239 230 214 / 0.04);
+  }
+  .wiki-content :where(.wiki-callout) {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--color-gold-400);
+    border-radius: 0.4rem;
+    background: rgb(240 169 75 / 0.08);
+  }
+  .wiki-content :where(.wiki-layout) {
+    display: grid;
+    gap: 1rem;
+    margin: 1rem 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .wiki-content :where(.wiki-layout-3) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .wiki-content :where(.wiki-layout-column) {
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid rgb(239 230 214 / 0.14);
+    border-radius: 0.5rem;
+  }
+  .wiki-content :where(.wiki-guide-layout) {
+    display: grid;
+    gap: 1.25rem;
+    margin: 1rem 0;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 28%);
+  }
+  .wiki-content :where(.wiki-guide-panel) {
+    padding: 0.75rem;
+    border: 1px solid rgb(239 230 214 / 0.14);
+    border-radius: 0.5rem;
+    background: rgb(239 230 214 / 0.03);
+  }
+  .wiki-content :where(details) {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgb(239 230 214 / 0.14);
+    border-radius: 0.5rem;
+  }
+  .wiki-content :where(details > summary) {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-gold-300);
+  }
+  @media (max-width: 640px) {
+    .wiki-content :where(.wiki-layout, .wiki-guide-layout) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   .wiki-content :where(.wk-split) {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

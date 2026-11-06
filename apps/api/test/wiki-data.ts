@@ -3,8 +3,9 @@ import type { WikiData } from '../src/modules/wiki/wiki.service.js';
 /** Copia mínima de la wiki para las pruebas. */
 export const wikiTestData: WikiData = {
   groups: [
-    { name: 'Zonas', pages: ['Sistema de pesca', 'Sistema de minería'] },
-    { name: 'Eventos', pages: ['Halloween'] },
+    { name: 'Guías', parent: null, pages: [] },
+    { name: 'Zonas', parent: 'Guías', pages: ['Sistema de pesca', 'Sistema de minería'] },
+    { name: 'Eventos', parent: null, pages: ['Halloween'] },
   ],
   pages: [
     {
@@ -16,14 +17,6 @@ export const wikiTestData: WikiData = {
       text: 'Evento La luz de Halloween Town se filtra hacia Caspen.',
     },
     {
-      title: 'Página principal',
-      group: null,
-      html: '<div class="hro2-hero"><h1 class="hro2-title">HikariRO</h1></div>',
-      sections: [],
-      notice: null,
-      text: 'HikariRO',
-    },
-    {
       title: 'Sistema de minería',
       group: 'Zonas',
       html: '<p>Extrae minerales con el <b>pico</b>.</p>',
@@ -33,6 +26,7 @@ export const wikiTestData: WikiData = {
     },
     {
       title: 'Sistema de pesca',
+      slug: 'sistema-de-pesca',
       group: 'Zonas',
       html:
         '<h2 id="Primeros_pasos">Primeros pasos</h2>' +
