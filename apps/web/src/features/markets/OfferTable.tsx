@@ -29,9 +29,9 @@ export function OfferTable({ offers, type }: { offers: MarketOffer[]; type: Mark
   const meta = marketMeta[type];
   return (
     <>
-      <div className="hidden overflow-hidden rounded-card border border-white/7 md:block">
+      <div className="surface hidden overflow-hidden rounded-card md:block">
         <table className="w-full text-left text-sm">
-          <thead className="bg-night-800/80 text-xs uppercase tracking-wider text-ink-faint">
+          <thead className="border-b border-white/7 bg-white/[0.03] text-xs text-ink-faint">
             <tr>
               <th scope="col" className="px-4 py-3 font-medium">
                 Objeto
@@ -50,11 +50,11 @@ export function OfferTable({ offers, type }: { offers: MarketOffer[]; type: Mark
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/6 bg-night-850/60">
+          <tbody className="divide-y divide-white/5">
             {offers.map((offer, index) => (
               <tr
                 key={`${offer.shop.id}-${offer.item.itemId}-${index}`}
-                className="align-top hover:bg-white/[0.02]"
+                className="align-top transition-colors hover:bg-white/[0.035]"
               >
                 <td className="px-4 py-3">
                   <div className="flex gap-3">
@@ -85,7 +85,7 @@ export function OfferTable({ offers, type }: { offers: MarketOffer[]; type: Mark
         {offers.map((offer, index) => (
           <li
             key={`${offer.shop.id}-${offer.item.itemId}-${index}`}
-            className="rounded-card border border-white/7 bg-night-850/80 p-3.5"
+            className="rounded-card surface p-3.5"
           >
             <div className="flex gap-3">
               <ItemIcon src={offer.item.iconUrl} name={offer.item.name} className="size-10" />

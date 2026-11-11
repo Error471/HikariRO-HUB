@@ -110,7 +110,7 @@ export function ShopDetailPage({ type, shopId }: { type: MarketType; shopId: num
             Ver en HikariRO <ArrowUpRight aria-hidden="true" className="size-3.5" />
           </a>
         </p>
-        <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-white/8 pt-4 text-sm">
+        <dl className="well mt-5 grid grid-cols-3 gap-3 rounded-xl p-4 text-sm">
           <div>
             <dt className="text-xs text-ink-faint">Objetos</dt>
             <dd className="mt-1 font-semibold tabular-nums">{shop.items.length}</dd>

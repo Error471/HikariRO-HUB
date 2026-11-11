@@ -100,7 +100,7 @@ export function FishingAlbumPage({ filter, onFilterChange }: FishingAlbumPagePro
             : 'Prueba con otro filtro.'}
         </EmptyState>
       ) : (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
+        <div className="stagger grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
           {visible.map((entry, index) => (
             <FishTile key={entry.discovered ? `f-${entry.name}` : `l-${index}`} fish={entry} />
           ))}

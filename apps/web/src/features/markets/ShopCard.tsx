@@ -15,7 +15,7 @@ export function ShopCard({ shop }: { shop: MarketShop }) {
     shop.type === 'vending' ? '/mercados/vending/$shopId' : '/mercados/buying-store/$shopId';
 
   return (
-    <article className="group relative flex flex-col rounded-card border border-white/7 bg-night-850/80 p-4 transition duration-300 hover:border-white/20 sm:p-5">
+    <article className="group relative flex flex-col rounded-card surface p-4 transition-colors duration-300 hover:border-white/16 sm:p-5">
       <div className="flex items-center justify-between text-xs text-ink-faint">
         <span>{meta.shopLabel}</span>
         <span className="tabular-nums">#{shop.id}</span>
@@ -24,7 +24,7 @@ export function ShopCard({ shop }: { shop: MarketShop }) {
         <Link
           to={detailPath}
           params={{ shopId: String(shop.id) }}
-          className="after:absolute after:inset-0 focus-visible:outline-none"
+          className="after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-gold-400"
         >
           {shop.title || 'Tienda sin título'}
         </Link>
@@ -49,13 +49,13 @@ export function ShopCard({ shop }: { shop: MarketShop }) {
           </li>
         ))}
         {shop.items.length > PREVIEW && (
-          <li className="grid size-9 place-items-center rounded-lg bg-white/5 text-xs text-ink-muted">
+          <li className="well grid size-9 place-items-center rounded-xl text-xs text-ink-muted">
             +{shop.items.length - PREVIEW}
           </li>
         )}
       </ul>
 
-      <dl className="mt-auto grid grid-cols-3 gap-2 border-t border-white/6 pt-3 text-xs">
+      <dl className="well mt-auto grid grid-cols-3 gap-2 rounded-xl px-3.5 py-3 text-xs">
         <div>
           <dt className="text-ink-faint">Objetos</dt>
           <dd className="mt-0.5 font-medium tabular-nums text-ink">{shop.items.length}</dd>

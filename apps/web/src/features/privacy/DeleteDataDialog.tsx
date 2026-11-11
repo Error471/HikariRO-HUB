@@ -26,7 +26,7 @@ export function DeleteDataDialog() {
       <Dialog.Trigger
         aria-label="Borrar mis datos"
         title="Borrar mis datos"
-        className="grid size-10 place-items-center rounded-lg text-ink-muted transition hover:bg-white/5 hover:text-ember-400"
+        className="grid size-10 place-items-center rounded-lg text-ink-muted transition-colors pointer-coarse:size-11 hover:bg-white/5 hover:text-ember-400"
       >
         <Trash2 aria-hidden="true" className="size-4.5" />
       </Dialog.Trigger>

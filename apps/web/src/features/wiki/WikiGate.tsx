@@ -84,8 +84,8 @@ export function WikiGate({ children }: { children: ReactNode }) {
             className="mt-6 h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-ink/10"
           >
             <div
-              className="h-full rounded-full bg-gold-400 transition-[width] duration-500"
-              style={{ width: `${percent}%` }}
+              className="h-full origin-left bg-gold-400 transition-transform duration-500"
+              style={{ transform: `scaleX(${percent / 100})` }}
             />
           </div>
           <p className="mt-2 text-xs tabular-nums text-ink-faint">{percent}%</p>

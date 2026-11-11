@@ -15,13 +15,13 @@ export function CardTile({ card }: { card: AlbumCard }) {
       rel="noopener noreferrer"
       title={`${card.name} · ${card.obtained ? 'Obtenida' : 'No obtenida'}`}
       className={cn(
-        'group flex flex-col overflow-hidden rounded-card border bg-night-850/80 transition duration-300',
+        'group flex flex-col overflow-hidden rounded-card surface transition duration-300',
         card.obtained
           ? 'border-gold-400/25 hover:border-gold-400/50'
           : 'border-white/6 hover:border-white/15',
       )}
     >
-      <div className="relative grid aspect-[3/4] place-items-center bg-night-800 p-3">
+      <div className="well relative m-1.5 grid aspect-[3/4] place-items-center rounded-[0.8rem] p-3">
         {source === 'none' ? (
           <Layers aria-hidden="true" className="size-8 text-ink-faint" />
         ) : (

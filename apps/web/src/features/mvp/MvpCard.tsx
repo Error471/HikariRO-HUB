@@ -37,7 +37,7 @@ export const stateStyles: Record<SpawnStateKey, { pill: string; bar: string; tex
 function MvpPortrait({ src, name }: { src: string; name: string }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-night-950/70 ring-1 ring-white/8">
+    <div className="grid size-16 shrink-0 place-items-center overflow-hidden well rounded-2xl">
       {failed ? (
         <Skull aria-hidden="true" className="size-6 text-ink-faint" />
       ) : (
@@ -46,6 +46,8 @@ function MvpPortrait({ src, name }: { src: string; name: string }) {
           alt={name}
           loading="lazy"
           decoding="async"
+          width={56}
+          height={56}
           onError={() => setFailed(true)}
           className="max-h-14 max-w-14 object-contain [image-rendering:pixelated]"
         />
@@ -58,9 +60,9 @@ function SpawnRow({ spawn }: { spawn: SpawnView }) {
   const { state } = spawn;
   const styles = stateStyles[state.key];
   return (
-    <li className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-white/6 py-3 text-sm first:border-t-0 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto]">
+    <li className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-white/5 py-3.5 text-sm first:border-t-0 sm:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto]">
       <div className="min-w-0">
-        <p className="text-[0.68rem] uppercase tracking-wider text-ink-faint">Mapa</p>
+        <p className="text-xs whitespace-nowrap text-ink-faint">Mapa</p>
         <a
           href={`${HIKARI}/?module=map&action=view&map=${encodeURIComponent(spawn.map)}`}
           target="_blank"
@@ -71,13 +73,13 @@ function SpawnRow({ spawn }: { spawn: SpawnView }) {
         </a>
       </div>
       <div>
-        <p className="text-[0.68rem] uppercase tracking-wider text-ink-faint">Última muerte</p>
+        <p className="text-xs whitespace-nowrap text-ink-faint">Última muerte</p>
         <p className="tabular-nums text-ink-muted">
           {spawn.killedAt ? formatEpoch(spawn.killedAt) : 'Sin registro'}
         </p>
       </div>
       <div>
-        <p className="text-[0.68rem] uppercase tracking-wider text-ink-faint">Próxima aparición</p>
+        <p className="text-xs whitespace-nowrap text-ink-faint">Próxima aparición</p>
         <p className="tabular-nums text-ink-muted">
           {spawn.killedAt && spawn.minAt
             ? spawn.maxAt && spawn.maxAt > spawn.minAt
@@ -87,18 +89,18 @@ function SpawnRow({ spawn }: { spawn: SpawnView }) {
         </p>
       </div>
       <div className="sm:text-right">
-        <p className="text-[0.68rem] uppercase tracking-wider text-ink-faint">
+        <p className="text-xs whitespace-nowrap text-ink-faint">
           {state.key === 'window' ? 'Máximo en' : 'Restante'}
         </p>
         <p
-          className={cn('font-mono text-base font-semibold tabular-nums', styles.text)}
+          className={cn('font-mono text-xl leading-tight font-semibold tabular-nums', styles.text)}
           title={stateDescriptions[state.key]}
         >
           {state.remaining === null ? '—' : formatCountdown(state.remaining)}
         </p>
       </div>
       <div
-        className="col-span-full h-1 overflow-hidden rounded-full bg-white/6"
+        className="col-span-full h-1.5 overflow-hidden rounded-full bg-white/6"
         role="progressbar"
         aria-label={`Progreso: ${stateLabels[state.key]}`}
         aria-valuenow={Math.round(state.progress)}
@@ -107,10 +109,10 @@ function SpawnRow({ spawn }: { spawn: SpawnView }) {
       >
         <div
           className={cn(
-            'h-full rounded-full transition-[width] duration-1000 ease-linear',
+            'h-full origin-left transition-transform duration-1000 ease-linear',
             styles.bar,
           )}
-          style={{ width: `${state.progress}%` }}
+          style={{ transform: `scaleX(${state.progress / 100})` }}
         />
       </div>
     </li>
@@ -138,7 +140,7 @@ export function MvpCard({
   return (
     <article
       className={cn(
-        'rounded-card border bg-night-850/80 p-4 transition-colors sm:p-5',
+        'rounded-card surface p-4 transition-colors duration-300 hover:border-white/16 sm:p-5',
         mvp.state.key === 'window' ? 'border-ember-400/25' : 'border-white/7',
       )}
     >
@@ -185,7 +187,7 @@ export function MvpCard({
             aria-label={
               favorite ? `Quitar ${mvp.name} de favoritos` : `Añadir ${mvp.name} a favoritos`
             }
-            className="grid size-10 shrink-0 place-items-center rounded-lg text-ink-faint transition hover:bg-white/5 hover:text-gold-300"
+            className="grid size-10 shrink-0 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-white/5 hover:text-gold-300 pointer-coarse:size-11"
           >
             <Star
               aria-hidden="true"
@@ -194,7 +196,7 @@ export function MvpCard({
           </button>
         </div>
       </header>
-      <ul className="mt-3">
+      <ul className="well mt-4 rounded-xl px-3.5 sm:px-4">
         {mvp.spawns.map((spawn, index) => (
           <SpawnRow key={`${spawn.map}-${index}`} spawn={spawn} />
         ))}

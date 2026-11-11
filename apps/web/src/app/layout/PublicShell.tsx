@@ -1,5 +1,7 @@
 import { Link, Outlet } from '@tanstack/react-router';
 import { Brand } from '@/components/ui/Brand';
+import { subtleButtonClass } from '@/components/ui/Button';
+import { cn } from '@/lib/cn';
 
 /** Marco de las páginas que se pueden ver sin cuenta (la wiki local): solo marca y acceso. */
 export function PublicShell() {
@@ -10,10 +12,7 @@ export function PublicShell() {
           <Link to="/wiki" aria-label="Ir a la wiki" className="rounded-xl">
             <Brand />
           </Link>
-          <Link
-            to="/login"
-            className="inline-flex min-h-10 items-center rounded-full border border-ink/12 px-5 text-xs font-medium uppercase tracking-[0.08em] text-ink transition hover:border-ink"
-          >
+          <Link to="/login" className={cn(subtleButtonClass, 'min-h-10 text-ink')}>
             Iniciar sesión
           </Link>
         </div>

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useId, useState, type FormEvent } from 'react';
 import { Brand } from '@/components/ui/Brand';
-import { Button } from '@/components/ui/Button';
+import { Button, subtleButtonClass } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { errorMessage } from '@/lib/api-client';
 import { cn } from '@/lib/cn';
@@ -24,18 +24,21 @@ interface LoginPageProps {
   reason?: 'expired';
 }
 
+type Field = 'username' | 'password';
+
 const inputClass =
-  'block min-h-12 w-full rounded-xl border border-white/10 bg-night-950/60 px-4 text-base text-ink placeholder:text-ink-faint transition focus:border-gold-400/60 focus:outline-none focus:ring-2 focus:ring-gold-400/25 sm:text-sm';
+  'block min-h-12 w-full rounded-xl border border-white/10 bg-night-950/60 px-4 text-base text-ink placeholder:text-ink-faint transition focus:border-gold-400/60 focus:outline-none focus:ring-2 focus:ring-gold-400/25 aria-invalid:border-ember-400/60 sm:text-sm';
 
 export function LoginPage({ redirectTo, reason }: LoginPageProps) {
   const navigate = useNavigate();
   const login = useLogin();
   const rememberAvailable = useQuery(publicInfoQuery).data?.rememberAvailable === true;
   const [showPassword, setShowPassword] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [fieldError, setFieldError] = useState<{ field: Field; message: string } | null>(null);
   const userId = useId();
   const passwordId = useId();
   const errorId = useId();
+  const fieldErrorId = useId();
   const rememberHintId = useId();
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -47,16 +50,36 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
       remember: rememberAvailable && form.get('remember') === 'on',
     });
     if (!parsed.success) {
-      setValidationError(parsed.error.issues[0]?.message ?? 'Revisa los datos.');
+      // El aviso sale junto al campo que falla y el foco va a ese campo.
+      const issue = parsed.error.issues[0];
+      const field: Field = issue?.path[0] === 'password' ? 'password' : 'username';
+      setFieldError({ field, message: issue?.message ?? 'Revisa este campo.' });
+      login.reset();
+      const input = event.currentTarget.elements.namedItem(field);
+      if (input instanceof HTMLInputElement) input.focus();
       return;
     }
-    setValidationError(null);
+    setFieldError(null);
     login.mutate(parsed.data, {
       onSuccess: () => void navigate({ href: safeRedirect(redirectTo), replace: true }),
     });
   };
 
-  const error = validationError ?? (login.isError ? errorMessage(login.error) : null);
+  // Error de HikariRO (credenciales, conexión): afecta a los dos campos y se muestra bajo ellos.
+  const error = !fieldError && login.isError ? errorMessage(login.error) : null;
+  const describedBy = (field: Field) =>
+    fieldError?.field === field ? fieldErrorId : error ? errorId : undefined;
+  const renderFieldError = (field: Field) =>
+    fieldError?.field === field && (
+      <p
+        id={fieldErrorId}
+        role="alert"
+        className="mt-1.5 flex items-center gap-1.5 text-sm text-ember-400"
+      >
+        <AlertTriangle aria-hidden="true" className="size-3.5 shrink-0" />
+        {fieldError.message}
+      </p>
+    );
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
@@ -84,24 +107,13 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
             Usa las credenciales de tu cuenta de HikariRO.
           </p>
 
-          {reason === 'expired' && !error && (
+          {reason === 'expired' && !error && !fieldError && (
             <p
               role="status"
               className="mt-6 flex items-start gap-2.5 rounded-xl border border-gold-400/25 bg-gold-400/8 p-3 text-sm text-gold-200"
             >
               <Hourglass aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
               Tu sesión ha expirado. Vuelve a iniciar sesión.
-            </p>
-          )}
-
-          {error && (
-            <p
-              id={errorId}
-              role="alert"
-              className="mt-6 flex items-start gap-2.5 rounded-xl border border-ember-400/30 bg-ember-400/8 p-3 text-sm text-ember-400"
-            >
-              <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
-              {error}
             </p>
           )}
 
@@ -118,9 +130,11 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
                 spellCheck={false}
                 required
                 maxLength={32}
-                aria-describedby={error ? errorId : undefined}
+                aria-invalid={fieldError?.field === 'username' || Boolean(error) || undefined}
+                aria-describedby={describedBy('username')}
                 className={inputClass}
               />
+              {renderFieldError('username')}
             </div>
             <div>
               <label htmlFor={passwordId} className="mb-1.5 block text-sm font-medium">
@@ -134,7 +148,8 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
                   autoComplete="current-password"
                   required
                   maxLength={64}
-                  aria-describedby={error ? errorId : undefined}
+                  aria-invalid={fieldError?.field === 'password' || Boolean(error) || undefined}
+                  aria-describedby={describedBy('password')}
                   className={cn(inputClass, 'pr-12')}
                 />
                 <button
@@ -142,7 +157,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   aria-pressed={showPassword}
-                  className="absolute inset-y-0 right-1 my-auto grid size-10 place-items-center rounded-lg text-ink-faint hover:text-ink"
+                  className="absolute inset-y-0 right-1 my-auto grid size-10 pointer-coarse:size-11 place-items-center rounded-lg text-ink-faint hover:text-ink"
                 >
                   {showPassword ? (
                     <EyeOff aria-hidden="true" className="size-4.5" />
@@ -151,7 +166,19 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
                   )}
                 </button>
               </div>
+              {renderFieldError('password')}
             </div>
+
+            {error && (
+              <p
+                id={errorId}
+                role="alert"
+                className="flex items-start gap-2.5 rounded-xl border border-ember-400/30 bg-ember-400/8 p-3 text-sm text-ember-400"
+              >
+                <AlertTriangle aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
+                {error}
+              </p>
+            )}
 
             {rememberAvailable && (
               <label className="flex cursor-pointer items-start gap-3 text-sm">
@@ -186,10 +213,7 @@ export function LoginPage({ redirectTo, reason }: LoginPageProps) {
             Hikari Hub envía tu contraseña por HTTPS a HikariRO para iniciar sesión. Nunca la
             registra y solo la guarda, cifrada, si marcas la casilla.
           </p>
-          <Link
-            to="/wiki"
-            className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-ink/12 px-6 text-xs font-medium uppercase tracking-[0.08em] text-ink transition hover:border-ink"
-          >
+          <Link to="/wiki" className={cn(subtleButtonClass, 'mt-6 w-full')}>
             <BookOpen aria-hidden="true" className="size-4" />
             Ver la wiki sin iniciar sesión
           </Link>

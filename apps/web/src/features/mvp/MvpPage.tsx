@@ -1,25 +1,65 @@
-import { Hourglass, RefreshCw, SearchX } from 'lucide-react';
-import { useDeferredValue, useMemo, useState } from 'react';
+import { CircleHelp, Hourglass, RefreshCw, SearchX } from 'lucide-react';
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { modules } from '@/app/navigation';
+import { subtleButtonClass } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { FilterTabs, type FilterOption } from '@/components/ui/FilterTabs';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SearchInput } from '@/components/ui/SearchInput';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useNow } from '@/hooks/useNow';
 import { cn } from '@/lib/cn';
 import { NotificationsDialog } from '@/features/notifications/NotificationsDialog';
 import { useMvpChannels } from '@/features/notifications/alerts';
 import { useFavorites } from './favorites';
-import { MvpCard } from './MvpCard';
+import { MvpCard, stateStyles } from './MvpCard';
 import { useMvpList } from './mvp-query';
-import { filterMvps, sortMvpViews, toMvpView, type MvpFilter } from './mvp-status';
+import {
+  filterMvps,
+  sortMvpViews,
+  stateDescriptions,
+  stateLabels,
+  toMvpView,
+  type MvpFilter,
+  type SpawnStateKey,
+} from './mvp-status';
 
 interface MvpPageProps {
   initialQuery?: string;
   filter: MvpFilter;
   onFilterChange: (filter: MvpFilter) => void;
+  /** Guarda la búsqueda en la URL para poder compartirla o recargar sin perderla. */
+  onQueryChange?: (query: string) => void;
+}
+
+const legendOrder: SpawnStateKey[] = ['window', 'cooldown', 'ready'];
+
+/** Qué significa cada estado, a la vista con teclado y en táctil (no solo al pasar el ratón). */
+function StateLegend() {
+  return (
+    <details className="group text-sm">
+      <summary className="inline-flex min-h-9 cursor-pointer list-none items-center gap-2 rounded-lg text-ink-muted transition-colors hover:text-ink pointer-coarse:min-h-11 [&::-webkit-details-marker]:hidden">
+        <CircleHelp aria-hidden="true" className="size-4 shrink-0" />
+        Qué significa cada estado
+      </summary>
+      <dl className="mt-2 grid gap-x-6 gap-y-3 rounded-card surface p-4 sm:grid-cols-3">
+        {legendOrder.map((key) => (
+          <div key={key}>
+            <dt className="flex items-center gap-2 font-medium text-ink">
+              <span
+                aria-hidden="true"
+                className={cn('size-2 shrink-0 rounded-full', stateStyles[key].bar)}
+              />
+              {stateLabels[key]}
+            </dt>
+            <dd className="mt-1 text-ink-muted">{stateDescriptions[key]}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
 }
 
 function MvpGridSkeleton() {
@@ -32,12 +72,25 @@ function MvpGridSkeleton() {
   );
 }
 
-export function MvpPage({ initialQuery = '', filter, onFilterChange }: MvpPageProps) {
+export function MvpPage({
+  initialQuery = '',
+  filter,
+  onFilterChange,
+  onQueryChange,
+}: MvpPageProps) {
   const { data, error, isPending, isFetching, refetch, offset } = useMvpList();
   const favorites = useFavorites();
   const alerts = useMvpChannels();
   const [query, setQuery] = useState(initialQuery);
   const deferredQuery = useDeferredValue(query);
+  const settledQuery = useDebouncedValue(query.trim(), 350);
+  const lastSent = useRef(initialQuery.trim());
+
+  useEffect(() => {
+    if (settledQuery === lastSent.current) return;
+    lastSent.current = settledQuery;
+    onQueryChange?.(settledQuery);
+  }, [settledQuery, onQueryChange]);
   const now = useNow(1000) + offset;
 
   const views = useMemo(
@@ -80,7 +133,7 @@ export function MvpPage({ initialQuery = '', filter, onFilterChange }: MvpPagePr
               onClick={() => void refetch()}
               disabled={isFetching}
               aria-label="Actualizar ahora"
-              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink disabled:opacity-60"
+              className={cn(subtleButtonClass, 'disabled:opacity-60')}
             >
               <RefreshCw
                 aria-hidden="true"
@@ -92,7 +145,8 @@ export function MvpPage({ initialQuery = '', filter, onFilterChange }: MvpPagePr
         }
       />
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      {/* En escritorio, filtros y búsqueda quedan fijos al desplazarse por la lista. */}
+      <div className="z-10 flex flex-col gap-3 lg:sticky lg:top-16 lg:-mx-10 lg:-my-3 lg:bg-night-900/90 lg:px-10 lg:py-3 lg:backdrop-blur-md xl:flex-row xl:items-start xl:justify-between">
         <FilterTabs
           label="Filtrar por estado"
           options={options}
@@ -101,12 +155,14 @@ export function MvpPage({ initialQuery = '', filter, onFilterChange }: MvpPagePr
         />
         <SearchInput
           label="Buscar MVP o mapa"
-          className="lg:w-72 lg:shrink-0"
+          className="xl:w-72 xl:shrink-0"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Buscar MVP o mapa…"
         />
       </div>
+
+      <StateLegend />
 
       {isPending ? (
         <MvpGridSkeleton />
@@ -128,7 +184,7 @@ export function MvpPage({ initialQuery = '', filter, onFilterChange }: MvpPagePr
               : 'Prueba con otro filtro o búsqueda.'}
         </EmptyState>
       ) : (
-        <div className="grid gap-4 xl:grid-cols-2">
+        <div className="stagger grid gap-4 xl:grid-cols-2">
           {visible.map((mvp) => (
             <MvpCard
               key={`${mvp.id}-${mvp.name}`}

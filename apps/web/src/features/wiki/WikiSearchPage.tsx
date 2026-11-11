@@ -79,7 +79,7 @@ export function WikiSearchPage({ query }: { query: string }) {
                   <li key={result.title}>
                     <ArticleLink
                       title={result.title}
-                      className="group block rounded-card border border-white/7 bg-night-850/80 p-4 transition hover:border-white/20"
+                      className="group block rounded-card surface p-4 transition-colors duration-300 hover:border-white/16"
                     >
                       <span className="block font-medium text-ink group-hover:text-gold-200">
                         {result.title}

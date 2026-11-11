@@ -103,7 +103,7 @@ export function PrivacyPage({ authenticated }: { authenticated: boolean }) {
       <Section title="Qué guardamos">
         <ul className="flex flex-col gap-3">
           {stored.map((item) => (
-            <li key={item.what} className="rounded-xl border border-white/8 bg-night-850/70 p-4">
+            <li key={item.what} className="rounded-xl surface p-4">
               <p className="flex items-start gap-2 font-medium text-ink">
                 <Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-leaf-400" />
                 {item.what}

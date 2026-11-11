@@ -29,7 +29,7 @@ export function Emblem({ className }: { className?: string }) {
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <span className="flex items-center gap-3">
+    <span translate="no" className="flex items-center gap-3">
       <Emblem />
       {!compact && (
         <span className="font-display text-[1.7rem] leading-none text-ink">

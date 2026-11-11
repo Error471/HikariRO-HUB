@@ -2,10 +2,11 @@ import { Link } from '@tanstack/react-router';
 import { ArrowUpRight } from 'lucide-react';
 import { modules, type ModuleDefinition } from '@/app/navigation';
 import { Badge } from '@/components/ui/Badge';
+import { subtleButtonClass } from '@/components/ui/Button';
 import { MarketSearchBox } from '@/features/markets/MarketSearchBox';
-import { SearchButton } from '@/features/search/CommandPalette';
 import { AlbumsWidget } from './AlbumsWidget';
 import { AlertsWidget } from './AlertsWidget';
+import { MvpStats } from './MvpStats';
 import { MvpWidget } from './MvpWidget';
 import { NewsWidget } from './NewsWidget';
 import { StatusChip } from './StatusChip';
@@ -30,7 +31,7 @@ function ModuleTile({ module }: { module: ModuleDefinition }) {
   return (
     <Link
       to={module.path}
-      className="group flex h-full flex-col rounded-card border border-white/7 bg-night-850/80 p-4 transition-colors duration-200 hover:border-white/15 hover:bg-night-800"
+      className="group flex h-full flex-col rounded-card surface p-4 transition-colors duration-200 hover:border-white/15 hover:bg-night-800"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="grid size-10 place-items-center rounded-lg bg-night-700 text-gold-300 ring-1 ring-white/8">
@@ -50,28 +51,30 @@ function ModuleTile({ module }: { module: ModuleDefinition }) {
 
 export function DashboardPage({ username }: { username: string }) {
   return (
-    <div className="flex flex-col gap-6 animate-rise">
-      <section className="hero-banner -mx-4 -mt-6 flex flex-col gap-4 px-4 pt-52 pb-6 lg:pt-64 sm:-mx-6 sm:px-6 md:flex-row md:items-end md:justify-between lg:-mx-10 lg:-mt-10 lg:px-10">
+    <div className="stagger flex flex-col gap-5">
+      <section className="hero-banner hero-banner--compact flex min-h-52 flex-col justify-end gap-3 overflow-hidden rounded-[1.5rem] border border-white/9 p-5 shadow-[inset_0_1px_0_rgb(255_255_255/0.1),0_28px_56px_-30px_rgb(0_0_0/0.85)] sm:flex-row sm:items-end sm:justify-between sm:p-7 lg:min-h-64">
         <div>
           <p className="kicker">{greeting()}</p>
           <h1 className="mt-1 font-display text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
             {username}
           </h1>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        {/* En escritorio el estado y la web oficial viven en la barra superior. */}
+        <div className="flex flex-wrap items-center gap-2 lg:hidden">
           <StatusChip />
-          <SearchButton className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink lg:inline-flex" />
           <a
             href="https://hikariro.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
+            className={subtleButtonClass}
           >
             Web oficial
             <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
         </div>
       </section>
+
+      <MvpStats />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2 lg:row-span-2">
@@ -87,7 +90,7 @@ export function DashboardPage({ username }: { username: string }) {
         </div>
         <section
           aria-labelledby="widget-market"
-          className="flex flex-col gap-3 rounded-card border border-white/7 bg-night-850/80 p-5"
+          className="flex flex-col gap-3 rounded-card surface p-5"
         >
           <h2 id="widget-market" className="font-display text-2xl font-semibold tracking-tight">
             Mercado

@@ -34,10 +34,7 @@ export function AlertsWidget() {
   const active = Boolean(data?.enabled && marked > 0);
 
   return (
-    <section
-      aria-labelledby="widget-alerts"
-      className="flex flex-col rounded-card border border-white/7 bg-night-850/80 p-5"
-    >
+    <section aria-labelledby="widget-alerts" className="flex flex-col rounded-card surface p-5">
       <header className="flex items-center justify-between gap-3">
         <h2
           id="widget-alerts"

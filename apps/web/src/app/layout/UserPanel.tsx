@@ -19,7 +19,7 @@ export function UserPanel({ username }: { username: string }) {
   };
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/6 bg-night-800/60 p-2.5">
+    <div className="flex items-center gap-3 well rounded-2xl p-2.5">
       <span
         aria-hidden="true"
         className="grid size-9 shrink-0 place-items-center rounded-lg bg-night-700 text-sm font-semibold text-ink ring-1 ring-white/10"
@@ -37,7 +37,7 @@ export function UserPanel({ username }: { username: string }) {
         disabled={logout.isPending}
         aria-label="Cerrar sesión"
         title="Cerrar sesión"
-        className="grid size-10 place-items-center rounded-lg text-ink-muted transition hover:bg-white/5 hover:text-ember-400 disabled:opacity-60"
+        className="grid size-10 place-items-center rounded-lg text-ink-muted transition-colors pointer-coarse:size-11 hover:bg-white/5 hover:text-ember-400 disabled:opacity-60"
       >
         {logout.isPending ? <Spinner /> : <LogOut aria-hidden="true" className="size-4.5" />}
       </button>

@@ -44,6 +44,8 @@ function FishImage({
       alt=""
       loading="lazy"
       decoding="async"
+      width={112}
+      height={80}
       onError={() => (iconUrl && current !== iconUrl ? setCurrent(iconUrl) : setFailed(true))}
       className={cn(
         'h-20 w-28 object-contain',
@@ -66,7 +68,7 @@ export function FishTile({ fish }: { fish: Fish }) {
   }
 
   return (
-    <article className="flex flex-col items-center gap-2 rounded-card border border-white/8 bg-night-850 p-4 text-center">
+    <article className="flex flex-col items-center gap-2 rounded-card surface p-4 text-center transition-colors duration-300 hover:border-white/16">
       <FishImage src={fish.imageUrl} iconUrl={fish.iconUrl} discovered />
       <h3 className="font-semibold text-ink">
         {fish.itemId ? (

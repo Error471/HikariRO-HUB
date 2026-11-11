@@ -69,7 +69,7 @@ export function NewsPage({ section, onSectionChange }: NewsPageProps) {
       ) : visible.length === 0 ? (
         <EmptyState icon={Newspaper} title="No hay publicaciones en esta sección" />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visible.map((post) => (
             <NewsCard key={post.id} post={post} />
           ))}

@@ -43,7 +43,7 @@ export function MobileNav({ username }: { username: string }) {
         <Dialog.Overlay className="fixed inset-0 z-40 bg-night-950/70 backdrop-blur-sm data-[state=open]:animate-fade lg:hidden" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,86vw)] flex-col gap-6 overflow-y-auto border-r border-white/8 bg-night-850 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl data-[state=open]:animate-[rise_300ms_ease-out] lg:hidden"
+          className="fixed inset-y-0 left-0 z-50 flex w-[min(20rem,86vw)] flex-col gap-6 overflow-y-auto overscroll-contain border-r border-white/8 bg-night-850 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl data-[state=open]:animate-[rise_300ms_ease-out] lg:hidden"
         >
           <div className="flex items-center justify-between">
             <Brand />
@@ -73,7 +73,7 @@ export function MobileNav({ username }: { username: string }) {
               key={item.path}
               to={item.path}
               activeOptions={{ exact: item.path === '/' }}
-              className="flex min-h-14 flex-col items-center justify-center gap-1 text-[0.68rem] text-ink-faint"
+              className="flex min-h-14 flex-col items-center justify-center gap-1 text-xs text-ink-faint"
               activeProps={{ className: 'text-gold-300', 'aria-current': 'page' }}
             >
               <Icon aria-hidden="true" className="size-5" />
@@ -86,7 +86,7 @@ export function MobileNav({ username }: { username: string }) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex min-h-14 flex-col items-center justify-center gap-1 text-[0.68rem] text-ink-faint"
+          className="flex min-h-14 flex-col items-center justify-center gap-1 text-xs text-ink-faint"
         >
           <Menu aria-hidden="true" className="size-5" />
           Más

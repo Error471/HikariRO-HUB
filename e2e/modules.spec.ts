@@ -85,8 +85,13 @@ test('la búsqueda global (Ctrl+K) lleva a un MVP y a la wiki', async ({ page })
 
 test('el diagnóstico muestra el estado de HikariRO tras usar la app', async ({ page }) => {
   await login(page, '/mvp');
-  await expect(page.getByRole('link', { name: 'Diagnóstico' })).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1, name: 'MVP Timer' })).toBeVisible();
+  // El diagnóstico no está en el menú: se llega desde el indicador de estado o la búsqueda global.
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Navegación principal' })
+      .getByRole('link', { name: 'Diagnóstico' }),
+  ).toHaveCount(0);
   await page.goto('/diagnostico');
   const mvp = page.getByRole('main').getByRole('listitem').filter({ hasText: 'MVP Timer' });
   await expect(mvp).toContainText('Funciona');

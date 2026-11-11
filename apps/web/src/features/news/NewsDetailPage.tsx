@@ -52,10 +52,10 @@ export function NewsDetailPage({ postId }: { postId: string }) {
           </header>
           <NewsImage
             src={post.imageUrl}
-            className="w-full rounded-card border border-white/8 bg-night-950 object-contain"
+            className="w-full rounded-card border border-white/9 bg-night-950 object-contain shadow-[0_28px_56px_-30px_rgb(0_0_0/0.85)]"
           />
           {(post.body || !post.content) && (
-            <div className="rounded-card border border-white/7 bg-night-850/70 p-5 sm:p-7">
+            <div className="rounded-card surface p-5 sm:p-7">
               <DiscordMarkdown content={post.body} />
             </div>
           )}
@@ -64,7 +64,7 @@ export function NewsDetailPage({ postId }: { postId: string }) {
               href={post.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-11 items-center gap-2 self-start rounded-xl border border-white/10 px-4 text-sm text-ink-muted transition hover:border-white/20 hover:text-ink"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4.5 text-sm font-medium text-ink-muted shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] transition-colors duration-200 hover:border-white/18 hover:bg-white/[0.07] hover:text-ink self-start"
             >
               Ver en Discord
               <ArrowUpRight aria-hidden="true" className="size-4" />

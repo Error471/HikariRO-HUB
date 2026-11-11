@@ -12,13 +12,13 @@ export function SearchInput({ label, className, ...props }: SearchInputProps) {
       <span className="sr-only">{label}</span>
       <Search
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-faint"
+        className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-faint"
       />
       <input
         type="search"
         autoComplete="off"
         spellCheck={false}
-        className="min-h-11 w-full rounded-xl border border-white/10 bg-night-950/50 pr-3 pl-10 text-base placeholder:text-ink-faint focus:border-gold-400/50 focus:outline-none sm:text-sm"
+        className="min-h-11 w-full rounded-full border border-white/10 bg-night-950/50 pr-4 pl-11 shadow-[inset_0_1px_2px_rgb(0_0_0/0.5)] transition-colors text-base placeholder:text-ink-faint focus:border-gold-400/60 focus:outline-none focus:ring-2 focus:ring-gold-400/25 sm:text-sm"
         {...props}
       />
     </label>

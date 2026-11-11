@@ -17,16 +17,30 @@ Dirección: **RPG premium sobrio**, solo tema oscuro. Nombre: **Hikari Hub** (su
 | `ink`, `ink-muted`, `ink-faint` | Texto principal, secundario y terciario                                                                 |
 | `gold-*`                        | **Único acento**: estado activo, acción principal, importes. No usarlo en bordes de hover ni decoración |
 | `mana-*`, `ember-*`, `leaf-*`   | Solo semántica: en espera, ventana de respawn/error, disponible/ok                                      |
-| `font-sans` / `font-display`    | Hanken Grotesk (texto) / Instrument Serif (títulos)                                                          |
+| `font-sans` / `font-display`    | Hanken Grotesk (texto, peso normal) / Instrument Serif (títulos)                                        |
 | `font-mono`                     | Geist Mono (mapas, contadores)                                                                          |
-| `rounded-card` (12 px)          | Tarjetas y paneles; botones `rounded-xl`, chips `rounded-full`                                          |
-| `.panel`                        | Panel elevado: borde blanco 7 %, sombra suave, sin degradados                                           |
+| `rounded-card` (18 px)          | Tarjetas y paneles; botones, filtros y buscadores en píldora (`rounded-full`)                           |
+| `surface`                       | Tarjeta: luz superior, filo interior, sombra suave y reflejo tenue que sigue al cursor (`useSpotlight`) |
+| `.panel`                        | Panel flotante (menú lateral, diálogos, menús): como `surface`, con desenfoque de fondo                 |
+| `.well`                         | Hueco interior hundido dentro de una superficie (filas de datos, retratos, panel de usuario)            |
+| `.stagger`                      | Entrada escalonada de los hijos de una lista o rejilla                                                  |
+
+## Estructura
+
+- **Escritorio**: menú lateral **flotante** (panel redondeado separado del borde de la ventana) solo con navegación y usuario, y una **barra superior fija** con la búsqueda global (Ctrl+K), el estado de HikariRO y el enlace a la web oficial. Así están a mano en todas las pantallas, no solo en el dashboard.
+- **Móvil**: barra superior con marca, búsqueda y menú; barra inferior de accesos rápidos.
+- **Dashboard**: ilustración enmarcada en una tarjeta redondeada (`.hero-banner--compact`), cuatro cifras del MVP Timer que enlazan al timer ya filtrado (`MvpStats`) y debajo los widgets. Lo importante se ve sin desplazarse.
+- **MVP Timer**: el estado se indica con la insignia, el color de la cuenta atrás y la barra de progreso (sin franjas de color en el borde de la tarjeta); la cuenta atrás es el dato más grande. En escritorio los filtros y la búsqueda se quedan fijos al desplazarse.
 
 ## Reglas
 
-- Sin degradados ni brillos decorativos; superficies planas con bordes finos.
-- Títulos en Instrument Serif (solo peso normal); etiquetas, botones y navegación en mayúsculas espaciadas pequeñas, con runa "ᚱ" en los `kicker`. Botones y filtros en píldora; fondo con grano sutil y banner de la web en login y dashboard.
-- `PageHeader` usa la etiqueta superior solo como contexto de sección (p. ej. "Mercados", "Álbumes").
+- **Profundidad, no decoración**: las superficies tienen capas (luz superior, filo interior, sombra) y el fondo una luz ambiente cálida muy tenue. Nada de franjas de color, brillos de neón ni degradados llamativos.
+- Referencias de acabado: reactbits.dev, ui.aceternity.com, motionsites.ai y cosmos.so (paneles flotantes, huecos interiores, controles en píldora, botón principal con brillo sutil).
+- Títulos en Instrument Serif (solo peso normal). `PageHeader` es compacto (título de 36–44 px) para dejar sitio al contenido; la etiqueta superior (`kicker`, con runa "ᚱ") solo da contexto de sección (p. ej. "Mercados", "Álbumes").
+- Navegación, botones y filtros en **minúsculas de 14 px**: las mayúsculas espaciadas se reservan para etiquetas pequeñas (kicker, cabeceras de grupo y de tabla).
+- Botones (`Button`): principal en dorado, secundario con borde neutro (`subtleButtonClass` para enlaces con el mismo aspecto), todos en píldora. El principal lleva degradado dorado suave y brillo interior.
+- Filtros (`FilterTabs`): control segmentado en píldora dentro de un contenedor; la opción activa se marca con fondo y su contador en dorado.
 - Hover: cambio de fondo o de borde neutro, sin desplazar elementos.
 - Animaciones cortas (200–280 ms) y siempre con `prefers-reduced-motion`.
+- Fondo con grano sutil; banner de la web en login y dashboard.
 - La wiki sigue el mismo sistema (negro cálido, bordes finos color crema, Instrument Serif). Su copia local ya trae los colores de los artículos adaptados al tema oscuro, así que no hay fondo de pergamino. Avisos de página (`WikiNotice`): desactualizado/sistema antiguo en `ember`, en construcción en `mana`, evento antiguo en neutro.

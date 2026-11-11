@@ -52,42 +52,67 @@ function MvpRow({
   const spawn = mvp.spawns[0];
   const ChannelIcon = channel ? channelIcons[channel].icon : null;
   return (
-    <li className="flex items-center gap-3 py-2.5">
-      <img
-        src={mvp.imageUrl}
-        alt=""
-        loading="lazy"
-        className="size-9 shrink-0 object-contain [image-rendering:pixelated]"
-        onError={(event) => {
-          event.currentTarget.style.visibility = 'hidden';
-        }}
-      />
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-          <span className="truncate">{mvp.name}</span>
-          {favorite && (
-            <Star aria-label="Favorito" className="size-3.5 shrink-0 fill-gold-400 text-gold-400" />
-          )}
-          {channel && ChannelIcon && (
-            <ChannelIcon
-              aria-label={channelIcons[channel].label}
-              className="size-3.5 shrink-0 text-gold-300"
-            />
-          )}
-        </p>
-        <p className="truncate font-mono text-xs text-ink-faint">{spawn?.map}</p>
-      </div>
-      <div className="text-right">
-        <p
-          className={cn(
-            'font-mono text-sm font-semibold tabular-nums',
-            stateStyles[mvp.state.key].text,
-          )}
+    <li>
+      <Link
+        to="/mvp"
+        search={{ filter: 'all', q: mvp.name }}
+        title="Ver en el MVP Timer"
+        className="relative -mx-2 flex items-center gap-3 rounded-lg px-2 py-2.5 transition-colors duration-150 hover:bg-white/4"
+      >
+        <img
+          src={mvp.imageUrl}
+          alt=""
+          loading="lazy"
+          width={36}
+          height={36}
+          className="size-9 shrink-0 object-contain [image-rendering:pixelated]"
+          onError={(event) => {
+            event.currentTarget.style.visibility = 'hidden';
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+            <span className="truncate">{mvp.name}</span>
+            {favorite && (
+              <Star
+                aria-label="Favorito"
+                className="size-3.5 shrink-0 fill-gold-400 text-gold-400"
+              />
+            )}
+            {channel && ChannelIcon && (
+              <ChannelIcon
+                aria-label={channelIcons[channel].label}
+                className="size-3.5 shrink-0 text-gold-300"
+              />
+            )}
+          </p>
+          <p className="truncate font-mono text-xs text-ink-faint">{spawn?.map}</p>
+        </div>
+        <div className="text-right">
+          <p
+            className={cn(
+              'font-mono text-base font-semibold tabular-nums',
+              stateStyles[mvp.state.key].text,
+            )}
+          >
+            {mvp.state.remaining === null ? '—' : formatCountdown(mvp.state.remaining)}
+          </p>
+          <p className="text-xs text-ink-faint">{stateLabels[mvp.state.key]}</p>
+        </div>
+        {/* Progreso del estado actual, pegado al borde inferior de la fila. */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-x-2 bottom-0 h-0.5 overflow-hidden rounded-full bg-white/6"
         >
-          {mvp.state.remaining === null ? '—' : formatCountdown(mvp.state.remaining)}
-        </p>
-        <p className="text-[0.7rem] text-ink-faint">{stateLabels[mvp.state.key]}</p>
-      </div>
+          <span
+            className={cn(
+              'block h-full origin-left transition-transform duration-1000 ease-linear',
+              stateStyles[mvp.state.key].bar,
+            )}
+            style={{ transform: `scaleX(${mvp.state.progress / 100})` }}
+          />
+        </span>
+      </Link>
     </li>
   );
 }
@@ -106,7 +131,7 @@ export function MvpWidget() {
   const { mine, upcoming } = pickDashboardMvps(views, tracked);
   const personal = mine.length > 0;
   const renderRows = (list: MvpView[]) => (
-    <ul className="flex flex-col divide-y divide-white/6">
+    <ul className="flex flex-col gap-0.5">
       {list.map((mvp) => {
         const channel = channels.channelOf(mvp.id);
         return (
@@ -120,8 +145,6 @@ export function MvpWidget() {
       })}
     </ul>
   );
-  const inWindow = views.filter((mvp) => mvp.state.key === 'window').length;
-  const inCooldown = views.filter((mvp) => mvp.state.key === 'cooldown').length;
 
   return (
     <section
@@ -139,8 +162,9 @@ export function MvpWidget() {
           </h2>
           {data && (
             <p className="mt-1 text-sm text-ink-muted">
-              <span className="text-ember-400">{inWindow} en ventana de respawn</span> ·{' '}
-              <span className="text-mana-300">{inCooldown} en espera</span> · {views.length} MVPs
+              {personal
+                ? 'Tus favoritos y los que tienen aviso, por orden de salida.'
+                : `Los siguientes en salir de ${views.length} MVPs.`}
             </p>
           )}
         </div>
@@ -175,7 +199,7 @@ export function MvpWidget() {
             {upcoming.length > 0 && (
               <div>
                 {personal && (
-                  <h3 className="mb-1 text-[0.68rem] font-semibold uppercase tracking-wider text-ink-faint">
+                  <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-ink-faint">
                     Próximos en salir
                   </h3>
                 )}

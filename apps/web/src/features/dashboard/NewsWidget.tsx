@@ -16,7 +16,7 @@ export function NewsWidget() {
   return (
     <section
       aria-labelledby="widget-news"
-      className="flex flex-col rounded-card border border-white/7 bg-night-850/80 p-5 sm:p-6"
+      className="flex flex-col rounded-card surface p-5 sm:p-6"
     >
       <header className="flex items-start justify-between gap-4">
         <h2

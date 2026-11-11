@@ -53,7 +53,7 @@ export function ItemName({ item }: { item: MarketItem }) {
 export function MarketItemCard({ item, type }: { item: MarketItem; type: MarketType }) {
   const meta = marketMeta[type];
   return (
-    <article className="flex gap-4 rounded-card border border-white/7 bg-night-850/80 p-4">
+    <article className="flex gap-4 rounded-card surface p-4">
       <ItemIcon src={item.iconUrl} name={item.name} className="size-12" />
       <div className="min-w-0 flex-1">
         <p className="text-xs text-ink-faint">ID {item.itemId}</p>

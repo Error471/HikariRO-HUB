@@ -20,7 +20,7 @@ export function StatusChip() {
       to="/diagnostico"
       title={`${status.hint} · Ver diagnóstico`}
       aria-label={`${status.hint}. Ver diagnóstico`}
-      className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 text-sm text-ink-muted transition hover:bg-white/5 hover:text-ink"
+      className="inline-flex min-h-11 items-center gap-2 rounded-full px-3.5 text-sm text-ink-muted transition hover:bg-white/5 hover:text-ink"
     >
       <span aria-hidden="true" className={cn('size-2 rounded-full', status.dot)} />
       {status.label}

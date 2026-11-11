@@ -46,7 +46,7 @@ function SubcategoryBlock({ name }: { name: string }) {
 function CategoryPanel({ name, pages }: { name: string; pages: number }) {
   const { data, isPending } = useQuery(wikiCategoryQuery(name));
   return (
-    <section className="min-w-0 rounded-card border border-white/7 bg-night-850/80 p-5">
+    <section className="min-w-0 rounded-card surface p-5">
       <h2 className="mb-3 flex items-baseline justify-between gap-3 font-display text-2xl font-semibold tracking-tight">
         <CategoryLink name={name} className="transition hover:text-gold-200" />
         <span className="text-xs font-normal tabular-nums text-ink-faint">{pages}</span>
@@ -78,7 +78,7 @@ export function WikiHomePage() {
             href={modules.wiki.sourceUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-ink/12 px-5 text-xs uppercase tracking-[0.08em] text-ink-muted transition hover:border-ink hover:text-ink"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-4.5 text-sm font-medium text-ink-muted shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] transition-colors duration-200 hover:border-white/18 hover:bg-white/[0.07] hover:text-ink"
           >
             Wiki online <ArrowUpRight aria-hidden="true" className="size-4" />
           </a>
@@ -95,7 +95,7 @@ export function WikiHomePage() {
       ) : categories.error && !categories.data ? (
         <ErrorState error={categories.error} onRetry={() => void categories.refetch()} />
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {categories.data.categories
             .filter((category) => category.parent === null)
             .map((category) => (

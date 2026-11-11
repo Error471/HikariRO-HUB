@@ -79,7 +79,7 @@ const MIN_REMOTE_QUERY = 2;
 const itemClass =
   'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 py-2 text-sm text-ink-muted data-[selected=true]:bg-white/7 data-[selected=true]:text-ink';
 const groupClass =
-  '[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:text-[0.68rem] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ink-faint';
+  '[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-ink-faint';
 
 function Thumb({ src }: { src: string }) {
   return (
@@ -87,6 +87,8 @@ function Thumb({ src }: { src: string }) {
       src={src}
       alt=""
       loading="lazy"
+      width={28}
+      height={28}
       className="size-7 shrink-0 object-contain [image-rendering:pixelated]"
       onError={(event) => {
         event.currentTarget.style.visibility = 'hidden';
@@ -326,12 +328,12 @@ export function CommandPaletteProvider({ children }: { children: ReactNode }) {
                   placeholder="Busca un MVP, un objeto, una página de la wiki o una carta…"
                   className="h-14 w-full bg-transparent text-base text-ink placeholder:text-ink-faint focus:outline-none"
                 />
-                <kbd className="hidden shrink-0 rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-[0.68rem] text-ink-faint sm:block">
+                <kbd className="hidden shrink-0 rounded-md border border-white/10 px-1.5 py-0.5 font-mono text-xs text-ink-faint sm:block">
                   Esc
                 </kbd>
               </div>
               {open && <PaletteResults query={query} go={go} />}
-              <div className="hidden items-center gap-4 border-t border-white/8 px-4 py-2 text-[0.7rem] text-ink-faint sm:flex">
+              <div className="hidden items-center gap-4 border-t border-white/8 px-4 py-2 text-xs text-ink-faint sm:flex">
                 <span className="flex items-center gap-1">
                   <CornerDownLeft aria-hidden="true" className="size-3.5" /> abrir
                 </span>
@@ -361,7 +363,7 @@ export function SearchButton({ className }: { className?: string }) {
     >
       <Search aria-hidden="true" className="size-4 shrink-0" />
       <span className="flex-1 text-left">Buscar…</span>
-      <kbd className="rounded border border-white/10 px-1.5 font-mono text-[0.68rem]">
+      <kbd className="rounded border border-white/10 px-1.5 font-mono text-xs">
         {shortcutLabel()}
       </kbd>
     </button>

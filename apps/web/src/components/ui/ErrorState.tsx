@@ -51,7 +51,7 @@ export function ErrorState({ error, onRetry, fallbackUrl }: ErrorStateProps) {
             href={fallbackUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-11 items-center rounded-xl px-4 text-sm text-ink-muted hover:text-ink"
+            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm text-ink-muted hover:text-ink"
           >
             Ver en HikariRO
           </a>
@@ -59,7 +59,7 @@ export function ErrorState({ error, onRetry, fallbackUrl }: ErrorStateProps) {
         {changed && (
           <Link
             to="/diagnostico"
-            className="inline-flex min-h-11 items-center rounded-xl px-4 text-sm text-gold-300 hover:text-gold-200"
+            className="inline-flex min-h-11 items-center rounded-full px-4 text-sm text-gold-300 hover:text-gold-200"
           >
             Ver diagnóstico
           </Link>

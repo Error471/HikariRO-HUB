@@ -76,7 +76,7 @@ export function MarketPage({ type, sort, onSortChange }: MarketPageProps) {
             <select
               value={sort}
               onChange={(event) => onSortChange(event.target.value as ShopSort)}
-              className="min-h-10 rounded-lg border border-white/10 bg-night-850 px-3 text-sm text-ink focus:border-gold-400/50 focus:outline-none"
+              className="min-h-10 rounded-full border border-white/10 bg-night-850 px-4 text-sm text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] transition-colors hover:border-white/18 focus:border-gold-400/60 focus:outline-none focus:ring-2 focus:ring-gold-400/25"
             >
               <option value="id">Nº de tienda</option>
               <option value="owner">{meta.ownerLabel}</option>
@@ -106,7 +106,7 @@ export function MarketPage({ type, sort, onSortChange }: MarketPageProps) {
           {filter ? 'Prueba con otro texto.' : 'Vuelve a mirar en un rato.'}
         </EmptyState>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="stagger grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {shops.map((shop) => (
             <ShopCard key={shop.id} shop={shop} />
           ))}

@@ -28,11 +28,11 @@ export function ProgressMeter({ label, obtained, total, unit, className }: Progr
         aria-valuemax={total}
         aria-valuenow={obtained}
         aria-valuetext={`${obtained} de ${total} ${unit}`}
-        className="h-2.5 overflow-hidden rounded-full bg-white/8"
+        className="well h-2.5 overflow-hidden rounded-full"
       >
         <div
-          className="h-full rounded-full bg-gold-400 transition-[width] duration-700 ease-out"
-          style={{ width: `${Math.min(100, percent)}%` }}
+          className="h-full origin-left bg-linear-to-r from-gold-500 to-gold-300 transition-transform duration-700 ease-out"
+          style={{ transform: `scaleX(${Math.min(100, percent) / 100})` }}
         />
       </div>
       <p className="text-xs text-ink-faint tabular-nums">

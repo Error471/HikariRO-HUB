@@ -17,7 +17,7 @@ const leadOptions: { value: LeadMinutes; label: string }[] = [
 ];
 
 const inputClass =
-  'min-h-11 w-full rounded-xl border border-white/10 bg-night-950/60 px-3 text-base text-ink placeholder:text-ink-faint focus:border-gold-400/60 focus:outline-none sm:text-sm';
+  'min-h-11 w-full rounded-xl border border-white/10 bg-night-950/60 px-3 text-base text-ink placeholder:text-ink-faint focus:border-gold-400/60 focus:outline-none focus:ring-2 focus:ring-gold-400/25 sm:text-sm';
 
 function Notice({ children, tone = 'muted' }: { children: ReactNode; tone?: 'muted' | 'warn' }) {
   return (

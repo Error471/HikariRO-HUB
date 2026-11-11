@@ -18,12 +18,15 @@ export function visiblePages(page: number, pages: number): (number | 'gap')[] {
 }
 
 const button =
-  'inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg px-2 text-sm tabular-nums transition disabled:pointer-events-none disabled:opacity-40';
+  'inline-flex min-h-9 min-w-9 items-center justify-center rounded-full px-2 text-sm tabular-nums transition-colors disabled:pointer-events-none disabled:opacity-40 pointer-coarse:min-h-11 pointer-coarse:min-w-11';
 
 export function Pagination({ page, pages, onChange }: PaginationProps) {
   if (pages <= 1) return null;
   return (
-    <nav aria-label="Paginación" className="flex items-center justify-center gap-1">
+    <nav
+      aria-label="Paginación"
+      className="mx-auto flex w-fit max-w-full items-center justify-center gap-1 rounded-full border border-white/8 bg-white/[0.025] p-1 shadow-[inset_0_1px_0_rgb(255_255_255/0.04)]"
+    >
       <button
         type="button"
         className={cn(button, 'text-ink-muted hover:bg-white/5 hover:text-ink')}
@@ -48,7 +51,7 @@ export function Pagination({ page, pages, onChange }: PaginationProps) {
             className={cn(
               button,
               entry === page
-                ? 'bg-gold-400/15 font-semibold text-gold-200 ring-1 ring-gold-400/40'
+                ? 'bg-white/11 font-semibold text-gold-200 shadow-[inset_0_1px_0_rgb(255_255_255/0.14),0_1px_2px_rgb(0_0_0/0.4)]'
                 : 'text-ink-muted hover:bg-white/5 hover:text-ink',
             )}
           >

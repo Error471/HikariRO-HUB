@@ -115,7 +115,7 @@ export function WikiArticlePage({ title }: { title: string }) {
       </header>
 
       {page.sections.length >= 2 && (
-        <details className="rounded-card border border-white/8 bg-night-850/70 p-4 xl:hidden">
+        <details className="rounded-card surface p-4 xl:hidden">
           <summary className="cursor-pointer text-sm font-medium text-ink-muted">
             Índice del artículo
           </summary>

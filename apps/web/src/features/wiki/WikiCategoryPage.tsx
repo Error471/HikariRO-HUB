@@ -41,7 +41,7 @@ export function WikiCategoryPage({ name }: { name: string }) {
                 <li key={subcategory}>
                   <CategoryLink
                     name={subcategory}
-                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/10 px-3 text-sm text-ink-muted hover:border-white/20 hover:text-gold-200"
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3.5 text-sm text-ink-muted shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] transition-colors hover:border-white/18 hover:text-gold-200"
                   >
                     <FolderOpen aria-hidden="true" className="size-4" />
                     {subcategory}
@@ -55,7 +55,7 @@ export function WikiCategoryPage({ name }: { name: string }) {
               <li key={title}>
                 <ArticleLink
                   title={title}
-                  className="flex min-h-14 items-center gap-3 rounded-card border border-white/7 bg-night-850/80 px-4 text-sm transition hover:border-white/20 hover:text-gold-200"
+                  className="flex min-h-14 items-center gap-3 rounded-card surface px-4 text-sm transition-colors duration-300 hover:border-white/16 hover:text-gold-200"
                 >
                   <FileText aria-hidden="true" className="size-4 shrink-0 text-gold-300" />
                   <span className="truncate">{title}</span>

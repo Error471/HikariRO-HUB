@@ -23,7 +23,7 @@ export function NewsImage({ src, className }: { src: string | null; className?: 
 
 export function NewsCard({ post }: { post: NewsPost }) {
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-card border border-white/7 bg-night-850/80 transition duration-300 hover:border-white/20">
+    <article className="group relative flex flex-col overflow-hidden rounded-card surface transition-colors duration-300 hover:border-white/16">
       <NewsImage
         src={post.imageUrl}
         className="aspect-[16/9] w-full border-b border-white/6 bg-night-950 object-cover"
@@ -39,7 +39,7 @@ export function NewsCard({ post }: { post: NewsPost }) {
           <Link
             to="/noticias/$postId"
             params={{ postId: post.id }}
-            className="after:absolute after:inset-0 focus-visible:outline-none"
+            className="after:absolute after:inset-0 after:rounded-card focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-gold-400"
           >
             {post.title}
           </Link>
