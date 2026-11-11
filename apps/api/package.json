@@ -18,8 +18,8 @@
     "cheerio": "^1.1.2",
     "fastify": "^5.6.0",
     "sanitize-html": "^2.18.0",
-    "undici": "^7.16.0",
-    "zod": "^4.3.0"
+    "undici": "^7.30.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@hikari-hub/shared": "workspace:*",
