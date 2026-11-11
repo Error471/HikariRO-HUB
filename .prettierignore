@@ -5,3 +5,5 @@ pnpm-lock.yaml
 playwright-report
 test-results
 apps/desktop/release
+# Datos generados por wiki:sync: el manifiesto guarda su huella, no se pueden reformatear.
+wiki

@@ -1,14 +1,7 @@
 import { z } from 'zod';
 
 /** Partes de HikariRO de las que depende la app. */
-export const upstreamModules = [
-  'login',
-  'mvp',
-  'markets',
-  'news',
-  'cards',
-  'fishing',
-] as const;
+export const upstreamModules = ['login', 'mvp', 'markets', 'news', 'cards', 'fishing'] as const;
 export const upstreamModuleSchema = z.enum(upstreamModules);
 export type UpstreamModule = z.infer<typeof upstreamModuleSchema>;
 
