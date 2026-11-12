@@ -1,0 +1,48 @@
+# Mantiene la wiki del Hub al día con la wiki online de HikariRO.
+# Cada 6 horas recorre la wiki; si hay artículos nuevos, cambiados o retirados, sube los cambios a
+# la carpeta wiki/ de main. Las apps instaladas los descargan solas al abrirse (no hace falta
+# publicar una versión nueva). Si no hay cambios, no hace nada.
+# También se puede lanzar a mano: Actions → "Sincronizar wiki" → Run workflow.
+name: Sincronizar wiki
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Leer la wiki online
+        env:
+          # Si la web falla a medias, la sincronización se cancela en vez de publicar una wiki incompleta.
+          WIKI_STRICT: '1'
+        run: pnpm --filter @hikari-hub/api wiki:sync
+      - name: Subir los cambios
+        run: |
+          git add wiki
+          if git diff --cached --quiet; then
+            echo "La wiki ya estaba al día." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          message="$(node apps/api/scripts/wiki-changes.mjs)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "$message" -m "Sincronización automática con la wiki online de HikariRO."
+          # Si alguien ha subido algo a main mientras tanto, se coloca encima antes de subir.
+          git pull --rebase origin main
+          git push
+          echo "$message" >> "$GITHUB_STEP_SUMMARY"

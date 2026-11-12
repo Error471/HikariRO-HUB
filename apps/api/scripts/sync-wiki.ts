@@ -149,6 +149,7 @@ interface Article {
 }
 
 const articles: Article[] = [];
+const unreadable: string[] = [];
 const bySlug = new Map<string, Article>();
 for (const category of [...categories.values()].sort((a, b) => a.id - b.id)) {
   for (const { slug } of category.articles) {
@@ -157,6 +158,7 @@ for (const category of [...categories.values()].sort((a, b) => a.id - b.id)) {
     const title = text($('.flux-wiki > h1').first().text() || $('h1').first().text());
     if (!title || !$('.wiki-article-content').length) {
       console.warn(`No se pudo leer el artículo ${slug}`);
+      unreadable.push(slug);
       continue;
     }
     const article = { slug, title, category, $ };
@@ -164,6 +166,22 @@ for (const category of [...categories.values()].sort((a, b) => a.id - b.id)) {
     bySlug.set(slug, article);
   }
 }
+// Protección para la sincronización automática (WIKI_STRICT=1): si la web falla a medias no se
+// escribe nada, para no publicar una wiki a la que le faltan artículos. Un artículo que HikariRO
+// retira de verdad deja de aparecer en su categoría y no pasa por aquí.
+if (process.env.WIKI_STRICT === '1') {
+  if (unreadable.length)
+    throw new Error(`No se pudieron leer ${unreadable.length} artículos: ${unreadable.join(', ')}`);
+  const previousFile = join(outDir, 'pages.json');
+  const previous = existsSync(previousFile)
+    ? (JSON.parse(readFileSync(previousFile, 'utf8')) as { pages: unknown[] }).pages.length
+    : 0;
+  if (articles.length < previous * 0.8)
+    throw new Error(
+      `La wiki pasaría de ${previous} a ${articles.length} artículos: demasiados menos, no se publica.`,
+    );
+}
+
 const titles = new Set<string>();
 for (const { title } of articles) {
   if (titles.has(title)) throw new Error(`Hay dos artículos con el título «${title}»`);
