@@ -10,3 +10,6 @@ playwright-report/
 test-results/
 apps/desktop/release/
 .data/
+
+# Registro de la tarea programada que sincroniza la wiki
+scripts/wiki-sync.log

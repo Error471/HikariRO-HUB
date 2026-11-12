@@ -21,4 +21,4 @@ Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Se
   -Description 'Sincroniza la wiki de Hikari Hub con la wiki online de HikariRO y sube los cambios a GitHub.' `
   -Force | Out-Null
 
-Write-Output "Tarea '$taskName' registrada: cada 6 horas. Registro en $env:LOCALAPPDATA\HikariHub\wiki-sync.log"
+Write-Output "Tarea '$taskName' registrada: cada 6 horas. Registro en $PSScriptRoot\wiki-sync.log"

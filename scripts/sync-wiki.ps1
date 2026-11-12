@@ -4,16 +4,14 @@
 #
 # Solo toca la carpeta wiki/. No hace nada si el repositorio no está en main o si hay commits
 # locales sin subir, para no publicar por accidente trabajo a medias.
-# Registro: %LOCALAPPDATA%\HikariHub\wiki-sync.log
+# Registro: scripts\wiki-sync.log (no se sube a GitHub)
 
 $ErrorActionPreference = 'Stop'
 # Los títulos de los artículos llevan acentos: la salida de node y git se lee como UTF-8.
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 $started = $false
 $repo = Split-Path -Parent $PSScriptRoot
-$logDir = Join-Path $env:LOCALAPPDATA 'HikariHub'
-$log = Join-Path $logDir 'wiki-sync.log'
-New-Item -ItemType Directory -Force $logDir | Out-Null
+$log = Join-Path $PSScriptRoot 'wiki-sync.log'
 
 function Write-Log([string]$message) {
   $line = '{0}  {1}' -f (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'), $message
