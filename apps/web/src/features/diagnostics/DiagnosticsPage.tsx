@@ -15,6 +15,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { errorMessage } from '@/lib/api-client';
+import { copyText } from '@/lib/clipboard';
 import { cn } from '@/lib/cn';
 import { formatRelative } from '@/lib/format';
 import {
@@ -69,12 +70,9 @@ export function DiagnosticsPage() {
 
   const copy = async () => {
     if (!data) return;
-    try {
-      await navigator.clipboard.writeText(diagnosticsText(data));
+    if (await copyText(diagnosticsText(data)))
       toast.success('Diagnóstico copiado. Pégalo al reportar el problema.');
-    } catch {
-      toast.error('No se pudo copiar. Selecciona el texto del registro y cópialo a mano.');
-    }
+    else toast.error('No se pudo copiar. Selecciona el texto del registro y cópialo a mano.');
   };
 
   return (

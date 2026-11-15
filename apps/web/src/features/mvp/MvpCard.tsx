@@ -1,6 +1,8 @@
 import type { AlertConfigResponse } from '@hikari-hub/shared';
-import { ExternalLink, Skull, Star } from 'lucide-react';
-import { useState } from 'react';
+import { Check, Copy, ExternalLink, Skull, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { copyText } from '@/lib/clipboard';
 import { cn } from '@/lib/cn';
 import { formatEpoch, formatEpochRange } from '@/lib/format';
 import type { ChannelChoice } from '@/features/notifications/alerts';
@@ -53,6 +55,43 @@ function MvpPortrait({ src, name }: { src: string; name: string }) {
         />
       )}
     </div>
+  );
+}
+
+const COPIED_MS = 1600;
+
+/** Copia el nombre del MVP (para pegarlo en el juego o en un chat) y lo confirma con un visto. */
+function CopyNameButton({ name }: { name: string }) {
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const id = window.setTimeout(() => setCopied(false), COPIED_MS);
+    return () => window.clearTimeout(id);
+  }, [copied]);
+
+  const copy = async () => {
+    if (await copyText(name)) setCopied(true);
+    else toast.error('No se pudo copiar el nombre.');
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={() => void copy()}
+      aria-label={`Copiar el nombre de ${name}`}
+      title="Copiar nombre"
+      className="grid size-8 shrink-0 place-items-center rounded-lg text-ink-faint transition-colors hover:bg-white/5 hover:text-ink pointer-coarse:size-11"
+    >
+      {copied ? (
+        <Check aria-hidden="true" className="size-4 text-leaf-400" />
+      ) : (
+        <Copy aria-hidden="true" className="size-4" />
+      )}
+      <span role="status" className="sr-only">
+        {copied ? 'Nombre copiado' : ''}
+      </span>
+    </button>
   );
 }
 
@@ -147,17 +186,20 @@ export function MvpCard({
       <header className="flex items-start gap-4">
         <MvpPortrait src={mvp.imageUrl} name={mvp.name} />
         <div className="min-w-0 flex-1">
-          <h2 className="flex items-center gap-1.5 font-display text-2xl font-semibold tracking-tight">
-            <a
-              href={mvp.detailUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="truncate hover:text-gold-300"
-            >
-              {mvp.name}
-            </a>
-            <ExternalLink aria-hidden="true" className="size-3.5 shrink-0 text-ink-faint" />
-          </h2>
+          <div className="flex items-center gap-1">
+            <h2 className="flex min-w-0 items-center gap-1.5 font-display text-2xl font-semibold tracking-tight">
+              <a
+                href={mvp.detailUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="truncate hover:text-gold-300"
+              >
+                {mvp.name}
+              </a>
+              <ExternalLink aria-hidden="true" className="size-3.5 shrink-0 text-ink-faint" />
+            </h2>
+            <CopyNameButton name={mvp.name} />
+          </div>
           <p className="mt-0.5 text-xs text-ink-faint">
             ID {mvp.id} · {mvp.spawns.length} {mvp.spawns.length === 1 ? 'mapa' : 'mapas'}
             {mvp.activeSpawns > 0 &&
